@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>নথি প্রক্রিয়াকরণের স্থিতি — আইন-AI</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #0B5D4B;
+      --color-primary-soft: #E3F1EC;
+      --color-primary-hover: #084336;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-success: #166534;
+      --color-success-bg: #DCFCE7;
+      --color-warning: #92400E;
+      --color-warning-bg: #FEF3C7;
+      --color-error: #991B1B;
+      --color-error-bg: #FEE2E2;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* Desktop Sidebar */
+    .app-sidebar {
+      width: 240px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding-bottom: 74px;
+    }
+
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-badge {
+      width: 38px; height: 38px; background: var(--color-primary); color: white;
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700;
+    }
+    .brand-title { font-size: 1.15rem; font-weight: 700; color: var(--color-primary); }
+    .brand-sub { font-size: 0.75rem; color: var(--color-text-muted); }
+
+    .nav-links { display: flex; flex-direction: column; gap: 6px; list-style: none; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      border-radius: 8px; color: var(--color-text-muted); text-decoration: none;
+      font-size: 0.95rem; font-weight: 500; min-height: 48px;
+    }
+    .nav-link.active { background: var(--color-primary-soft); color: var(--color-primary); font-weight: 600; }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
+
+    .header-box {
+      margin-bottom: 24px;
+    }
+    .header-box h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 6px;
+    }
+    .header-box p {
+      color: var(--color-text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Status Card */
+    .status-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .doc-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--color-border);
+      margin-bottom: 24px;
+    }
+    .meta-item { display: flex; flex-direction: column; gap: 4px; }
+    .meta-label { font-size: 0.85rem; color: var(--color-text-muted); }
+    .meta-value { font-size: 1rem; font-weight: 600; color: var(--color-text-main); }
+
+    /* Stepper */
+    .stepper {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      position: relative;
+    }
+
+    .step-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 18px;
+      top: 36px;
+      bottom: -16px;
+      width: 2px;
+      background: var(--color-border);
+      z-index: 1;
+    }
+
+    .step-item.completed:not(:last-child)::after {
+      background: var(--color-primary);
+    }
+
+    .step-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+      z-index: 2;
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      color: var(--color-text-muted);
+    }
+
+    .step-item.completed .step-icon {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: white;
+    }
+
+    .step-item.active .step-icon {
+      background: var(--color-primary-soft);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      animation: pulseRing 1.5s infinite;
+    }
+
+    .step-item.failed .step-icon {
+      background: var(--color-error-bg);
+      border-color: var(--color-error);
+      color: var(--color-error);
+    }
+
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(11, 93, 75, 0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(11, 93, 75, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(11, 93, 75, 0); }
+    }
+
+    .step-content {
+      flex: 1;
+      padding-top: 4px;
+    }
+    .step-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--color-text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .step-desc {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    /* Error Box */
+    .error-box {
+      display: none;
+      background: var(--color-error-bg);
+      border: 1px solid #FCA5A5;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-top: 24px;
+    }
+    .error-box.visible { display: block; }
+    .error-title {
+      font-weight: 700;
+      color: var(--color-error);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+    }
+    .error-desc {
+      color: #7F1D1D;
+      font-size: 0.9rem;
+      margin: 8px 0 16px 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      min-height: 48px;
+      border: none;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .btn-retry {
+      background: var(--color-error);
+      color: white;
+    }
+    .btn-retry:hover { background: #7F1D1D; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--color-border);
+      color: var(--color-text-main);
+    }
+    .btn-outline:hover { background: var(--color-bg); }
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    /* Mobile Bottom Navigation */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 64px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      z-index: 100;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .mobile-nav a {
+      display: flex; flex-direction: column; align-items: center;
+      font-size: 0.75rem; color: var(--color-text-muted); text-decoration: none;
+      gap: 4px; padding: 8px; min-width: 48px; min-height: 48px; justify-content: center;
+    }
+    .mobile-nav a.active { color: var(--color-primary); font-weight: 600; }
+
+    @media (max-width: 768px) {
+      .app-sidebar { display: none; }
+      .mobile-nav { display: flex; }
+      .container { padding: 20px 16px; }
+      .doc-meta-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar (Desktop & Tablet) -->
+  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+    <div class="logo-area">
+      <div class="logo-badge" aria-hidden="true">আইন</div>
+      <div>
+        <div class="brand-title">আইন-AI</div>
+        <div class="brand-sub">সহজ আইনি সেবা</div>
+      </div>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/documents/upload" class="nav-link"><span>📤</span> নথি আপলোড</a></li>
+      <li><a href="/documents/viewer" class="nav-link"><span>📄</span> নথি পর্যালোচনা</a></li>
+      <li><a href="/documents/status" class="nav-link active"><span>⏱️</span> প্রক্রিয়ার স্থিতি</a></li>
+      <li><a href="/library" class="nav-link"><span>📚</span> আইন ভাণ্ডার</a></li>
+    </ul>
+  </aside>
+
+  <main class="app-main">
+    <div class="container">
+      <div class="header-box">
+        <h1>নথি প্রক্রিয়াকরণের স্থিতি</h1>
+        <p>আপনার নথির প্রতিটি ধাপ স্বয়ংক্রিয় ও নিরাপদভাবে যাচাই করা হচ্ছে।</p>
+      </div>
+
+      <div class="status-card">
+        <div class="doc-meta-grid">
+          <div class="meta-item">
+            <span class="meta-label">নথির নাম</span>
+            <span class="meta-value" id="docFilename">sample_kabinnama_scan.pdf</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">নথির ধরন</span>
+            <span class="meta-value" id="docType">নিকাহনামা / কাবিননামা</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">বর্তমান অবস্থা</span>
+            <span class="meta-value" id="currentStatusText" style="color: var(--color-primary);">প্রক্রিয়াকরণ চলছে...</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">পুনঃচেষ্টার সংখ্যা</span>
+            <span class="meta-value" id="retryCountDisplay">০ বার</span>
+          </div>
+        </div>
+
+        <!-- Visual Stepper -->
+        <div class="stepper" id="stepperContainer">
+          <div class="step-item completed" id="stepUpload">
+            <div class="step-icon">১</div>
+            <div class="step-content">
+              <div class="step-title">নথি গ্রহণ ও হ্যাশ যাচাই</div>
+              <div class="step-desc">নথিটি সফলভাবে সংরক্ষিত এবং এর ডিজিটাল সুরক্ষা নিশ্চিত করা হয়েছে।</div>
+            </div>
+          </div>
+
+          <div class="step-item completed" id="stepScan">
+            <div class="step-icon">২</div>
+            <div class="step-content">
+              <div class="step-title">নিরাপত্তা ও ভাইরাস স্ক্যান</div>
+              <div class="step-desc">ম্যালওয়্যার মুক্ত ও অনুমোদিত ফরম্যাট হিসেবে নিশ্চিত হয়েছে।</div>
+            </div>
+          </div>
+
+          <div class="step-item completed" id="stepSplit">
+            <div class="step-icon">৩</div>
+            <div class="step-content">
+              <div class="step-title">পৃষ্ঠা বিভাজন ও স্পষ্টকরণ</div>
+              <div class="step-desc">নথির অস্পষ্ট লেখা স্পষ্ট করা এবং পৃষ্ঠাগুলি আলাদা করা হয়েছে।</div>
+            </div>
+          </div>
+
+          <div class="step-item active" id="stepOcr">
+            <div class="step-icon">৪</div>
+            <div class="step-content">
+              <div class="step-title">অক্ষর ও পাঠ রূপান্তর (OCR)</div>
+              <div class="step-desc">বাংলা ও ইংরেজি হরফগুলো নির্ভুলভাবে ডিজিটাল লেখায় রূপান্তর করা হচ্ছে।</div>
+            </div>
+          </div>
+
+          <div class="step-item" id="stepExtract">
+            <div class="step-icon">৫</div>
+            <div class="step-content">
+              <div class="step-title">তথ্য ও তারিখ নিষ্কাশন</div>
+              <div class="step-desc">গুরুত্বপূর্ণ নাম, তারিখ, সিল ও আইনি শর্ত চিহ্নিতকরণ।</div>
+            </div>
+          </div>
+
+          <div class="step-item" id="stepComplete">
+            <div class="step-icon">৬</div>
+            <div class="step-content">
+              <div class="step-title">পর্যালোচনা সম্পন্ন</div>
+              <div class="step-desc">নথি পর্যালোচনার জন্য প্রস্তুত।</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Failure / Error Box -->
+        <div class="error-box" id="errorBox">
+          <div class="error-title">
+            <span>⚠️</span> নথির লেখা পড়তে সাময়িক ত্রুটি হয়েছে
+          </div>
+          <p class="error-desc" id="errorMessageText">
+            নথির ছবির মান অতিরিক্ত অস্পষ্ট হওয়ার কারণে ৩ বার স্বয়ংক্রিয় চেষ্টা ব্যর্থ হয়েছে। আপনি পুনরায় স্ক্যান কপি আপলোড করতে পারেন অথবা পুনরায় চেষ্টা করতে পারেন। আপনার কোনো তথ্য হারায়নি।
+          </p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-retry" onclick="retryProcessing()">
+              🔄 পুনরায় চেষ্টা করুন
+            </button>
+            <a href="/documents/upload" class="btn btn-outline">
+              নতুন নথি আপলোড
+            </a>
+          </div>
+        </div>
+
+        <!-- Success Action Row -->
+        <div class="action-row" id="successActions" style="display: none;">
+          <a href="/documents/viewer" class="btn btn-primary" id="viewDocBtn">
+            📄 নথি ও তথ্য দেখুন
+          </a>
+          <a href="/documents/upload" class="btn btn-outline">
+            অন্য নথি আপলোড করুন
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Bar -->
+  <nav class="mobile-nav" aria-label="মোবাইল নেভিগেশন">
+    <a href="/documents/upload">
+      <span style="font-size: 20px;">📤</span>
+      <span>আপলোড</span>
+    </a>
+    <a href="/documents/viewer">
+      <span style="font-size: 20px;">📄</span>
+      <span>পর্যালোচনা</span>
+    </a>
+    <a href="/documents/status" class="active">
+      <span style="font-size: 20px;">⏱️</span>
+      <span>স্থিতি</span>
+    </a>
+    <a href="/library">
+      <span style="font-size: 20px;">📚</span>
+      <span>আইন ভাণ্ডার</span>
+    </a>
+  </nav>
+
+  <script>
+    // Bengali numeral helper
+    function toBnNum(num) {
+      const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      return String(num).replace(/[0-9]/g, d => bnDigits[d]);
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const docId = urlParams.get('id') || 'sample-doc-123';
+
+    async function checkStatus() {
+      if (!urlParams.get('id')) {
+        // Mock demo mode if no docId in query params
+        setTimeout(() => {
+          document.getElementById('stepOcr').className = 'step-item completed';
+          document.getElementById('stepExtract').className = 'step-item completed';
+          document.getElementById('stepComplete').className = 'step-item completed';
+          document.getElementById('currentStatusText').textContent = 'সম্পন্ন হয়েছে';
+          document.getElementById('currentStatusText').style.color = 'var(--color-success)';
+          document.getElementById('successActions').style.display = 'flex';
+        }, 1200);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/v1/documents/${encodeURIComponent(docId)}/status`);
+        if (!res.ok) throw new Error('Status fetch failed');
+        const data = await res.json();
+
+        document.getElementById('retryCountDisplay').textContent = `${toBnNum(data.retry_count || 0)} বার`;
+
+        if (data.status === 'completed') {
+          document.querySelectorAll('.step-item').forEach(el => el.className = 'step-item completed');
+          document.getElementById('currentStatusText').textContent = 'সম্পন্ন হয়েছে';
+          document.getElementById('currentStatusText').style.color = 'var(--color-success)';
+          document.getElementById('successActions').style.display = 'flex';
+          document.getElementById('viewDocBtn').href = `/documents/viewer?id=${encodeURIComponent(docId)}`;
+        } else if (data.status === 'failed') {
+          document.getElementById('stepOcr').className = 'step-item failed';
+          document.getElementById('currentStatusText').textContent = 'ব্যর্থ হয়েছে';
+          document.getElementById('currentStatusText').style.color = 'var(--color-error)';
+          document.getElementById('errorBox').classList.add('visible');
+          if (data.error_message) {
+            document.getElementById('errorMessageText').textContent = data.error_message;
+          }
+        } else {
+          // In progress: poll again in 1.5s
+          setTimeout(checkStatus, 1500);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function retryProcessing() {
+      alert('পুনরায় প্রক্রিয়াকরণ শুরু করা হচ্ছে...');
+      window.location.reload();
+    }
+
+    window.addEventListener('DOMContentLoaded', checkStatus);
+  </script>
+</body>
+</html>

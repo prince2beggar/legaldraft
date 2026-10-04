@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Dict, Any, List, Optional
@@ -10,8 +10,18 @@ from app.models.template_clause import Template, Clause
 from app.models.feedback import FeedbackEntry, EvaluationCase
 from app.models.audit import AuditLog
 from app.services.training_service import training_service
+from services.api.app.routers.auth import get_current_user
 
-router = APIRouter()
+def require_admin_or_reviewer(current_user: dict = Depends(get_current_user)) -> dict:
+    role = current_user.get("role", "citizen")
+    if role not in ("admin", "reviewer"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden. Admin or reviewer role required.",
+        )
+    return current_user
+
+router = APIRouter(dependencies=[Depends(require_admin_or_reviewer)])
 
 class NasrinIngestRequest(BaseModel):
     chapter_num: Optional[int] = None

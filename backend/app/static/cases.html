@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI — মামলা ফোল্ডারসমূহ</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #047857;
+      --color-primary-dark: #065F46;
+      --color-primary-soft: #ECFDF5;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-amber-bg: #FEF3C7;
+      --color-amber-border: #F59E0B;
+      --color-amber-text: #92400E;
+      --color-danger-bg: #FEE2E2;
+      --color-danger-border: #EF4444;
+      --color-danger-text: #991B1B;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* Sidebar */
+    .app-sidebar {
+      width: 250px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      background-color: var(--color-primary-soft);
+      color: var(--color-primary);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding-bottom: 80px;
+    }
+
+    /* Top bar */
+    .top-bar {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .top-bar-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+    .btn-create-case {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .btn-create-case:hover {
+      background: var(--color-primary-dark);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Search & Filter Bar */
+    .filter-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+    }
+    .search-input:focus {
+      border-color: var(--color-primary);
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .tab-btn {
+      background: none;
+      border: 1px solid var(--color-border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--color-text-muted);
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+
+    /* Case Grid */
+    .cases-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .case-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+    .case-card:hover {
+      border-color: var(--color-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .case-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .case-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-text-main);
+      line-height: 1.4;
+    }
+    .badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-urgent {
+      background: var(--color-danger-bg);
+      color: var(--color-danger-text);
+      border: 1px solid var(--color-danger-border);
+    }
+    .badge-active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      border: 1px solid var(--color-primary);
+    }
+    .badge-action {
+      background: var(--color-amber-bg);
+      color: var(--color-amber-text);
+      border: 1px solid var(--color-amber-border);
+    }
+    .case-desc {
+      font-size: 14px;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .case-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--color-text-muted);
+      border-top: 1px solid var(--color-border);
+      padding-top: 10px;
+      margin-top: auto;
+    }
+
+    /* Modal Create Case */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--color-surface);
+      border-radius: var(--radius);
+      max-width: 520px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-text-main);
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-main);
+    }
+    .form-control {
+      padding: 10px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    .form-control:focus {
+      border-color: var(--color-primary);
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .btn-secondary {
+      background: #F1F5F9;
+      color: var(--color-text-main);
+      border: 1px solid var(--color-border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    @media (max-width: 768px) {
+      .app-sidebar { display: none; }
+      .container { padding: 16px 12px; }
+      .cases-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Desktop Sidebar -->
+  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+    <a href="/home" class="logo">
+      <span aria-hidden="true">⚖️</span>
+      <span>আইন-AI</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/home" class="nav-link">🏠 হোম</a></li>
+      <li><a href="/cases" class="nav-link active">📁 মামলা ফোল্ডার</a></li>
+      <li><a href="/documents/upload" class="nav-link">📄 নোটিশ স্ক্যান</a></li>
+      <li><a href="/notifications" class="nav-link">🔔 বিজ্ঞপ্তি</a></li>
+      <li><a href="/library" class="nav-link">📚 আইন পাঠাগার</a></li>
+      <li><a href="/notification-settings" class="nav-link">⚙️ সেটিংস</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Area -->
+  <main class="app-main">
+    <header class="top-bar">
+      <div class="top-bar-title">মামলা ফোল্ডারসমূহ (Case Folders)</div>
+      <button type="button" class="btn-create-case" id="btnOpenCreateModal" onclick="openCreateModal()">
+        <span>+</span> নতুন মামলা তৈরি
+      </button>
+    </header>
+
+    <div class="container">
+
+      <!-- Search & Filters -->
+      <section class="filter-bar">
+        <input
+          type="search"
+          id="searchCasesInput"
+          class="search-input"
+          placeholder="মামলার শিরোনাম বা বিষয় দিয়ে খুঁজুন..."
+          aria-label="মামলা অনুসন্ধান"
+          oninput="filterCases()"
+        />
+        <div class="filter-tabs">
+          <button type="button" class="tab-btn active" data-filter="all" onclick="setFilter('all', this)">সকল</button>
+          <button type="button" class="tab-btn" data-filter="action_required" onclick="setFilter('action_required', this)">পদক্ষেপ প্রয়োজন</button>
+          <button type="button" class="tab-btn" data-filter="active" onclick="setFilter('active', this)">সক্রিয়</button>
+          <button type="button" class="tab-btn" data-filter="waiting" onclick="setFilter('waiting', this)">অপেক্ষমান</button>
+          <button type="button" class="tab-btn" data-filter="with_lawyer" onclick="setFilter('with_lawyer', this)">আইনজীবীর সাথে</button>
+          <button type="button" class="tab-btn" data-filter="completed" onclick="setFilter('completed', this)">সম্পন্ন</button>
+          <button type="button" class="tab-btn" data-filter="archived" onclick="setFilter('archived', this)">আর্কাইভ</button>
+        </div>
+      </section>
+
+      <!-- Cases Grid -->
+      <section class="cases-grid" id="casesGrid">
+        <!-- Injected dynamically -->
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modal: Create Case -->
+  <div class="modal-overlay" id="createCaseModal" role="dialog" aria-modal="true" aria-labelledby="createCaseTitle">
+    <div class="modal-box">
+      <h3 class="modal-title" id="createCaseTitle">নতুন মামলা ফোল্ডার তৈরি করুন</h3>
+      <form id="createCaseForm" onsubmit="handleCreateCase(event)">
+        <div class="form-group">
+          <label class="form-label" for="newCaseTitle">মামলার শিরোনাম *</label>
+          <input type="text" id="newCaseTitle" class="form-control" placeholder="যেমন: জমি খারিজ সংক্রান্ত নোটিশ বিরোধ" required />
+        </div>
+        <div class="form-group" style="margin-top: 10px;">
+          <label class="form-label" for="newCaseType">মামলার ধরন</label>
+          <select id="newCaseType" class="form-control">
+            <option value="notice_response">আইনি নোটিশ জবাব (Legal Notice)</option>
+            <option value="land_dispute">জমিজমা ও সম্পত্তি (Land & Property)</option>
+            <option value="civil">দেওয়ানি মামলা (Civil Dispute)</option>
+            <option value="criminal">ফৌজদারি বা এনআই অ্যাক্ট (Criminal / NI Act)</option>
+            <option value="family">পারিবারিক বিরোধ (Family Dispute)</option>
+            <option value="general">সাধারণ আইনি বিষয় (General)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-top: 10px;">
+          <label class="form-label" for="newCaseUrgency">জরুরিতা</label>
+          <select id="newCaseUrgency" class="form-control">
+            <option value="normal">সাধারণ (Normal)</option>
+            <option value="urgent">জরুরি (Urgent)</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-top: 10px;">
+          <label class="form-label" for="newCaseDesc">সংক্ষিপ্ত বিবরণ</label>
+          <textarea id="newCaseDesc" class="form-control" rows="3" placeholder="মামলা বা বিষয়ের মূল তথ্য..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeCreateModal()">বাতিল</button>
+          <button type="submit" class="btn-create-case">সংরক্ষণ ও ফোল্ডার খুলুন</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let allCases = [];
+    let currentFilter = 'all';
+
+    function getMockCases() {
+      return [
+        {
+          id: 'case-mock-01',
+          title: 'আইনি নোটিশ বিষয়: এনআই অ্যাক্ট ১৩৮ চেক ডিজঅনার',
+          case_type: 'notice_response',
+          status: 'action_required',
+          urgency: 'urgent',
+          description: 'ডাচ-বাংলা ব্যাংকের চেক ডিজঅনার সংক্রান্ত লিগ্যাল নোটিশের জবাব দাখিল ও প্রস্তুতি।',
+          parties_count: 2,
+          created_at: '২০২৬-১০-০১'
+        },
+        {
+          id: 'case-mock-02',
+          title: 'মিরপুর প্লট চুক্তিপত্র বিরোধ',
+          case_type: 'land_dispute',
+          status: 'active',
+          urgency: 'normal',
+          description: 'জমির মূল দলিল উত্তোলন ও বায়নানামা চুক্তি সংক্রান্ত আইনি পর্যালোচনা।',
+          parties_count: 3,
+          created_at: '২০২৬-০৯-১৫'
+        },
+        {
+          id: 'case-mock-03',
+          title: 'বাণিজ্যিক অংশীদারি বিরোধ নিষ্পত্তি',
+          case_type: 'civil',
+          status: 'waiting',
+          urgency: 'normal',
+          description: 'ব্যবসা প্রতিষ্ঠানের হিসাব পর্যালোচনা ও সালিশ বৈঠক প্রস্তুতি।',
+          parties_count: 2,
+          created_at: '২০২৬-০৮-২০'
+        }
+      ];
+    }
+
+    async function loadCases() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('new') === 'true') {
+        openCreateModal();
+      }
+
+      if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http') || urlParams.has('mock')) {
+        allCases = getMockCases();
+        renderCases(allCases);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/cases');
+        if (!res.ok) throw new Error('মামলা তালিকা লোড করা সম্ভব হয়নি');
+        const data = await res.json();
+        allCases = data.cases || [];
+        renderCases(allCases);
+      } catch (err) {
+        console.warn('Fallback to mock cases:', err);
+        allCases = getMockCases();
+        renderCases(allCases);
+      }
+    }
+
+    function renderCases(cases) {
+      const grid = document.getElementById('casesGrid');
+      grid.innerHTML = '';
+
+      if (cases.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--color-text-muted);">কোনো মামলা পাওয়া যায়নি।</div>';
+        return;
+      }
+
+      cases.forEach(c => {
+        const card = document.createElement('a');
+        card.href = `/cases/${c.id}`;
+        card.className = 'case-card';
+
+        let badgeClass = 'badge-active';
+        let badgeText = 'সক্রিয়';
+        if (c.urgency === 'urgent') {
+          badgeClass = 'badge-urgent';
+          badgeText = 'জরুরি';
+        } else if (c.status === 'action_required') {
+          badgeClass = 'badge-action';
+          badgeText = 'পদক্ষেপ প্রয়োজন';
+        } else if (c.status === 'completed') {
+          badgeText = 'সম্পন্ন';
+        }
+
+        card.innerHTML = `
+          <div class="case-card-header">
+            <h3 class="case-title">${c.title}</h3>
+            <span class="badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <p class="case-desc">${c.description || 'কোনো বিবরণ যোগ করা হয়নি।'}</p>
+          <div class="case-footer">
+            <span>ধরন: ${c.case_type || 'সাধারণ'}</span>
+            <span>বিস্তারিত দেখুন →</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function setFilter(filter, btn) {
+      currentFilter = filter;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterCases();
+    }
+
+    function filterCases() {
+      const query = document.getElementById('searchCasesInput').value.toLowerCase().trim();
+      const filtered = allCases.filter(c => {
+        const matchesFilter = (currentFilter === 'all') || (c.status === currentFilter);
+        const matchesQuery = !query || (c.title && c.title.toLowerCase().includes(query)) || (c.description && c.description.toLowerCase().includes(query));
+        return matchesFilter && matchesQuery;
+      });
+      renderCases(filtered);
+    }
+
+    function openCreateModal() {
+      document.getElementById('createCaseModal').classList.add('open');
+      document.getElementById('newCaseTitle').focus();
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createCaseModal').classList.remove('open');
+    }
+
+    async function handleCreateCase(e) {
+      e.preventDefault();
+      const title = document.getElementById('newCaseTitle').value.trim();
+      const caseType = document.getElementById('newCaseType').value;
+      const urgency = document.getElementById('newCaseUrgency').value;
+      const description = document.getElementById('newCaseDesc').value.trim();
+
+      if (!title) return;
+
+      if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http')) {
+        const newMock = {
+          id: 'case-mock-' + Date.now(),
+          title,
+          case_type: caseType,
+          status: 'new',
+          urgency,
+          description,
+          created_at: '২০২৬-১০-০৩'
+        };
+        allCases.unshift(newMock);
+        closeCreateModal();
+        renderCases(allCases);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/cases', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            case_type: caseType,
+            urgency,
+            description,
+          })
+        });
+        const data = await res.json();
+        if (data.case && data.case.id) {
+          window.location.href = `/cases/${data.case.id}`;
+        }
+      } catch (err) {
+        alert('মামলা তৈরি করতে ত্রুটি হয়েছে: ' + err.message);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadCases);
+  </script>
+</body>
+</html>

@@ -6,6 +6,8 @@ from app.core.database import get_db
 from app.models.matter import Matter
 from app.models.organization import Organization
 from app.models.user import User
+from packages.trust_kernel.policy_consent import policy_consent
+from services.api.app.routers.auth import get_current_user
 
 router = APIRouter()
 
@@ -25,8 +27,12 @@ class MatterResponse(BaseModel):
     created_at: str
 
 @router.post("/", response_model=MatterResponse)
-def create_matter(data: MatterCreate, db: Session = Depends(get_db)):
-    # Ensure default organization and demo user exist for frictionless use
+def create_matter(
+    data: MatterCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    # Ensure default organization exists for backward compatibility
     org = db.query(Organization).first()
     if not org:
         org = Organization(name="Default Law Office", org_type="law_firm")
@@ -34,29 +40,17 @@ def create_matter(data: MatterCreate, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(org)
 
-    user = db.query(User).first()
-    if not user:
-        user = User(
-            org_id=org.id,
-            email="lawyer@legalai.bd",
-            full_name="Advocate M. Rahman",
-            hashed_password="mock_hashed_password",
-            role="lawyer",
-            is_verified_lawyer=True
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    owner_id = current_user["sub"]
 
     matter = Matter(
         org_id=org.id,
-        user_id=user.id,
+        user_id=owner_id,
         title=data.title,
         matter_type=data.matter_type,
         client_name=data.client_name,
         status="active",
         notes=data.notes,
-        facts_data={}
+        facts_data={},
     )
     db.add(matter)
     db.commit()
@@ -69,12 +63,26 @@ def create_matter(data: MatterCreate, db: Session = Depends(get_db)):
         client_name=matter.client_name,
         status=matter.status,
         facts_data=matter.facts_data or {},
-        created_at=matter.created_at.isoformat()
+        created_at=matter.created_at.isoformat(),
     )
 
 @router.get("/", response_model=List[MatterResponse])
-def list_matters(db: Session = Depends(get_db)):
-    matters = db.query(Matter).order_by(Matter.created_at.desc()).all()
+def list_matters(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    user_role = current_user.get("role", "citizen")
+    if user_role in ("admin", "reviewer"):
+        matters = db.query(Matter).order_by(Matter.created_at.desc()).all()
+    else:
+        # Cross-tenant isolation: Citizens only see matters they own
+        matters = (
+            db.query(Matter)
+            .filter(Matter.user_id == current_user["sub"])
+            .order_by(Matter.created_at.desc())
+            .all()
+        )
+
     return [
         MatterResponse(
             id=m.id,
@@ -83,7 +91,37 @@ def list_matters(db: Session = Depends(get_db)):
             client_name=m.client_name,
             status=m.status,
             facts_data=m.facts_data or {},
-            created_at=m.created_at.isoformat()
+            created_at=m.created_at.isoformat(),
         )
         for m in matters
     ]
+
+@router.get("/{matter_id}", response_model=MatterResponse)
+def get_matter(
+    matter_id: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    matter = db.query(Matter).filter(Matter.id == matter_id).first()
+    if not matter:
+        raise HTTPException(status_code=404, detail="Matter not found")
+
+    actor = {"id": current_user["sub"], "role": current_user.get("role", "citizen")}
+    obj = {"id": matter.id, "owner_id": matter.user_id, "object_type": "case"}
+
+    # Enforce ownership & consent check via PolicyConsent.can (SRS Section 3.2, X-001)
+    if not policy_consent.can(actor=actor, action="read", obj=obj):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden. You do not own this matter and consent has not been granted.",
+        )
+
+    return MatterResponse(
+        id=matter.id,
+        title=matter.title,
+        matter_type=matter.matter_type,
+        client_name=matter.client_name,
+        status=matter.status,
+        facts_data=matter.facts_data or {},
+        created_at=matter.created_at.isoformat(),
+    )

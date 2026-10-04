@@ -43,6 +43,8 @@ nosetests.xml
 coverage.xml
 *.cover
 *.py,cover
+reports/
+backups/
 
 # Node.js & Frontend
 node_modules/
@@ -70,6 +72,11 @@ backend/legal_saas.db
 backend/legal_saas.db-journal
 backend/legal_saas.db-wal
 backend/legal_saas.db-shm
+*.db-journal
+*.db-wal
+*.db-shm
+test_*.db
+services/api/*.db
 backend/storage/*
 !backend/storage/.gitkeep
 learning/uploads/*

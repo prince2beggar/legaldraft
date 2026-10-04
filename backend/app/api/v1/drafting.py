@@ -1,14 +1,17 @@
 import os
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.config import settings
 from app.models.document import Document, DocumentVersion
+from app.models.matter import Matter
 from app.models.organization import Organization
 from app.schemas.document import DraftGenerationRequest, DocumentDetailResponse
 from app.services.drafting_engine import build_draft, drafting_engine
 from app.services.export_service import export_service
 from app.services.matter_requirements import TEMPLATE_TO_MATTER
+from packages.trust_kernel.policy_consent import policy_consent
+from services.api.app.routers.auth import get_current_user
 
 router = APIRouter()
 
@@ -37,12 +40,25 @@ def _document_title(code: str, facts: dict) -> str:
 
 
 @router.post("/generate", response_model=DocumentDetailResponse)
-def generate_draft(request: DraftGenerationRequest, db: Session = Depends(get_db)):
+def generate_draft(
+    request: DraftGenerationRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     """
     Generates a legal document in the format of Dr. Syeda Nasrin's "Basics of Legal Drafting".
     Values the client has not supplied are left as blanks and returned as questions
     (missing_information) — nothing is invented. Also returns the book checklist audit and legal warnings.
     """
+    if request.matter_id:
+        matter = db.query(Matter).filter(Matter.id == request.matter_id).first()
+        if not matter:
+            raise HTTPException(status_code=404, detail="Matter not found")
+        actor = {"id": current_user["sub"], "role": current_user.get("role", "citizen")}
+        obj = {"id": matter.id, "owner_id": matter.user_id, "object_type": "case"}
+        if not policy_consent.can(actor=actor, action="edit", obj=obj):
+            raise HTTPException(status_code=403, detail="Forbidden. You do not own this matter.")
+
     org = db.query(Organization).first()
     if not org:
         org = Organization(name="Default Law Office", org_type="law_firm")

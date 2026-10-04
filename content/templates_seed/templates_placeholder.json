@@ -1,0 +1,29 @@
+[
+  {
+    "id": "tmpl-placeholder-001",
+    "doc_type": "DT-01",
+    "name": "House / Premises Rental Agreement",
+    "name_bn": "আবাসিক বাসা / ফ্ল্যাট ভাড়া চুক্তিপত্র",
+    "version": "0.1.0-draft",
+    "approval_status": "DRAFT_NOT_REVIEWED",
+    "body_template": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER]\n\n১ম পক্ষ: {landlord_name}\n২য় পক্ষ: {tenant_name}\nমাসিক ভাড়া: {monthly_rent_bdt}\nঅগ্রিম জামানত: {security_deposit_bdt}",
+    "execution_checklist": [
+      {"item_key": "stamp_duty", "label_bn": "নন-জুডিশিয়াল স্ট্যাম্পে টাইপ নিশ্চিত করুন"},
+      {"item_key": "witness_signatures", "label_bn": "২ জন উপযুক্ত প্রাপ্তবয়স্ক সাক্ষীর স্বাক্ষর ও জাতীয় পরিচয়পত্র সংযুক্ত করুন"}
+    ],
+    "note": "PLACEHOLDER ONLY: In production, templates can only be used by citizens when approval_status is 'approved'."
+  },
+  {
+    "id": "tmpl-placeholder-002",
+    "doc_type": "DT-03",
+    "name": "Reply to Legal Notice",
+    "name_bn": "আইনি নোটিশের জবাবপত্র",
+    "version": "0.1.0-draft",
+    "approval_status": "DRAFT_NOT_REVIEWED",
+    "body_template": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER]\n\nবরাবর: {notice_sender}\nবিষয়: {subject}",
+    "execution_checklist": [
+      {"item_key": "registry_ad", "label_bn": "রেজিস্ট্রি ডাকযোগে এডি সহ প্রেরণের রসিদ সংরক্ষণ"}
+    ],
+    "note": "PLACEHOLDER ONLY: Requires lawyer review."
+  }
+]

@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI — হোম ও পরবর্তী পদক্ষেপ</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #047857;
+      --color-primary-dark: #065F46;
+      --color-primary-soft: #ECFDF5;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-amber-bg: #FEF3C7;
+      --color-amber-border: #F59E0B;
+      --color-amber-text: #92400E;
+      --color-danger-bg: #FEE2E2;
+      --color-danger-border: #EF4444;
+      --color-danger-text: #991B1B;
+      --color-info-bg: #EFF6FF;
+      --color-info-border: #3B82F6;
+      --color-info-text: #1E40AF;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* Sidebar (Desktop) */
+    .app-sidebar {
+      width: 250px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      background-color: var(--color-primary-soft);
+      color: var(--color-primary);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding-bottom: 80px;
+    }
+
+    /* Top bar */
+    .top-bar {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .top-bar-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+    .user-pill {
+      font-size: 14px;
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Greeting Section */
+    .greeting-card {
+      background: linear-gradient(135deg, #047857 0%, #065F46 100%);
+      color: white;
+      padding: 24px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(4, 120, 87, 0.15);
+    }
+    .greeting-text {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .greeting-subtext {
+      font-size: 15px;
+      opacity: 0.9;
+    }
+
+    /* Problem Input (SRS M02) */
+    .problem-input-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .problem-input-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .problem-input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .problem-input-field {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .problem-input-field:focus {
+      border-color: var(--color-primary);
+    }
+    .btn-mic {
+      background: #F1F5F9;
+      color: #94A3B8;
+      border: 1px solid var(--color-border);
+      padding: 12px 14px;
+      border-radius: 8px;
+      cursor: not-allowed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .btn-submit-problem {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .btn-submit-problem:hover {
+      background: var(--color-primary-dark);
+    }
+
+    /* Next Action Card (SRS M02 p. 21) */
+    .next-action-card {
+      background: var(--color-surface);
+      border: 2px solid var(--color-primary);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: 0 4px 16px rgba(4, 120, 87, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+    }
+    .next-action-badge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .next-action-header-badge {
+      background: var(--color-primary);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .urgency-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .urgency-urgent {
+      background: var(--color-danger-bg);
+      color: var(--color-danger-text);
+      border: 1px solid var(--color-danger-border);
+    }
+    .urgency-action {
+      background: var(--color-amber-bg);
+      color: var(--color-amber-text);
+      border: 1px solid var(--color-amber-border);
+    }
+    .urgency-normal {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      border: 1px solid var(--color-primary);
+    }
+    .next-action-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--color-text-main);
+    }
+    .next-action-desc {
+      font-size: 15px;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+    .next-action-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 6px;
+      padding-top: 14px;
+      border-top: 1px solid var(--color-border);
+    }
+    .btn-why {
+      background: none;
+      border: 1px dashed var(--color-primary);
+      color: var(--color-primary);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-why:hover {
+      background: var(--color-primary-soft);
+    }
+    .btn-action-primary {
+      background: var(--color-primary);
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-action-primary:hover {
+      background: var(--color-primary-dark);
+    }
+
+    /* Empty state */
+    .empty-next-action {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 36px 20px;
+      text-align: center;
+      color: var(--color-text-muted);
+    }
+    .empty-next-action h3 {
+      font-size: 18px;
+      color: var(--color-text-main);
+      margin-bottom: 8px;
+    }
+
+    /* Quick Actions */
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-text-main);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .quick-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-decoration: none;
+      color: var(--color-text-main);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+    .quick-card:hover {
+      border-color: var(--color-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .quick-card-icon {
+      font-size: 24px;
+    }
+    .quick-card-title {
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .quick-card-desc {
+      font-size: 13px;
+      color: var(--color-text-muted);
+    }
+
+    /* My Cases & Upcoming */
+    .cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .item-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s ease;
+    }
+    .item-card:hover {
+      border-color: var(--color-primary);
+    }
+    .item-card-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .item-card-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--color-text-main);
+    }
+    .item-card-meta {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .item-badge {
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .badge-days-left {
+      background: var(--color-danger-bg);
+      color: var(--color-danger-text);
+      font-weight: 700;
+    }
+
+    /* Modal Why */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--color-surface);
+      border-radius: var(--radius);
+      max-width: 500px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-text-main);
+    }
+    .modal-body {
+      font-size: 14px;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+    .reason-refs-box {
+      background: #F1F5F9;
+      border: 1px solid var(--color-border);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #334155;
+    }
+    .modal-btn-close {
+      align-self: flex-end;
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Disclaimer Footer */
+    .footer-disclaimer {
+      text-align: center;
+      font-size: 13px;
+      color: var(--color-text-muted);
+      padding: 24px 16px 0;
+      border-top: 1px solid var(--color-border);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .app-sidebar {
+        display: none;
+      }
+      .container {
+        padding: 16px 12px;
+        gap: 16px;
+      }
+      .greeting-text {
+        font-size: 20px;
+      }
+      .problem-input-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn-submit-problem {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Desktop Sidebar -->
+  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+    <a href="/home" class="logo">
+      <span aria-hidden="true">⚖️</span>
+      <span>আইন-AI</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/home" class="nav-link active">🏠 হোম</a></li>
+      <li><a href="/cases" class="nav-link">📁 মামলা ফোল্ডার</a></li>
+      <li><a href="/documents/upload" class="nav-link">📄 নোটিশ স্ক্যান</a></li>
+      <li><a href="/notifications" class="nav-link">🔔 বিজ্ঞপ্তি</a></li>
+      <li><a href="/library" class="nav-link">📚 আইন পাঠাগার</a></li>
+      <li><a href="/notification-settings" class="nav-link">⚙️ সেটিংস</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Area -->
+  <main class="app-main">
+    <header class="top-bar">
+      <div class="top-bar-title" id="pageTitle">আইন-AI ড্যাশবোর্ড</div>
+      <div class="user-pill" id="userPill">নাগরিক হিসাব</div>
+    </header>
+
+    <div class="container">
+
+      <!-- 1. Time-aware Greeting -->
+      <section class="greeting-card" id="greetingSection">
+        <div class="greeting-text" id="greetingText">শুভ দিন, নাগরিক!</div>
+        <div class="greeting-subtext">আপনার আইন-AI সুরক্ষিত ব্যক্তিগত ড্যাশবোর্ডে স্বাগতম।</div>
+      </section>
+
+      <!-- 2. Problem Input Box (SRS M02) -->
+      <section class="problem-input-card" aria-labelledby="problemInputHeading">
+        <div class="problem-input-label" id="problemInputHeading">
+          <span>🔍</span> আপনার আইনি সমস্যা বা প্রশ্ন লিখুন
+        </div>
+        <form class="problem-input-row" id="problemForm" onsubmit="handleProblemSubmit(event)">
+          <input
+            type="text"
+            id="problemInputField"
+            class="problem-input-field"
+            placeholder="যেমন: জমি খারিজ সংক্রান্ত নোটিশ পেয়েছি, কী করণীয়?"
+            aria-label="আইনি সমস্যা লিখুন"
+          />
+          <button
+            type="button"
+            class="btn-mic"
+            id="btnMic"
+            title="ভয়েস ইনপুট শীঘ্রই আসছে"
+            aria-label="ভয়েস ইনপুট শীঘ্রই আসছে"
+            disabled
+          >
+            🎤
+          </button>
+          <button type="submit" class="btn-submit-problem">পরামর্শ নিন</button>
+        </form>
+      </section>
+
+      <!-- 3. Next Action Card (SRS M02 p. 21) -->
+      <section id="nextActionSection">
+        <!-- Rendered dynamically -->
+        <div class="next-action-card" id="nextActionCard">
+          <div class="next-action-badge-row">
+            <span class="next-action-header-badge">⭐ পরবর্তী শীর্ষ পদক্ষেপ</span>
+            <span class="urgency-badge urgency-urgent" id="nextActionUrgency">জরুরি</span>
+          </div>
+          <h2 class="next-action-title" id="nextActionTitle">আসন্ন সময়সীমা: নোটিশের জবাব দাখিল</h2>
+          <p class="next-action-desc" id="nextActionDesc">
+            আপনার প্রাপ্ত আইনি নোটিশের নির্ধারিত ১৫ দিনের জবাব দাখিলের আর ৩ দিন বাকি রয়েছে।
+          </p>
+          <div class="next-action-footer">
+            <button type="button" class="btn-why" id="btnWhyNextAction" onclick="openWhyModal()">
+              কেন এটি দেখছি? (Why am I seeing this?)
+            </button>
+            <a href="/cases" class="btn-action-primary" id="btnNextActionCTA">
+              পদক্ষেপ নিন →
+            </a>
+          </div>
+        </div>
+
+        <!-- Empty state fallback -->
+        <div class="empty-next-action" id="emptyNextAction" style="display:none;">
+          <h3>বর্তমানে কোনো জরুরি আইনি পদক্ষেপ বাকি নেই</h3>
+          <p>আপনার সমস্ত সময়সীমা ও নথিপত্র হালনাগাদ রয়েছে। নতুন নোটিশ বিশ্লেষণ করতে নিচের বোতামে চাপুন।</p>
+          <div style="margin-top: 14px;">
+            <a href="/documents/upload" class="btn-action-primary">নতুন নোটিশ স্ক্যান করুন</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Quick Actions -->
+      <section aria-labelledby="quickActionsHeading">
+        <h3 class="section-title" id="quickActionsHeading">দ্রুত পদক্ষেপ</h3>
+        <div class="quick-actions-grid">
+          <a href="/documents/upload" class="quick-card">
+            <div class="quick-card-icon">📄</div>
+            <div class="quick-card-title">আইনি নোটিশ স্ক্যান</div>
+            <div class="quick-card-desc">নোটিশ আপলোড করে সময়সীমা ও করণীয় জানুন</div>
+          </a>
+          <a href="/cases?new=true" class="quick-card">
+            <div class="quick-card-icon">📁</div>
+            <div class="quick-card-title">নতুন মামলা তৈরি</div>
+            <div class="quick-card-desc">নতুন আইনি নথিপত্র ও বিষয় এক ফোল্ডারে রাখুন</div>
+          </a>
+          <a href="/library" class="quick-card">
+            <div class="quick-card-icon">📚</div>
+            <div class="quick-card-title">আইন পাঠাগার</div>
+            <div class="quick-card-desc">বাংলাদেশের আইন ও অধিকারের ব্যাখ্যা পড়ুন</div>
+          </a>
+          <a href="#" class="quick-card" onclick="alert('আইনজীবীর পরামর্শ সেবা মডিউল (M08) শীঘ্রই আসছে।'); return false;">
+            <div class="quick-card-icon">👨‍⚖️</div>
+            <div class="quick-card-title">আইনজীবীর পরামর্শ</div>
+            <div class="quick-card-desc">অনলাইন ব্রিফ প্রস্তুত করে আইনজীবীর সাথে শেয়ার করুন</div>
+          </a>
+        </div>
+      </section>
+
+      <!-- 5. My Cases -->
+      <section aria-labelledby="myCasesHeading">
+        <div class="section-title">
+          <span id="myCasesHeading">আমার মামলাসমূহ</span>
+          <a href="/cases" style="font-size: 14px; color: var(--color-primary); text-decoration: none;">সকল দেখুন →</a>
+        </div>
+        <div class="cards-list" id="myCasesList">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- 6. Upcoming Events / Deadlines -->
+      <section aria-labelledby="upcomingHeading">
+        <h3 class="section-title" id="upcomingHeading">আসন্ন সময়সীমা ও গুরুত্বপূর্ণ তারিখ</h3>
+        <div class="cards-list" id="upcomingList">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- Footer Disclaimer -->
+      <footer class="footer-disclaimer">
+        আইন-AI একটি প্রযুক্তিগত সহায়ক প্ল্যাটফর্ম, সরাসরি আইনি পরামর্শ নয়। প্রয়োজনীয় ক্ষেত্রে নিবন্ধিত আইনজীবীর পরামর্শ নিন।
+      </footer>
+
+    </div>
+  </main>
+
+  <!-- Modal: Why am I seeing this? -->
+  <div class="modal-overlay" id="whyModal" role="dialog" aria-modal="true" aria-labelledby="whyModalTitle">
+    <div class="modal-box">
+      <h3 class="modal-title" id="whyModalTitle">কেন এই পদক্ষেপটি শীর্ষ তালিকায় রয়েছে?</h3>
+      <div class="modal-body" id="whyModalBody">
+        আইন-AI এর ট্রাস্ট কার্নেল নির্ধারিত ১০-ধাপের অগ্রাধিকার নীতিমালা (SRS Section 5.2, M02) অনুযায়ী আপনার সক্রিয় মামলার তারিখ ও নোটিশ বিশ্লেষণ পর্যালোচনা করে এই সুপারিশ তৈরি করা হয়েছে।
+      </div>
+      <div class="reason-refs-box" id="whyReasonRefs">
+        কারণ রেফারেন্স: [deadline_priority_tier_1]
+      </div>
+      <button type="button" class="modal-btn-close" onclick="closeWhyModal()">বুঝেছি</button>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let homeData = null;
+
+    function getTimeAwareGreeting(name) {
+      const hour = new Date().getHours();
+      let greeting = 'শুভ দিন';
+      if (hour >= 5 && hour < 12) {
+        greeting = 'শুভ সকাল';
+      } else if (hour >= 12 && hour < 17) {
+        greeting = 'শুভ অপরাহ্ন';
+      } else {
+        greeting = 'শুভ সন্ধ্যা';
+      }
+      return `${greeting}, ${name || 'নাগরিক'}!`;
+    }
+
+    function toBanglaDigits(num) {
+      const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      return String(num).replace(/[0-9]/g, d => bnDigits[Number(d)]);
+    }
+
+    function getMockHomeData(variant) {
+      if (variant === 'empty') {
+        return {
+          greeting: 'শুভ দিন, নাগরিক!',
+          next_action: null,
+          my_cases: [],
+          upcoming: [],
+        };
+      }
+      return {
+        greeting: 'শুভ সকাল, মোঃ আব্দুল্লাহ!',
+        next_action: {
+          priority_tier: 1,
+          title: 'আসন্ন সময়সীমা: নোটিশের জবাব দাখিল',
+          explanation: 'আপনার প্রাপ্ত আইনি নোটিশের নির্ধারিত ১৫ দিনের জবাব দাখিলের আর ৩ দিন বাকি রয়েছে। দ্রুত পদক্ষেপ না নিলে আইনি অধিকার ক্ষুণ্ন হতে পারে।',
+          urgency: 'urgent',
+          action_url: '/cases/case-mock-01',
+          action_cta: 'মামলা ফোল্ডারে যান',
+          reason_refs: ['case_mock_01', 'deadline_notice_resp_01'],
+        },
+        my_cases: [
+          {
+            id: 'case-mock-01',
+            title: 'আইনি নোটিশ বিষয়: এনআই অ্যাক্ট ১৩৮ চেক ডিজঅনার',
+            status: 'action_required',
+            urgency: 'urgent',
+            case_type: 'notice_response',
+            parties_count: 2,
+            updated_at: '২০২৬-১০-০৩'
+          },
+          {
+            id: 'case-mock-02',
+            title: 'মিরপুর প্লট চুক্তিপত্র বিরোধ',
+            status: 'active',
+            urgency: 'normal',
+            case_type: 'land_dispute',
+            parties_count: 3,
+            updated_at: '২০২৬-০৯-২৮'
+          }
+        ],
+        upcoming: [
+          {
+            title: 'আইনি নোটিশের জবাব প্রেরণের শেষ তারিখ',
+            due_date: '2026-10-08',
+            days_left: 3,
+            case_title: 'আইনি নোটিশ বিষয়: এনআই অ্যাক্ট ১৩৮ চেক ডিজঅনার'
+          },
+          {
+            title: 'জমির মূল দলিল উত্তোলন ও সত্যায়িত কপি সংগ্রহ',
+            due_date: '2026-10-15',
+            days_left: 10,
+            case_title: 'মিরপুর প্লট চুক্তিপত্র বিরোধ'
+          }
+        ]
+      };
+    }
+
+    async function loadHome() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const variant = urlParams.get('variant') || 'standard';
+
+      if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http') || urlParams.has('mock') || variant === 'empty') {
+        homeData = getMockHomeData(variant);
+        renderHome(homeData);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/home');
+        if (!res.ok) {
+          throw new Error('হোম ডেটা লোড করতে ব্যর্থ হয়েছে');
+        }
+        homeData = await res.json();
+        renderHome(homeData);
+      } catch (err) {
+        console.warn('API fetch failed, falling back to mock data:', err);
+        homeData = getMockHomeData(variant);
+        renderHome(homeData);
+      }
+    }
+
+    function renderHome(data) {
+      // 1. Greeting
+      const greetingEl = document.getElementById('greetingText');
+      if (greetingEl) {
+        const name = (data.user && data.user.name) || '';
+        greetingEl.innerText = getTimeAwareGreeting(name);
+      }
+
+      // 2. Next Action Card
+      const na = data.next_action;
+      const card = document.getElementById('nextActionCard');
+      const emptyCard = document.getElementById('emptyNextAction');
+
+      if (na && na.title) {
+        card.style.display = 'flex';
+        emptyCard.style.display = 'none';
+
+        document.getElementById('nextActionTitle').innerText = na.title;
+        document.getElementById('nextActionDesc').innerText = na.explanation || '';
+        
+        const urgencyEl = document.getElementById('nextActionUrgency');
+        urgencyEl.innerText = na.urgency === 'urgent' ? 'জরুরি' : (na.urgency === 'action_required' ? 'পদক্ষেপ প্রয়োজন' : 'নিয়মিত');
+        urgencyEl.className = 'urgency-badge ' + (na.urgency === 'urgent' ? 'urgency-urgent' : 'urgency-normal');
+
+        const ctaBtn = document.getElementById('btnNextActionCTA');
+        if (na.action_url) {
+          ctaBtn.href = na.action_url;
+        }
+        if (na.action_cta) {
+          ctaBtn.innerText = na.action_cta + ' →';
+        }
+
+        // Setup Why Modal content
+        window._currentReasonRefs = na.reason_refs || [];
+        window._currentExplanation = na.explanation || '';
+      } else {
+        card.style.display = 'none';
+        emptyCard.style.display = 'block';
+      }
+
+      // 3. My Cases
+      const casesContainer = document.getElementById('myCasesList');
+      casesContainer.innerHTML = '';
+      const cases = data.my_cases || [];
+      if (cases.length === 0) {
+        casesContainer.innerHTML = '<div style="font-size:14px; color:var(--color-text-muted); padding:10px;">কোনো সক্রিয় মামলা পাওয়া যায়নি।</div>';
+      } else {
+        cases.slice(0, 3).forEach(c => {
+          const item = document.createElement('a');
+          item.href = `/cases/${c.id}`;
+          item.className = 'item-card';
+          item.innerHTML = `
+            <div class="item-card-left">
+              <div class="item-card-title">${c.title}</div>
+              <div class="item-card-meta">
+                <span>ধরন: ${c.case_type || 'সাধারণ'}</span>
+                <span>হালনাগাদ: ${c.updated_at || 'সম্প্রতি'}</span>
+              </div>
+            </div>
+            <div>
+              <span class="item-badge ${c.urgency === 'urgent' ? 'urgency-urgent' : 'urgency-normal'}">
+                ${c.status === 'action_required' ? 'পদক্ষেপ প্রয়োজন' : 'সক্রিয়'}
+              </span>
+            </div>
+          `;
+          casesContainer.appendChild(item);
+        });
+      }
+
+      // 4. Upcoming list
+      const upcomingContainer = document.getElementById('upcomingList');
+      upcomingContainer.innerHTML = '';
+      const upcoming = data.upcoming || [];
+      if (upcoming.length === 0) {
+        upcomingContainer.innerHTML = '<div style="font-size:14px; color:var(--color-text-muted); padding:10px;">আসন্ন কোনো সময়সীমা নেই।</div>';
+      } else {
+        upcoming.slice(0, 5).forEach(u => {
+          const item = document.createElement('div');
+          item.className = 'item-card';
+          item.innerHTML = `
+            <div class="item-card-left">
+              <div class="item-card-title">${u.title}</div>
+              <div class="item-card-meta">
+                <span>মামলা: ${u.case_title || 'সাধারণ'}</span>
+                <span>তারিখ: ${u.due_date}</span>
+              </div>
+            </div>
+            <div>
+              <span class="item-badge badge-days-left">
+                ${toBanglaDigits(u.days_left)} দিন বাকি
+              </span>
+            </div>
+          `;
+          upcomingContainer.appendChild(item);
+        });
+      }
+    }
+
+    function openWhyModal() {
+      const modal = document.getElementById('whyModal');
+      const body = document.getElementById('whyModalBody');
+      const refs = document.getElementById('whyReasonRefs');
+
+      if (window._currentExplanation) {
+        body.innerText = window._currentExplanation;
+      }
+      if (window._currentReasonRefs && window._currentReasonRefs.length > 0) {
+        refs.innerText = 'কারণ রেফারেন্স: [' + window._currentReasonRefs.join(', ') + ']';
+      } else {
+        refs.innerText = 'কারণ রেফারেন্স: [prioritized_by_deadline_engine]';
+      }
+      modal.classList.add('open');
+    }
+
+    function closeWhyModal() {
+      document.getElementById('whyModal').classList.remove('open');
+    }
+
+    function handleProblemSubmit(e) {
+      e.preventDefault();
+      const val = document.getElementById('problemInputField').value.trim();
+      if (!val) return;
+      window.location.href = `/intake?q=${encodeURIComponent(val)}`;
+    }
+
+    window.addEventListener('DOMContentLoaded', loadHome);
+  </script>
+</body>
+</html>

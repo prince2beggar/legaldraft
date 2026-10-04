@@ -5,12 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bangladesh Legal Intelligence & Operations SaaS</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/static/fonts.css">
   <style>
-    body { font-family: 'Inter', 'Hind Siliguri', sans-serif; }
+    html, body {
+      overflow-x: hidden;
+      max-width: 100%;
+    }
+    body { font-family: var(--font-bn, 'Noto Sans Bengali', 'Inter', sans-serif); font-size: 16px; }
     .tab-active { border-bottom: 2px solid #0284c7; color: #0284c7; font-weight: 600; }
     .clause-card:hover { border-color: #0284c7; }
   </style>
+  <script>
+    if (localStorage.getItem('ain_user_role') === 'citizen') {
+      document.write('<style>#adminPortalLink { display: none !important; }</style>');
+    }
+  </script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
@@ -23,10 +32,10 @@
         </div>
         <div>
           <div class="flex items-center space-x-2">
-            <span class="font-bold text-lg tracking-tight">আইন-AI (Ain-AI)</span>
+            <span class="font-bold text-base sm:text-lg tracking-tight">আইন-AI (Ain-AI)</span>
             <span class="text-xs bg-emerald-900 text-emerald-300 font-semibold px-2 py-0.5 rounded border border-emerald-700">Bangladesh Legal OS</span>
           </div>
-          <p class="text-xs text-slate-400">Verified Legal Knowledge • Structured Drafting • Risk Engine</p>
+          <p class="text-xs text-slate-400 hidden sm:block">Verified Legal Knowledge • Structured Drafting • Risk Engine</p>
         </div>
       </div>
 
@@ -41,7 +50,7 @@
           <span class="text-xs bg-sky-950 text-sky-300 border border-sky-800 px-2.5 py-1 rounded-full font-medium">
             Advocate Workspace
           </span>
-          <a href="/admin" class="ml-2 text-xs bg-emerald-700 hover:bg-emerald-600 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center space-x-1 transition shadow">
+          <a href="/admin" id="adminPortalLink" class="ml-2 text-xs bg-emerald-700 hover:bg-emerald-600 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center space-x-1 transition shadow">
             <i data-lucide="shield" class="w-3.5 h-3.5"></i>
             <span>অ্যাডমিন পোর্টাল</span>
           </a>
@@ -414,8 +423,8 @@
               🛡️ অ্যান্টি-হ্যালুসিনেশন সাইটেশন ভেরিফায়ার:
             </h4>
             <div class="flex items-center space-x-2 text-xs">
-              <input type="text" id="verifyActInput" value="Transfer of Property Act" class="border rounded px-2.5 py-1.5 flex-1" />
-              <input type="text" id="verifySecInput" value="106" class="border rounded px-2.5 py-1.5 w-20" />
+              <input type="text" id="verifyActInput" aria-label="আইনের নাম (Act Name)" value="Transfer of Property Act" class="border rounded px-2.5 py-1.5 flex-1" />
+              <input type="text" id="verifySecInput" aria-label="ধারা নম্বর (Section Number)" value="106" class="border rounded px-2.5 py-1.5 w-20" />
               <button onclick="checkCitationLive()" class="bg-slate-800 hover:bg-slate-900 text-white font-medium px-3 py-1.5 rounded">
                 যাচাই করুন
               </button>
@@ -734,8 +743,8 @@
 
       <div class="space-y-4 text-xs">
         <div>
-          <label class="block text-slate-700 font-bold mb-1">হস্তলিখিত লাইনের ক্রপ আপলোড করুন:</label>
-          <input type="file" id="devCropInput" accept="image/*" class="w-full border p-2 rounded-lg text-xs" />
+          <label for="devCropInput" class="block text-slate-700 font-bold mb-1">হস্তলিখিত লাইনের ক্রপ আপলোড করুন:</label>
+          <input type="file" id="devCropInput" aria-label="হস্তলিখিত লাইনের ক্রপ আপলোড করুন" accept="image/*" class="w-full border p-2 rounded-lg text-xs" />
         </div>
         <div>
           <label class="block text-slate-700 font-bold mb-1">প্রত্যাশিত সঠিক পাঠ (Ground Truth):</label>
@@ -776,29 +785,29 @@
 
         <div class="space-y-3 text-xs">
           <div>
-            <label class="font-semibold text-slate-700 block mb-1">দলিলের শিরোনাম:</label>
-            <input type="text" id="editDeedTitle" class="w-full border rounded-lg p-2" />
+            <label for="editDeedTitle" class="font-semibold text-slate-700 block mb-1">দলিলের শিরোনাম:</label>
+            <input type="text" id="editDeedTitle" aria-label="দলিলের শিরোনাম" class="w-full border rounded-lg p-2" />
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="font-semibold text-slate-700 block mb-1">দলিল নম্বর:</label>
-              <input type="text" id="editDeedNumber" class="w-full border rounded-lg p-2" />
+              <label for="editDeedNumber" class="font-semibold text-slate-700 block mb-1">দলিল নম্বর:</label>
+              <input type="text" id="editDeedNumber" aria-label="দলিল নম্বর" class="w-full border rounded-lg p-2" />
             </div>
             <div>
-              <label class="font-semibold text-slate-700 block mb-1">রেজিস্ট্রেশন সাল:</label>
-              <input type="number" id="editDeedYear" class="w-full border rounded-lg p-2" />
+              <label for="editDeedYear" class="font-semibold text-slate-700 block mb-1">রেজিস্ট্রেশন সাল:</label>
+              <input type="number" id="editDeedYear" aria-label="রেজিস্ট্রেশন সাল" class="w-full border rounded-lg p-2" />
             </div>
           </div>
 
           <div class="p-3 bg-slate-50 rounded-lg border space-y-2">
             <span class="font-bold text-slate-800 block text-[11px]">পক্ষগণের নাম সংশোধন:</span>
             <div>
-              <label class="text-[11px] text-slate-600 block">১ম পক্ষ (দাতা / বিক্রেতা):</label>
-              <input type="text" id="editPartyFirst" class="w-full border rounded p-1.5 text-xs bg-white" placeholder="দাতার নাম লিখুন..." />
+              <label for="editPartyFirst" class="text-[11px] text-slate-600 block">১ম পক্ষ (দাতা / বিক্রেতা):</label>
+              <input type="text" id="editPartyFirst" aria-label="১ম পক্ষ (দাতা / বিক্রেতা)" class="w-full border rounded p-1.5 text-xs bg-white" placeholder="দাতার নাম লিখুন..." />
             </div>
             <div>
-              <label class="text-[11px] text-slate-600 block">২য় পক্ষ (গ্রহীতা / ক্রেতা):</label>
-              <input type="text" id="editPartySecond" class="w-full border rounded p-1.5 text-xs bg-white" placeholder="গ্রহীতার নাম লিখুন..." />
+              <label for="editPartySecond" class="text-[11px] text-slate-600 block">২য় পক্ষ (গ্রহীতা / ক্রেতা):</label>
+              <input type="text" id="editPartySecond" aria-label="২য় পক্ষ (গ্রহীতা / ক্রেতা)" class="w-full border rounded p-1.5 text-xs bg-white" placeholder="গ্রহীতার নাম লিখুন..." />
             </div>
           </div>
 
@@ -806,20 +815,20 @@
             <span class="font-bold text-emerald-950 block text-[11px]">তফশিল ও খতিয়ান তথ্য:</span>
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <label class="text-[11px] text-slate-600 block">মৌজার নাম:</label>
-                <input type="text" id="editSchedMouza" class="w-full border rounded p-1.5 text-xs bg-white" />
+                <label for="editSchedMouza" class="text-[11px] text-slate-600 block">মৌজার নাম:</label>
+                <input type="text" id="editSchedMouza" aria-label="মৌজার নাম" class="w-full border rounded p-1.5 text-xs bg-white" />
               </div>
               <div>
-                <label class="text-[11px] text-slate-600 block">এস.এ / আর.এস খতিয়ান:</label>
-                <input type="text" id="editSchedKhatian" class="w-full border rounded p-1.5 text-xs bg-white" />
+                <label for="editSchedKhatian" class="text-[11px] text-slate-600 block">এস.এ / আর.এস খতিয়ান:</label>
+                <input type="text" id="editSchedKhatian" aria-label="এস.এ / আর.এস খতিয়ান" class="w-full border rounded p-1.5 text-xs bg-white" />
               </div>
               <div>
-                <label class="text-[11px] text-slate-600 block">হাল দাগ নম্বর:</label>
-                <input type="text" id="editSchedDag" class="w-full border rounded p-1.5 text-xs bg-white" />
+                <label for="editSchedDag" class="text-[11px] text-slate-600 block">হাল দাগ নম্বর:</label>
+                <input type="text" id="editSchedDag" aria-label="হাল দাগ নম্বর" class="w-full border rounded p-1.5 text-xs bg-white" />
               </div>
               <div>
-                <label class="text-[11px] text-slate-600 block">জমির পরিমাণ (শতক):</label>
-                <input type="number" step="0.1" id="editSchedArea" class="w-full border rounded p-1.5 text-xs bg-white" />
+                <label for="editSchedArea" class="text-[11px] text-slate-600 block">জমির পরিমাণ (শতক):</label>
+                <input type="number" step="0.1" id="editSchedArea" aria-label="জমির পরিমাণ (শতক)" class="w-full border rounded p-1.5 text-xs bg-white" />
               </div>
             </div>
           </div>
@@ -2133,6 +2142,11 @@ async function runDevCropTest() {
       }
     }
 
+    // Role-based visibility: citizens must never see admin portal links
+    if (localStorage.getItem('ain_user_role') === 'citizen') {
+      const adminLink = document.getElementById('adminPortalLink');
+      if (adminLink) adminLink.style.display = 'none';
+    }
 </script>
 </body>
 </html>

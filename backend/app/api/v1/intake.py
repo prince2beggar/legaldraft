@@ -12,11 +12,18 @@ from app.schemas.intake import (
 )
 from app.services.intake_agent import intake_agent
 from app.services.scenario_analysis_service import scenario_analysis_service
+from packages.trust_kernel.policy_consent import policy_consent
+from services.api.app.routers.auth import get_current_user
 
 router = APIRouter()
 
 @router.post("/chat", response_model=IntakeChatResponse)
-def process_intake_chat(request: IntakeChatRequest, matter_id: str = None, db: Session = Depends(get_db)):
+def process_intake_chat(
+    request: IntakeChatRequest,
+    matter_id: str = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     """
     Intake chat endpoint: accepts natural language user messages in Bangla/English,
     extracts structured facts, checks completeness, and suggests the next question.
@@ -26,20 +33,39 @@ def process_intake_chat(request: IntakeChatRequest, matter_id: str = None, db: S
     # If matter_id provided, persist the updated facts into the matter record
     if matter_id:
         matter = db.query(Matter).filter(Matter.id == matter_id).first()
-        if matter:
-            matter.facts_data = response.extracted_facts
-            db.commit()
+        if not matter:
+            raise HTTPException(status_code=404, detail="Matter not found")
+        actor = {"id": current_user["sub"], "role": current_user.get("role", "citizen")}
+        obj = {"id": matter.id, "owner_id": matter.user_id, "object_type": "case"}
+        if not policy_consent.can(actor=actor, action="edit", obj=obj):
+            raise HTTPException(status_code=403, detail="Forbidden. You do not own this matter.")
+        matter.facts_data = response.extracted_facts
+        db.commit()
 
     return response
 
 @router.post("/analyze-scenario", response_model=ScenarioAnalysisResponse)
-def analyze_full_scenario(request: ScenarioAnalysisRequest, matter_id: str = None, db: Session = Depends(get_db)):
+def analyze_full_scenario(
+    request: ScenarioAnalysisRequest,
+    matter_id: str = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     """
     Full Scenario & Voice Analysis Endpoint:
     Accepts full case narrative (spoken or written in Bangla/English), extracts facts,
     detects critical missing legal items required by Dr. Syeda Nasrin's senior advocate guidelines,
     and returns comprehensive gap analysis with legal impact notes.
     """
+    if matter_id:
+        matter = db.query(Matter).filter(Matter.id == matter_id).first()
+        if not matter:
+            raise HTTPException(status_code=404, detail="Matter not found")
+        actor = {"id": current_user["sub"], "role": current_user.get("role", "citizen")}
+        obj = {"id": matter.id, "owner_id": matter.user_id, "object_type": "case"}
+        if not policy_consent.can(actor=actor, action="edit", obj=obj):
+            raise HTTPException(status_code=403, detail="Forbidden. You do not own this matter.")
+
     result = scenario_analysis_service.analyze_scenario(
         scenario_text=request.scenario_text,
         requested_matter_type=request.matter_type

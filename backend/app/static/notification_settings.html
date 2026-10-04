@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI — বিজ্ঞপ্তি সেটিংস ও পছন্দসমূহ</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #047857;
+      --color-primary-dark: #065F46;
+      --color-primary-soft: #ECFDF5;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-amber-bg: #FEF3C7;
+      --color-amber-border: #F59E0B;
+      --color-amber-text: #92400E;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* Sidebar */
+    .app-sidebar {
+      width: 250px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      background-color: var(--color-primary-soft);
+      color: var(--color-primary);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding-bottom: 80px;
+    }
+
+    /* Top bar */
+    .top-bar {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .back-link:hover {
+      color: var(--color-primary);
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .card-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-text-main);
+    }
+    .card-subtitle {
+      font-size: 14px;
+      color: var(--color-text-muted);
+    }
+
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .setting-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .setting-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .setting-name {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--color-text-main);
+    }
+    .setting-desc {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+
+    /* Switch toggle */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #CBD5E1;
+      transition: .2s;
+      border-radius: 26px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--color-primary);
+    }
+    input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+
+    .select-control {
+      padding: 8px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .btn-save {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      align-self: flex-start;
+      margin-top: 10px;
+    }
+    .btn-save:hover {
+      background: var(--color-primary-dark);
+    }
+
+    .toast {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #065F46;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+    }
+
+    @media (max-width: 768px) {
+      .app-sidebar { display: none; }
+      .container { padding: 16px 12px; }
+      .card { padding: 18px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Desktop Sidebar -->
+  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+    <a href="/home" class="logo">
+      <span aria-hidden="true">⚖️</span>
+      <span>আইন-AI</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/home" class="nav-link">🏠 হোম</a></li>
+      <li><a href="/cases" class="nav-link">📁 মামলা ফোল্ডার</a></li>
+      <li><a href="/documents/upload" class="nav-link">📄 নোটিশ স্ক্যান</a></li>
+      <li><a href="/notifications" class="nav-link">🔔 বিজ্ঞপ্তি</a></li>
+      <li><a href="/library" class="nav-link">📚 আইন পাঠাগার</a></li>
+      <li><a href="/notification-settings" class="nav-link active">⚙️ সেটিংস</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Area -->
+  <main class="app-main">
+    <header class="top-bar">
+      <a href="/notifications" class="back-link">
+        <span>←</span> বিজ্ঞপ্তিতে ফেরত যান
+      </a>
+      <div style="font-weight: 700; color: var(--color-primary);">বিজ্ঞপ্তি সেটিংস</div>
+    </header>
+
+    <div class="container">
+
+      <section class="card" id="settingsCard">
+        <div>
+          <h1 class="card-title">বিজ্ঞপ্তি ও সতর্কতা পছন্দসমূহ</h1>
+          <p class="card-subtitle">আইন-AI আপনাকে কীভাবে গুরুত্বপূর্ণ সময়সীমা স্মরণ করিয়ে দেবে তা নির্ধারণ করুন।</p>
+        </div>
+
+        <!-- 1. In-App Notifications -->
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-name">ইন-অ্যাপ বিজ্ঞপ্তি (In-App Alerts)</div>
+            <div class="setting-desc">ওয়েব ও মোবাইল ড্যাশবোর্ডে সময়সীমার বিজ্ঞপ্তি প্রদর্শন করুন।</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleInApp" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- 2. SMS Notifications (AC-M07-1, AC-M07-2) -->
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-name">এসএমএস এস্কেলেশন (SMS Alerts)</div>
+            <div class="setting-desc">
+              সময়সীমার ৩ দিন ও ১ দিন আগে মোবাইল নম্বরে সংক্ষিপ্ত এসএমএস পাঠান।<br>
+              <strong style="color:var(--color-primary-dark);">🔒 গোপনীয়তা সুরক্ষা:</strong> এসএমএস বার্তায় কোনো সংবেদনশীল তথ্য বা মামলার বিস্তারিত বিবরণ থাকবে না (যেমন: "You have a deadline soon. Open AIN-AI.")।
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleSms" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- 3. Quiet Hours (AC-M07-3) -->
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-name">নিস্তব্ধ সময় (Quiet Hours: রাত ১০টা - সকাল ৭টা)</div>
+            <div class="setting-desc">
+              রাত ২২:০০ থেকে সকাল ০৭:০০ (এশিয়া/ঢাকা সময়) পর্যন্ত কোনো বিজ্ঞপ্তি পাঠানো হবে না। এই সময়ের বিজ্ঞপ্তিগুলো সকাল ০৮:০০ টার মর্নিং ডাইজেস্টে পাঠানো হবে।
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleQuietHours" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- 4. Notification Language -->
+        <div class="setting-item">
+          <div class="setting-info">
+            <div class="setting-name">বিজ্ঞপ্তির ভাষা (Notification Language)</div>
+            <div class="setting-desc">বিজ্ঞপ্তি বার্তা প্রেরণের মূল ভাষা নির্বাচন করুন।</div>
+          </div>
+          <select id="prefLanguage" class="select-control">
+            <option value="bn" selected>বাংলা (Bangla)</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn-save" id="btnSavePreferences" onclick="savePreferences()">
+          পছন্দসমূহ সংরক্ষণ করুন
+        </button>
+      </section>
+
+    </div>
+  </main>
+
+  <div class="toast" id="toastMessage">বিজ্ঞপ্তি পছন্দসমূহ সফলভাবে সংরক্ষিত হয়েছে!</div>
+
+  <script>
+    async function loadPreferences() {
+      if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http')) {
+        return;
+      }
+      try {
+        const res = await fetch('/api/v1/me/notification-preferences');
+        if (!res.ok) return;
+        const data = await res.json();
+        const p = data.preferences || {};
+        if (p.enable_in_app !== undefined) document.getElementById('toggleInApp').checked = p.enable_in_app;
+        if (p.enable_sms !== undefined) document.getElementById('toggleSms').checked = p.enable_sms;
+        if (p.quiet_hours_enabled !== undefined) document.getElementById('toggleQuietHours').checked = p.quiet_hours_enabled;
+        if (p.language) document.getElementById('prefLanguage').value = p.language;
+      } catch (err) {
+        console.warn('Failed to load preferences:', err);
+      }
+    }
+
+    async function savePreferences() {
+      const payload = {
+        enable_in_app: document.getElementById('toggleInApp').checked,
+        enable_sms: document.getElementById('toggleSms').checked,
+        quiet_hours_enabled: document.getElementById('toggleQuietHours').checked,
+        language: document.getElementById('prefLanguage').value,
+      };
+
+      if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http')) {
+        showToast('পছন্দসমূহ সংরক্ষিত হয়েছে (মক মোড)!');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/v1/me/notification-preferences', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showToast('বিজ্ঞপ্তি পছন্দসমূহ সফলভাবে সংরক্ষিত হয়েছে!');
+        } else {
+          throw new Error('সংরক্ষণ ব্যর্থ হয়েছে');
+        }
+      } catch (err) {
+        alert('ত্রুটি: ' + err.message);
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toastMessage');
+      t.innerText = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    window.addEventListener('DOMContentLoaded', loadPreferences);
+  </script>
+</body>
+</html>

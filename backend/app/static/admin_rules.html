@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>রুলস ইঞ্জিন ও তামাদি ক্যালকুলেটর (Rules Engine) — AIN-AI</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #0B5D4B;
+      --color-primary-soft: #E3F1EC;
+      --color-primary-hover: #084336;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-badge-test: #FEF3C7;
+      --color-badge-test-text: #92400E;
+      --color-badge-success: #DCFCE7;
+      --color-badge-success-text: #166534;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      max-width: 100%;
+    }
+    body {
+      display: flex;
+    }
+
+    /* Layout structure */
+    .app-sidebar {
+      width: 260px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      flex-shrink: 0;
+    }
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding-bottom: 72px;
+    }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: clamp(16px, 3vw, 32px);
+    }
+
+    /* Logo & Nav */
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-badge {
+      width: 38px; height: 38px;
+      background: var(--color-primary); color: white;
+      border-radius: 10px; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700;
+    }
+    .brand-title { font-size: 1.15rem; font-weight: 700; color: var(--color-primary); }
+    .brand-sub { font-size: 0.75rem; color: var(--color-text-muted); }
+
+    .nav-links { display: flex; flex-direction: column; gap: 6px; list-style: none; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 8px;
+      color: var(--color-text-muted); text-decoration: none;
+      font-size: 0.95rem; font-weight: 500;
+      transition: all 0.15s;
+    }
+    .nav-link.active, .nav-link:hover {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    /* Header */
+    .top-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 16px clamp(16px, 3vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* Banner */
+    .test-banner {
+      background: #FEF3C7;
+      border: 1px solid #FCD34D;
+      color: #92400E;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    /* Cards */
+    .card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .card-title-lg {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+    .badge-success { background: var(--color-badge-success); color: var(--color-badge-success-text); }
+    .badge-test { background: var(--color-badge-test); color: var(--color-badge-test-text); }
+
+    /* Form & Grid */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 0 20px;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+
+    .result-box {
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .result-date-highlight {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin: 8px 0;
+    }
+
+    /* Rules Table */
+    .rules-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .rules-table th {
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--color-border);
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      font-weight: 600;
+    }
+    .rules-table td {
+      padding: 14px;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.9rem;
+    }
+
+    /* Mobile Bottom Nav */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      z-index: 1000;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .bottom-tab {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--color-text-muted); text-decoration: none;
+      font-size: 0.7rem; gap: 3px;
+      flex: 1; height: 100%;
+      min-width: 44px; min-height: 44px;
+    }
+    .bottom-tab.active { color: var(--color-primary); font-weight: 600; }
+    .bottom-tab svg { width: 20px; height: 20px; }
+
+    /* RESPONSIVE BREAKPOINTS (ADR-018) */
+    @media (max-width: 1023px) {
+      .app-sidebar {
+        width: 72px; padding: 20px 10px; align-items: center;
+      }
+      .brand-title, .brand-sub, .nav-text { display: none; }
+      .nav-link { justify-content: center; padding: 12px; }
+    }
+
+    @media (max-width: 639px) {
+      .app-sidebar { display: none; }
+      .mobile-bottom-nav { display: flex; }
+      .app-main { padding-bottom: 72px; }
+
+      .rules-table, .rules-table tbody, .rules-table tr, .rules-table td {
+        display: block; width: 100%;
+      }
+      .rules-table thead { display: none; }
+      .rules-table tr {
+        background: #FFFFFF;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        padding: 12px;
+      }
+      .rules-table td {
+        padding: 6px 0;
+        border-bottom: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .rules-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="app-sidebar" aria-label="Admin Navigation">
+    <div class="logo-area">
+      <div class="logo-badge">আইন</div>
+      <div>
+        <div class="brand-title">আইন-AI</div>
+        <div class="brand-sub">প্রশাসন কনসোল (Admin)</div>
+      </div>
+    </div>
+
+    <ul class="nav-links">
+      <li>
+        <a href="/" class="nav-link">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <span class="nav-text">ড্যাশবোর্ড</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/sources" class="nav-link">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          <span class="nav-text">নলেজ সেন্টার</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/rules" class="nav-link active">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          <span class="nav-text">রুলস ইঞ্জিন</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/evals" class="nav-link">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="nav-text">মূল্যায়ন (Evals)</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="app-main">
+    <header class="top-header">
+      <div>
+        <h1 style="font-size: clamp(1.2rem, 2.5vw, 1.5rem); font-weight: 700;">আইনি রুলস ইঞ্জিন ও তামাদি গণনাকারী</h1>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted);">সংবিধিবদ্ধ সময়সীমা ও নোটিশ পিরিয়ড নির্ধারণ (SRS Section 4.3 ও HR-D6)</p>
+      </div>
+      <div>
+        <span class="badge badge-success">HR-D6 সুরক্ষিত: AI কখনো সময়সীমা উদ্ভাবন করবে না</span>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="test-banner" role="alert">
+        <strong>সতর্কতা (FAKE_TEST_DATA):</strong> আইন-AI প্ল্যাটফর্মে ক্যালেন্ডার ও বিধিমালা পরীক্ষামূলক নমুনা হিসেবে সংরক্ষিত। সরকারি গ্যাজেটের চূড়ান্ত ছুটির তালিকা মেশিন রিডেবল আকারে এখনও প্রকাশিত না থাকায় ক্যালেন্ডারটি খালি রাখা হয়েছে।
+      </div>
+
+      <!-- Live Rule Playground Card -->
+      <section class="card" aria-label="Interactive Rule Playground">
+        <div class="card-title-lg">
+          <span>ইন্টারেক্টিভ রুল টেস্ট ও ক্যালকুলেটর: relative_period.calendar_days.v1</span>
+          <span class="badge badge-success">Ver 1.0.0 সক্রিয়</span>
+        </div>
+
+        <form onsubmit="handleCalculate(event)">
+          <div class="calc-grid">
+            <div class="form-group">
+              <label for="startDate">শুরুর তারিখ (Start Date):</label>
+              <input type="date" id="startDate" class="form-input" value="2026-10-02" required>
+            </div>
+            <div class="form-group">
+              <label for="offsetDays">ক্যালেন্ডার দিন (Days):</label>
+              <input type="number" id="offsetDays" class="form-input" value="30" required>
+            </div>
+            <div class="form-group" style="display:flex; flex-direction:column; justify-content:center;">
+              <label style="margin-bottom:8px;">ঘটনার দিন গণনা:</label>
+              <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.9rem; font-weight:normal; color:var(--color-text-main);">
+                <input type="checkbox" id="includeTriggerDay" style="width:18px; height:18px;">
+                <span>শুরুর দিন অন্তর্ভুক্ত করুন (Trigger Day = Day 1)</span>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" id="btnCalculate">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            <span>সময়সীমা হিসাব করুন</span>
+          </button>
+        </form>
+
+        <!-- Result Box -->
+        <div class="result-box" id="resultBox">
+          <div style="font-size:0.85rem; color:var(--color-text-muted); font-weight:600;">গণনাকৃত চূড়ান্ত সময়সীমা:</div>
+          <div class="result-date-highlight" id="resultDate">২০২৬-১১-০১</div>
+          <p id="resultExplanation" style="font-size:0.9rem; line-height:1.5;">শুরুর তারিখ 2026-10-02 থেকে ঘটনার দিন ব্যতিরেকে 30 ক্যালেন্ডার দিন গণনা করে নির্ধারিত সময়সীমা: 2026-11-01।</p>
+          <div style="margin-top:10px; font-size:0.78rem; color:#64748B;">
+            <strong>রিসনিং ইনপুট:</strong> <code id="resultInputs" style="background:#E2E8F0; padding:2px 6px; border-radius:4px;">{"start_date":"2026-10-02", "days":30, "include_trigger_day":false}</code>
+          </div>
+        </div>
+      </section>
+
+      <!-- Registered Rules List -->
+      <section class="card" aria-label="Registered Rules">
+        <div class="card-title-lg">
+          <span>নিবন্ধিত বিধিমালার তালিকা (Rules Registry)</span>
+        </div>
+
+        <table class="rules-table" id="rulesTable">
+          <thead>
+            <tr>
+              <th>রুল আইডি ও নাম</th>
+              <th>শ্রেণী</th>
+              <th>সংস্করণ</th>
+              <th>স্ট্যাটাস</th>
+              <th>টেস্ট ফলাফল</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-label="আইডি ও নাম">
+                <strong>relative_period.calendar_days.v1</strong><br>
+                <span style="font-size:0.8rem; color:var(--color-text-muted);">ক্যালেন্ডার দিন ভিত্তিক আপেক্ষিক সময়সীমা</span>
+              </td>
+              <td data-label="শ্রেণী">তামাদি (Limitation)</td>
+              <td data-label="সংস্করণ">1.0.0</td>
+              <td data-label="স্ট্যাটাস"><span class="badge badge-success">সক্রিয়</span></td>
+              <td data-label="টেস্ট"><span class="badge badge-success">৩/৩ পাস</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="mobile-bottom-nav">
+    <a href="/" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span>হোম</span>
+    </a>
+    <a href="/admin/sources" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      <span>উৎস</span>
+    </a>
+    <a href="/admin/rules" class="bottom-tab active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      <span>রুলস</span>
+    </a>
+    <a href="/admin/evals" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>মূল্যায়ন</span>
+    </a>
+  </nav>
+
+  <script>
+    async function handleCalculate(e) {
+      e.preventDefault();
+      const startDate = document.getElementById("startDate").value;
+      const days = parseInt(document.getElementById("offsetDays").value, 10);
+      const includeTriggerDay = document.getElementById("includeTriggerDay").checked;
+
+      const payload = {
+        rule_id: "relative_period.calendar_days.v1",
+        inputs: {
+          start_date: startDate,
+          days: days,
+          include_trigger_day: includeTriggerDay
+        }
+      };
+
+      try {
+        const res = await fetch("/api/v1/rules/compute", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const r = data.result;
+          document.getElementById("resultDate").innerText = r.result_date;
+          document.getElementById("resultExplanation").innerText = r.explanation;
+          document.getElementById("resultInputs").innerText = JSON.stringify(r.inputs || r.reasoning_inputs);
+        } else {
+          const err = await res.json();
+          alert("গণনা ত্রুটি: " + err.detail);
+        }
+      } catch (err) {
+        // Fallback local calc for offline static inspection
+        const parts = startDate.split("-").map(Number);
+        const d = new Date(parts[0], parts[1] - 1, parts[2]);
+        const offset = includeTriggerDay ? (days > 0 ? days - 1 : (days < 0 ? days + 1 : 0)) : days;
+        d.setDate(d.getDate() + offset);
+        const resDate = d.toISOString().split("T")[0];
+        document.getElementById("resultDate").innerText = resDate;
+        document.getElementById("resultExplanation").innerText = `গণনাকৃত সময়সীমা: ${resDate} (অফলাইন মোড)`;
+        document.getElementById("resultInputs").innerText = JSON.stringify(payload.inputs);
+      }
+    }
+  </script>
+</body>
+</html>

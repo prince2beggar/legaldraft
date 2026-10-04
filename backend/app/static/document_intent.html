@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>নথির উদ্দেশ্য নির্বাচন — আইন-AI</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #0B5D4B;
+      --color-primary-soft: #E3F1EC;
+      --color-primary-hover: #084336;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --radius: 14px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* Sidebar (Desktop) */
+    .app-sidebar {
+      width: 250px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding-bottom: 80px;
+    }
+    .container {
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+      padding: clamp(16px, 3vw, 32px);
+    }
+
+    /* Logo & Nav */
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-badge {
+      width: 40px; height: 40px;
+      background: var(--color-primary); color: white;
+      border-radius: 10px; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 700;
+    }
+    .brand-title { font-size: 1.2rem; font-weight: 700; color: var(--color-primary); }
+    .brand-sub { font-size: 0.78rem; color: var(--color-text-muted); }
+
+    .nav-links { display: flex; flex-direction: column; gap: 6px; list-style: none; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 8px;
+      color: var(--color-text-muted); text-decoration: none;
+      font-size: 1rem; font-weight: 500; min-height: 48px;
+    }
+    .nav-link.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary); font-weight: 600;
+    }
+
+    /* Header */
+    .top-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 20px clamp(16px, 3vw, 32px);
+    }
+    .top-header h1 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); font-weight: 700; }
+    .top-header p { font-size: 0.9rem; color: var(--color-text-muted); margin-top: 4px; }
+
+    /* Intent Options List */
+    .intent-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .intent-card {
+      background: #FFFFFF;
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-height: 48px;
+    }
+    .intent-card:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft);
+      transform: translateY(-2px);
+    }
+    .intent-card.selected {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft);
+      box-shadow: 0 4px 12px rgba(11, 93, 75, 0.12);
+    }
+    .intent-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      background: #E2E8F0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+    .intent-card.selected .intent-icon {
+      background: var(--color-primary);
+      color: white;
+    }
+    .intent-info h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
+    .intent-info p { font-size: 0.88rem; color: var(--color-text-muted); }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 48px;
+      margin-top: 24px;
+      transition: background 0.15s;
+    }
+    .btn-submit:hover { background: var(--color-primary-hover); }
+
+    /* Mobile Bottom Navigation */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 64px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      z-index: 1000;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .bottom-tab {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--color-text-muted); text-decoration: none;
+      font-size: 0.75rem; flex: 1; height: 100%; min-height: 48px;
+    }
+    .bottom-tab.active { color: var(--color-primary); }
+
+    @media (max-width: 768px) {
+      .app-sidebar { display: none; }
+      .mobile-bottom-nav { display: flex; }
+      .app-main { padding-bottom: 74px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+    <div class="logo-area">
+      <div class="logo-badge">⚖️</div>
+      <div>
+        <div class="brand-title">আইন-AI</div>
+        <div class="brand-sub">আইনি সেবা প্ল্যাটফর্ম</div>
+      </div>
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link">হোম</a></li>
+        <li><a href="/documents/upload" class="nav-link active">নথি আপলোড</a></li>
+        <li><a href="/library" class="nav-link">আইন পাঠাগার</a></li>
+        <li><a href="/profile" class="nav-link">প্রোফাইল</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="app-main">
+    <header class="top-header">
+      <div class="container" style="padding-top:0; padding-bottom:0;">
+        <h1>নথির উদ্দেশ্য নির্ধারণ</h1>
+        <p>এই নথিটি দিয়ে আপনি কি করতে চান? আপনার প্রয়োজন অনুসারে পরবর্তী ধাপসমূহ সাজানো হবে।</p>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="intent-grid" id="intentGrid">
+        <div class="intent-card selected" onclick="selectIntent('respond_notice', this)">
+          <div class="intent-icon">📬</div>
+          <div class="intent-info">
+            <h3>আইনি নোটিশের জবাব দিন</h3>
+            <p>প্রাপ্ত নোটিশের মূল অভিযোগ, দাবি ও সময়সীমা চিহ্নিত করে যথাযথ আইনি জবাব প্রস্তুত করুন।</p>
+          </div>
+        </div>
+
+        <div class="intent-card" onclick="selectIntent('verify_deed', this)">
+          <div class="intent-icon">📜</div>
+          <div class="intent-info">
+            <h3>দলিল ও মালিকানা স্বত্ব যাচাই</h3>
+            <p>দলিলের শর্তাবলী, সাফ-কবলা, খতিয়ান ও দাগ নম্বর যাচাই করে স্বত্বের ঝুঁকি পরীক্ষা করুন।</p>
+          </div>
+        </div>
+
+        <div class="intent-card" onclick="selectIntent('prepare_matter', this)">
+          <div class="intent-icon">⚖️</div>
+          <div class="intent-info">
+            <h3>মামলার প্রস্তুতি বা ড্রাফট তৈরি</h3>
+            <p>আদালতের আদেশ বা আরজির ওপর ভিত্তি করে মোকদ্দমার ড্রাফট ও মামলার সারসংক্ষেপ তৈরি করুন।</p>
+          </div>
+        </div>
+
+        <div class="intent-card" onclick="selectIntent('calculate_deadlines', this)">
+          <div class="intent-icon">⏱️</div>
+          <div class="intent-info">
+            <h3>তামাদি ও সময়সীমা গণনা</h3>
+            <p>নথিতে উল্লেখিত তারিখ ও আইনি তামাদি আইনের ধারা অনুসারে আপিল বা পদক্ষেপের সময়সীমা গণনা করুন।</p>
+          </div>
+        </div>
+
+        <div class="intent-card" onclick="selectIntent('archive', this)">
+          <div class="intent-icon">📁</div>
+          <div class="intent-info">
+            <h3>ব্যক্তিগত নথিশালায় সংরক্ষণ</h3>
+            <p>নথিটি অপটিক্যাল ক্যারেক্টার রিকগনিশন (OCR) সহ সুরক্ষিত ব্যক্তিগত ভল্টে সংরক্ষণ করে রাখুন।</p>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-submit" onclick="proceedToViewer()">
+        এগিয়ে যান (পরবর্তী ধাপ) →
+      </button>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="mobile-bottom-nav">
+    <a href="/" class="bottom-tab">হোম</a>
+    <a href="/documents/upload" class="bottom-tab active">আপলোড</a>
+    <a href="/library" class="bottom-tab">পাঠাগার</a>
+    <a href="/profile" class="bottom-tab">প্রোফাইল</a>
+  </nav>
+
+  <script>
+    let chosenIntent = 'respond_notice';
+
+    function selectIntent(intent, element) {
+      chosenIntent = intent;
+      document.querySelectorAll('.intent-card').forEach(c => c.classList.remove('selected'));
+      element.classList.add('selected');
+    }
+
+    function proceedToViewer() {
+      window.location.href = `/documents/viewer?intent=${chosenIntent}&doc=sample-doc-1`;
+    }
+  </script>
+</body>
+</html>

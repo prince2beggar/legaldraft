@@ -1,0 +1,28 @@
+[
+  {
+    "id": "src-placeholder-001",
+    "source_type": "act",
+    "title": "The Transfer of Property Act, 1882 (Placeholder)",
+    "title_bn": "সম্পত্তি হস্তান্তর আইন, ১৮৮২ (খসড়া প্লেসহোল্ডার)",
+    "authority": "Ministry of Law, Justice and Parliamentary Affairs",
+    "jurisdiction": "BD",
+    "language": "en",
+    "official": true,
+    "rights": "official",
+    "status": "DRAFT_NOT_REVIEWED",
+    "note": "PLACEHOLDER ONLY: Must be reviewed and approved by Legal Content Lead with authentic statutory text."
+  },
+  {
+    "id": "src-placeholder-002",
+    "source_type": "act",
+    "title": "The Premises Rent Control Act, 1991 (Placeholder)",
+    "title_bn": "বাড়ি ভাড়া নিয়ন্ত্রণ আইন, ১৯৯১ (খসড়া প্লেসহোল্ডার)",
+    "authority": "Government of Bangladesh",
+    "jurisdiction": "BD",
+    "language": "bn",
+    "official": true,
+    "rights": "official",
+    "status": "DRAFT_NOT_REVIEWED",
+    "note": "PLACEHOLDER ONLY: Must be replaced with verified gazette publication."
+  }
+]

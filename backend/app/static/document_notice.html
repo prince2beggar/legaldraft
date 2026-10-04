@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>আইনি নোটিশ বিশ্লেষণ — আইন-AI</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #0B5D4B;
+      --color-primary-soft: #E3F1EC;
+      --color-primary-hover: #084336;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-amber-bg: #FEF3C7;
+      --color-amber-border: #F59E0B;
+      --color-amber-text: #92400E;
+      --color-danger-bg: #FEE2E2;
+      --color-danger-border: #EF4444;
+      --color-danger-text: #991B1B;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* Sidebar (Desktop) */
+    .app-sidebar {
+      width: 250px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      background-color: var(--color-primary-soft);
+      color: var(--color-primary);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding-bottom: 80px;
+    }
+
+    .top-nav {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px clamp(16px, 3vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .top-nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--color-text-main);
+    }
+
+    .container {
+      max-width: 820px;
+      width: 100%;
+      margin: 0 auto;
+      padding: clamp(16px, 3vw, 28px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 1. Label Bar (Amber AI Disclaimer Banner) */
+    .label-bar {
+      background-color: var(--color-amber-bg);
+      border: 1px solid var(--color-amber-border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .label-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: var(--color-amber-text);
+      font-size: 15px;
+    }
+    .label-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+    }
+    .as-of-date {
+      color: #78350F;
+      font-weight: 500;
+    }
+    .certainty-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      background: #FDE68A;
+      color: #92400E;
+    }
+    .certainty-badge.clear { background: #D1FAE5; color: #065F46; }
+    .certainty-badge.check { background: #FEF3C7; color: #92400E; }
+    .certainty-badge.not_sure { background: #FEE2E2; color: #991B1B; }
+
+    /* Section Cards */
+    .section-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 2. One-line Summary */
+    .summary-box {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--color-text-main);
+      line-height: 1.6;
+    }
+    .chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .source-chip {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .source-chip:hover {
+      background: #cce9df;
+    }
+
+    /* 3. Who sent it, Why received, What it says */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    .info-item {
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .info-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-text-muted);
+      margin-bottom: 4px;
+    }
+    .info-value {
+      font-size: 15px;
+      color: var(--color-text-main);
+    }
+
+    /* 4. Action Checklist */
+    .checklist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      cursor: pointer;
+      user-select: none;
+    }
+    .check-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 3px;
+      accent-color: var(--color-primary);
+      cursor: pointer;
+    }
+    .check-text {
+      flex: 1;
+      font-size: 15px;
+    }
+    .check-item.done .check-text {
+      text-decoration: line-through;
+      color: var(--color-text-muted);
+    }
+
+    /* 5. DeadlineCard */
+    .deadline-card {
+      background: #FFFFFF;
+      border: 2px solid var(--color-primary);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .deadline-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .deadline-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+    .days-left-badge {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .deadline-date-display {
+      font-size: 26px;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 8px;
+    }
+    .deadline-note {
+      font-size: 14px;
+      color: var(--color-text-muted);
+      margin-bottom: 14px;
+    }
+    .how-counted-toggle {
+      background: none;
+      border: none;
+      color: var(--color-primary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0;
+      margin-bottom: 12px;
+    }
+    .how-counted-box {
+      background: #F1F5F9;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #334155;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .how-counted-box.open {
+      display: block;
+    }
+    .how-counted-steps {
+      list-style-type: decimal;
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .relative-trigger-box {
+      background: #F8FAFC;
+      border: 1px dashed var(--color-border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .form-group label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-main);
+    }
+    .form-control {
+      padding: 9px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 15px;
+    }
+
+    .deadline-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      transition: all 0.15s ease;
+    }
+    .btn-primary {
+      background: var(--color-primary);
+      color: #FFFFFF;
+    }
+    .btn-primary:hover {
+      background: var(--color-primary-hover);
+    }
+    .btn-secondary {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      color: var(--color-text-main);
+    }
+    .btn-secondary:hover {
+      background: #F1F5F9;
+    }
+    .btn-confirmed {
+      background: #10B981;
+      color: #FFFFFF;
+      cursor: default;
+    }
+
+    /* 7. If you ignore it */
+    .consequence-box {
+      border-left: 4px solid var(--color-amber-border);
+      padding: 12px 16px;
+      background: #FFFBEB;
+      border-radius: 4px 8px 8px 4px;
+      font-size: 15px;
+      color: #78350F;
+    }
+    .consequence-box.unverified {
+      border-left-color: #94A3B8;
+      background: #F1F5F9;
+      color: #475569;
+    }
+
+    /* Action Buttons Row */
+    .action-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    /* Simpler view toggle / side-by-side */
+    .simpler-card {
+      background: #ECFDF5;
+      border: 1px solid #A7F3D0;
+      border-radius: var(--radius);
+      padding: 20px;
+      display: none;
+      margin-top: 14px;
+    }
+    .simpler-card.active {
+      display: block;
+    }
+
+    /* Modal / Dialog for Save to Case */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-dialog {
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      max-width: 520px;
+      width: 100%;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    .modal-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0F172A;
+      color: #FFFFFF;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 15px;
+      z-index: 2000;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .app-sidebar { display: none; }
+      body { flex-direction: column; }
+      .container { padding: 12px; }
+      .label-bar { flex-direction: column; align-items: flex-start; }
+      .deadline-header { flex-direction: column; align-items: flex-start; }
+      .action-bar { flex-direction: column; }
+      .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Desktop Sidebar -->
+  <aside class="app-sidebar" aria-label="প্রধান মেনু">
+    <a href="/" class="logo">
+      <span>আইন-AI</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/" class="nav-link">হোম</a></li>
+      <li><a href="/documents/upload" class="nav-link active">নথি আপলোড ও বিশ্লেষণ</a></li>
+      <li><a href="/library" class="nav-link">আইন লাইব্রেরি</a></li>
+      <li><a href="/admin/knowledge-center" class="nav-link">নলেজ সেন্টার</a></li>
+      <li><a href="/admin/rules" class="nav-link">রুলস ইঞ্জিন</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="app-main">
+    <header class="top-nav">
+      <div class="top-nav-title">আইনি নোটিশ বিশ্লেষণ ও করণীয়</div>
+      <a href="/documents/upload" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">নতুন স্ক্যান</a>
+    </header>
+
+    <div class="container" id="noticeApp">
+
+      <!-- Fake Provider Banner (Item 5) -->
+      <div id="fakeProviderBanner" role="status" style="display:flex; align-items:center; gap:8px; background:#FEE2E2; border:1px solid #EF4444; color:#991B1B; padding:10px 16px; border-radius:var(--radius); font-weight:600; font-size:14px;">
+        <span aria-hidden="true">⚠️</span>
+        <span id="fakeBannerText">পরীক্ষামূলক মোড: এটি আসল AI বিশ্লেষণ নয়।</span>
+      </div>
+
+      <!-- 1. Label Bar (Amber Banner) -->
+      <section class="label-bar" id="labelBar" role="alert">
+        <div class="label-bar-left">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span id="disclaimerText">AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়</span>
+        </div>
+        <div class="label-bar-right">
+          <span class="as-of-date" id="asOfDateDisplay">হালনাগাদ: ০৩ অক্টোবর ২০২৬</span>
+          <span class="certainty-badge clear" id="certaintyBadge">স্পষ্ট</span>
+        </div>
+      </section>
+
+      <!-- Edge Case Warnings (if applicable) -->
+      <div id="edgeCaseAlert" style="display:none;" class="section-card" style="background:#FFFBEB; border-color:#F59E0B;">
+        <div id="edgeCaseMessage" style="font-weight:600; color:#92400E;"></div>
+      </div>
+
+      <!-- 2. One-line Summary -->
+      <section class="section-card" aria-labelledby="sec-summary">
+        <h2 id="sec-summary" class="section-title">এক নজরে মূল বার্তা</h2>
+        <div class="summary-box" id="summaryText">
+          লোডিং হচ্ছে...
+        </div>
+        <div class="chips-row" id="chipsRow">
+          <!-- Source chips injected dynamically -->
+        </div>
+      </section>
+
+      <!-- 3. Who sent it, Why received, What it says -->
+      <section class="section-card" aria-labelledby="sec-details">
+        <h2 id="sec-details" class="section-title">নোটিশের বিবরণ</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">কে পাঠিয়েছেন (প্রেরক)</div>
+            <div class="info-value" id="senderText">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">কেন আপনি পেয়েছেন (প্রেক্ষিত)</div>
+            <div class="info-value" id="whyReceivedText">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">নোটিশে মূল কী বলা হয়েছে</div>
+            <div class="info-value" id="whatItSaysText">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. What you must do (Checklist) -->
+      <section class="section-card" aria-labelledby="sec-actions">
+        <h2 id="sec-actions" class="section-title">
+          <span>আপনার করণীয় (চেকলিস্ট)</span>
+          <span style="font-size: 13px; font-weight: 500; color: var(--color-text-muted);">টিক দিলে টাস্ক তৈরি হবে</span>
+        </h2>
+        <ul class="checklist" id="actionsChecklist">
+          <!-- Checklist items injected dynamically -->
+        </ul>
+      </section>
+
+      <!-- 5. DeadlineCard -->
+      <section class="deadline-card" id="deadlineCardSection" aria-labelledby="sec-deadline">
+        <div class="deadline-header">
+          <div class="deadline-title" id="deadlineCardTitle">গুরুত্বপূর্ণ সময়সীমা</div>
+          <span class="days-left-badge" id="daysLeftBadge">হিসাব করা হচ্ছে</span>
+        </div>
+
+        <div class="deadline-date-display" id="deadlineDateDisplay">—</div>
+        <div class="deadline-note" id="deadlineNoteText">নোটিশে উল্লেখিত সময়সীমা</div>
+
+        <!-- Relative date trigger question (if relative deadline) -->
+        <div class="relative-trigger-box" id="relativeTriggerBox" style="display:none;">
+          <div class="form-group">
+            <label id="relativePromptQuestion">নোটিশটি আপনি কবে হাতে পেয়েছেন বা গ্রহণ করেছেন?</label>
+            <input type="date" id="triggerDateInput" class="form-control" value="2026-10-01">
+          </div>
+          <button type="button" class="btn btn-primary" id="btnCalculateRelative" style="padding: 6px 14px; font-size: 14px;">
+            সময়সীমা হিসাব করুন
+          </button>
+        </div>
+
+        <!-- How we counted this expandable breakdown -->
+        <button type="button" class="how-counted-toggle" id="btnToggleHowCounted" aria-expanded="false">
+          <span>কীভাবে এই দিন গণনা করা হয়েছে?</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <div class="how-counted-box" id="howCountedBox">
+          <ol class="how-counted-steps" id="howCountedStepsList">
+            <!-- Steps injected dynamically -->
+          </ol>
+        </div>
+
+        <div class="deadline-actions">
+          <button type="button" class="btn btn-primary" id="btnConfirmDeadline">
+            নিশ্চিত করুন
+          </button>
+          <button type="button" class="btn btn-secondary" id="btnSetOwnDate">
+            আমার নিজের তারিখ দিন
+          </button>
+        </div>
+      </section>
+
+      <!-- 6. Documents you need to gather -->
+      <section class="section-card" aria-labelledby="sec-docs">
+        <h2 id="sec-docs" class="section-title">প্রয়োজনীয় কাগজপত্র সংগ্রহ</h2>
+        <ul class="checklist" id="documentsNeededList">
+          <!-- Documents needed list injected dynamically -->
+        </ul>
+      </section>
+
+      <!-- 7. If you ignore it -->
+      <section class="section-card" aria-labelledby="sec-ignore">
+        <h2 id="sec-ignore" class="section-title">যদি কোনো পদক্ষেপ না নেন</h2>
+        <div class="consequence-box" id="ifIgnoredBox">
+          নথিতে এমন কিছু উল্লেখ নেই। একজন আইনজীবীর পরামর্শ নিন।
+        </div>
+      </section>
+
+      <!-- 8. Questions to ask your lawyer -->
+      <section class="section-card" aria-labelledby="sec-lawyer-questions">
+        <h2 id="sec-lawyer-questions" class="section-title">আইনজীবীকে কী কী প্রশ্ন করবেন</h2>
+        <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;" id="questionsList">
+          <!-- Lawyer questions injected dynamically -->
+        </ul>
+      </section>
+
+      <!-- Action Buttons Row -->
+      <section class="action-bar">
+        <button type="button" class="btn btn-primary" id="btnSaveToCase">
+          মামলায় সংরক্ষণ করুন
+        </button>
+        <button type="button" class="btn btn-secondary" id="btnAskLawyer">
+          আইনজীবীর পরামর্শ নিন
+        </button>
+        <button type="button" class="btn btn-secondary" id="btnExplainSimpler">
+          সহজ ভাষায় ব্যাখ্যা করুন
+        </button>
+        <button type="button" class="btn btn-secondary" id="btnReadAloud">
+          শুনুন
+        </button>
+      </section>
+
+      <!-- Simpler Bangla Rewrite Card (Toggleable) -->
+      <div class="simpler-card" id="simplerCard">
+        <h3 style="color:#065F46; font-size:17px; margin-bottom:8px;">সহজ ভাষায় ব্যাখ্যা (নাগরিক রূপ)</h3>
+        <div id="simplerSummaryText" style="font-weight:600; margin-bottom:10px;"></div>
+        <div id="simplerWhatItSaysText" style="margin-bottom:10px;"></div>
+        <div id="simplerActionsText" style="margin-bottom:10px;"></div>
+        <div id="simplerWarningText" style="font-size:13px; color:#065F46; font-style:italic;"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Save To Case Modal -->
+  <div class="modal-overlay" id="saveCaseModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-dialog">
+      <h3 class="modal-title" id="modalTitle">মামলায় সংরক্ষণ করুন</h3>
+      <p style="font-size: 14px; color: var(--color-text-muted);">
+        এই নোটিশটি একটি মামলায় যুক্ত করুন এবং চিহ্নিত করণীয়গুলো টাস্ক ও সময়সীমা হিসেবে সংরক্ষণ করুন।
+      </p>
+      <div class="form-group">
+        <label for="caseTitleInput">মামলার শিরোনাম</label>
+        <input type="text" id="caseTitleInput" class="form-control" value="আইনি নোটিশ বিষয়: নতুন মামলা">
+      </div>
+      <div style="font-size: 14px; color: var(--color-text-main); font-weight: 600;">
+        সংরক্ষিত হবে: <span id="saveSummaryTasksCount">২টি টাস্ক</span> এবং <span id="saveSummaryDeadlineText">১টি নিশ্চিত সময়সীমা</span>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+        <button type="button" class="btn btn-secondary" id="btnCloseModal">বাতিল</button>
+        <button type="button" class="btn btn-primary" id="btnConfirmSaveCase">সংরক্ষণ সম্পন্ন করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toastMessage" role="status"></div>
+
+  <script>
+    // State management
+    const state = {
+      docId: null,
+      noticeData: null,
+      calculatedDeadline: null,
+      confirmedDeadline: null,
+      tasks: [],
+      simplerActive: false,
+    };
+
+    // Extract doc_id from URL: /documents/:id/notice or query ?doc_id=
+    function initDocId() {
+      const pathParts = window.location.pathname.split('/');
+      const noticeIdx = pathParts.indexOf('notice');
+      if (noticeIdx > 1 && pathParts[noticeIdx - 1]) {
+        state.docId = pathParts[noticeIdx - 1];
+      } else {
+        const urlParams = new URLSearchParams(window.location.search);
+        state.docId = urlParams.get('doc_id') || 'demo-doc-notice';
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastMessage');
+      toast.innerText = msg;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    function getMockNoticeData(variant = 'standard') {
+      const v = (variant || '').toLowerCase().replace(/-/g, '_');
+      
+      if (v === 'unreadable' || v === 'could_not_read' || v === 'could_not_read_clearly') {
+        return {
+          certainty: 'not_sure',
+          is_notice: true,
+          provider: 'fake',
+          label_bar: {
+            disclaimer_text: 'AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়',
+            as_of_date: '2026-10-03',
+            as_of_date_formatted_bn: '০৩ অক্টোবর ২০২৬',
+            certainty_label: 'নিশ্চিত নই',
+          },
+          summary_one_line: 'নথির স্ক্যান বা ছবি অস্পষ্ট হওয়ায় নিশ্চিতভাবে তথ্য পাঠোদ্ধার করা সম্ভব হয়নি।',
+          summary_chips: [],
+          sender: { text: 'অস্পষ্ট বা অপাঠ্য' },
+          why_received: { text: 'অস্পষ্ট স্ক্যানের কারণে সুনির্দিষ্ট কারণ শনাক্ত করা যায়নি।' },
+          what_it_says: [{ text: 'নথিটির পাতাগুলো স্পষ্ট করে পুনরায় স্ক্যান বা ছবি তুলে আপলোড করুন।' }],
+          action_required: [{ text: 'উন্নত আলোতে স্পষ্ট ছবি তুলে পুনরায় আপলোড করুন।' }],
+          primary_deadline_card: { has_deadline: false, note: 'স্ক্যান অস্পষ্ট হওয়ায় কোনো সময়সীমা শনাক্ত করা যায়নি।' },
+          documents_needed: [{ text: 'মূল নোটিশের স্পষ্ট কপি।' }],
+          if_ignored: { text: 'নথিতে এমন কিছু উল্লেখ নেই। একজন আইনজীবীর পরামর্শ নিন।', stated_in_notice: false, not_stated: true },
+          questions_for_lawyer: ['এই অস্পষ্ট নোটিশের বিপরীতে কি কোনো আইনি ঝুঁকি আছে?']
+        };
+      }
+
+      if (v === 'blurry' || v === 'blurry_scan') {
+        return {
+          certainty: 'not_sure',
+          is_notice: true,
+          has_handwriting: true,
+          provider: 'fake',
+          label_bar: {
+            disclaimer_text: 'AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়',
+            as_of_date: '2026-10-03',
+            as_of_date_formatted_bn: '০৩ অক্টোবর ২০২৬',
+            certainty_label: 'নিশ্চিত নই',
+          },
+          summary_one_line: 'ঝাপসা স্ক্যান: নথির কিছু অংশ অস্পষ্ট এবং হাতে লেখা অংশ রয়েছে।',
+          summary_chips: [{ label: 'হাতে লেখা অংশ' }],
+          sender: { text: 'আংশিক অস্পষ্ট' },
+          why_received: { text: 'ঝাপসা স্ক্যান কপি হওয়ায় স্পষ্ট তথ্য পাওয়া যায়নি।' },
+          what_it_says: [{ text: 'নথিটি ভালো রেজোলিউশনে স্ক্যান করে পুনরায় জমা দিন।' }],
+          action_required: [{ text: 'স্পষ্ট স্ক্যান কপি সংগ্রহ করুন।' }],
+          primary_deadline_card: { has_deadline: false, note: 'ঝাপসা স্ক্যানের কারণে নির্দিষ্ট সময়সীমা গণনা করা যায়নি।' },
+          documents_needed: [{ text: 'পরিচ্ছন্ন মূল কপি।' }],
+          if_ignored: { text: 'নথিতে এমন কিছু উল্লেখ নেই। একজন আইনজীবীর পরামর্শ নিন।', stated_in_notice: false, not_stated: true },
+          questions_for_lawyer: ['ঝাপসা নোটিশের বিষয়ে কী পদক্ষেপ নেওয়া যেতে পারে?']
+        };
+      }
+
+      if (v === 'non_notice' || v === 'non_notice_document') {
+        return {
+          certainty: 'clear',
+          is_notice: false,
+          provider: 'fake',
+          label_bar: {
+            disclaimer_text: 'AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়',
+            as_of_date: '2026-10-03',
+            as_of_date_formatted_bn: '০৩ অক্টোবর ২০২৬',
+            certainty_label: 'স্পষ্ট',
+          },
+          summary_one_line: 'আপলোডকৃত নথিটি কোনো আইনি নোটিশ নয়। এটি একটি চালান/রসিদপত্র।',
+          summary_chips: [{ label: 'অ-নোটিশ নথি' }],
+          sender: { text: 'বাণিজ্যিক প্রতিষ্ঠান' },
+          why_received: { text: 'নথিটি ব্যবসায়িক রসিদ বা চালান হিসেবে দাখিল হয়েছে।' },
+          what_it_says: [{ text: 'এটি কোনো আইনি নোটিশ বা আদালতের নির্দেশ নয়।' }],
+          action_required: [{ text: 'সাধারণ নথি ব্যবস্থাপনা ট্যাবে সংরক্ষণ করুন।' }],
+          primary_deadline_card: { has_deadline: false, note: 'আইনি নোটিশ না হওয়ায় কোনো সময়সীমা প্রযোজ্য নয়।' },
+          documents_needed: [],
+          if_ignored: { text: 'নথিতে এমন কিছু উল্লেখ নেই। একজন আইনজীবীর পরামর্শ নিন।', stated_in_notice: false, not_stated: true },
+          questions_for_lawyer: ['সাধারণ চুক্তিপত্রের ক্ষেত্রে করণীয় কী?']
+        };
+      }
+
+      if (v === 'english' || v === 'english_notice') {
+        return {
+          certainty: 'needs_review',
+          is_notice: true,
+          provider: 'fake',
+          label_bar: {
+            disclaimer_text: 'AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়',
+            as_of_date: '2026-10-03',
+            as_of_date_formatted_bn: '০৩ অক্টোবর ২০২৬',
+            certainty_label: 'যাচাই করুন',
+          },
+          summary_one_line: 'ইংরেজি লিগ্যাল নোটিশ: ১৫ কার্যদিবসের মধ্যে চুক্তিভিত্তিক দেনা পরিশোধের অনুরোধ।',
+          summary_chips: [{ label: 'Legal Notice (English)' }, { label: 'Contract Breach' }],
+          sender: { text: 'Barrister S. Rahman, Advocate Supreme Court of Bangladesh' },
+          why_received: { text: 'চুক্তি ভঙ্গের অভিযোগে ক্ষতিপূরণ দাবি করে ইংরেজি নোটিশ পাঠানো হয়েছে।' },
+          what_it_says: [{ text: 'নোটিশের ১৫ কার্যদিবসের মধ্যে পাওনা পরিশোধ বা ব্যাখ্যা চাওয়া হয়েছে।' }],
+          action_required: [{ text: 'ইংরেজি নোটিশটির আইনি জবাব একজন আইনজীবীর মাধ্যমে প্রস্তুত করুন।' }],
+          primary_deadline_card: {
+            has_deadline: true,
+            type: 'stated',
+            due_date: '2026-10-20',
+            due_date_bn: '২০ অক্টোবর ২০২৬',
+            days_left: 17,
+            days_left_text: '১৭ দিন বাকি',
+            note: 'নোটিশে লেখা তারিখ, অনুগ্রহ করে নিশ্চিত করুন',
+            calculation_steps: ['ইংরেজি নোটিশে উল্লেখিত সময়সীমা: ১৫ কার্যদিবস', 'হিসাবের ভিত্তি তারিখ: ০৩ অক্টোবর ২০২৬'],
+            can_confirm: true,
+            is_confirmed: false
+          },
+          documents_needed: [{ text: 'মূল চুক্তিপত্র এবং ইমেইল যোগাযোগ।' }],
+          if_ignored: { text: 'চুক্তি বাতিলের মামলা দায়ের করা হতে পারে।', stated_in_notice: true, not_stated: false },
+          questions_for_lawyer: ['ইংরেজি ভাষায় প্রেরিত নোটিশের জবাবে কি বাংলা ব্যবহার করা যাবে?']
+        };
+      }
+
+      if (v === 'not_sure' || v === 'certainty_not_sure') {
+        return {
+          certainty: 'not_sure',
+          is_notice: true,
+          provider: 'fake',
+          label_bar: {
+            disclaimer_text: 'AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়',
+            as_of_date: '2026-10-03',
+            as_of_date_formatted_bn: '০৩ অক্টোবর ২০২৬',
+            certainty_label: 'নিশ্চিত নই',
+          },
+          summary_one_line: 'নোটিশের কিছু তথ্য অস্পষ্ট থাকায় পুরোপুরি নিশ্চিত হওয়া যায়নি।',
+          summary_chips: [{ label: 'যাচাই প্রয়োজন' }],
+          sender: { text: 'অস্পষ্ট প্রেরক' },
+          why_received: { text: 'সংশ্লিষ্ট পক্ষের সাথে জমিজমা সংক্রান্ত বিরোধের সম্ভাবনা।' },
+          what_it_says: [{ text: 'জরুরি ভিত্তিতে আইনজীবীর মাধ্যমে সত্যতা যাচাই করুন।' }],
+          action_required: [{ text: 'মূল নোটিশ আইনজীবীকে সরাসরি দেখান।' }],
+          primary_deadline_card: { has_deadline: false, note: 'সময়সীমা অস্পষ্ট হওয়ায় নিশ্চিত তারিখ দেওয়া গেল না।' },
+          documents_needed: [{ text: 'জমির মূল দলিল।' }],
+          if_ignored: { text: 'নথিতে এমন কিছু উল্লেখ নেই। একজন আইনজীবীর পরামর্শ নিন।', stated_in_notice: false, not_stated: true },
+          questions_for_lawyer: ['এই নোটিশের আইনি কার্যকারিতা কতটুকু?']
+        };
+      }
+
+      if (v === 'explain_simpler') {
+        return {
+          certainty: 'clear',
+          is_notice: true,
+          provider: 'fake',
+          label_bar: {
+            disclaimer_text: 'AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়',
+            as_of_date: '2026-10-03',
+            as_of_date_formatted_bn: '০৩ অক্টোবর ২০২৬',
+            certainty_label: 'স্পষ্ট',
+          },
+          summary_one_line: 'সহজ কথায়: চেক বাউন্স হওয়ার কারণে নোটিশ এসেছে। ৩০ দিনের মধ্যে টাকা না দিলে মামলা হতে পারে।',
+          summary_chips: [{ label: 'সহজ ব্যাখ্যা' }, { label: 'চেক সংক্রান্ত' }],
+          sender: { text: 'মো: রফিকুল ইসলামের পক্ষে অ্যাডভোকেট' },
+          why_received: { text: 'ব্যাংক চেক ডিজঅনার হওয়ায় টাকা আদায়ের উদ্দেশ্যে।' },
+          what_it_says: [{ text: '৩০ দিনের ভেতর টাকা পরিশোধ করতে হবে।' }],
+          action_required: [{ text: 'টাকা পরিশোধ করুন বা উকিল ধরে জবাব পাঠান।' }],
+          primary_deadline_card: {
+            has_deadline: true,
+            type: 'stated',
+            due_date: '2026-11-02',
+            due_date_bn: '০২ নভেম্বর ২০২৬',
+            days_left: 30,
+            days_left_text: '৩০ দিন বাকি',
+            note: 'নোটিশে লেখা তারিখ, অনুগ্রহ করে নিশ্চিত করুন',
+            calculation_steps: ['নোটিশে উল্লেখিত ৩০ দিন', 'হিসাবের ভিত্তি তারিখ: ০৩ অক্টোবর ২০২৬'],
+            can_confirm: true,
+            is_confirmed: false
+          },
+          documents_needed: [{ text: 'চেক ও রসিদ।' }],
+          if_ignored: { text: 'মামলা হতে পারে।', stated_in_notice: true, not_stated: false },
+          questions_for_lawyer: ['আমি কি কিস্তি চাইতে পারি?']
+        };
+      }
+
+      const isRelative = (v === 'relative');
+      return {
+        certainty: 'clear',
+        is_notice: true,
+        provider: 'fake',
+        label_bar: {
+          disclaimer_text: 'AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়',
+          as_of_date: '2026-10-03',
+          as_of_date_formatted_bn: '০৩ অক্টোবর ২০২৬',
+          certainty_label: 'স্পষ্ট',
+        },
+        summary_one_line: '[নমুনা] আইনি দাবি নোটিশ: নির্দিষ্ট সময়ের মধ্যে দাবিকৃত ৫,০০,০০০ টাকা পরিশোধ বা জবাব দাখিলের নির্দেশ।',
+        summary_chips: [
+          { label: 'এনআই অ্যাক্ট ১৩৮ ধারা' },
+          { label: 'ব্যাংক চেক ডিজঅনার' }
+        ],
+        sender: { text: 'অ্যাডভোকেট এম. এ. লতিফ, পক্ষে জনাব মো: রফিকুল ইসলাম, ঢাকা।' },
+        why_received: { text: 'ডাচ-বাংলা ব্যাংকের চেক নং ১২৩৪৫৬৭ অপর্যাপ্ত তহবিলের কারণে ডিজঅনার হওয়ায় এই নোটিশ পাঠানো হয়েছে।' },
+        what_it_says: [
+          { text: 'নোটিশ প্রাপ্তির ৩০ দিনের মধ্যে চেকের সম্পূর্ণ অর্থ ৫,০০,০০০ টাকা পরিশোধের নির্দেশ দেওয়া হয়েছে।' },
+          { text: 'অন্যথায় উপযুক্ত ফৌজদারি আদালতে মামলা দায়ের করা হবে।' }
+        ],
+        action_required: [
+          { text: 'নোটিশের দাবির সত্যতা যাচাই করে একজন আইনজীবীর মাধ্যমে জবাব প্রস্তুত করুন।' },
+          { text: 'ব্যাংক লেনদেনের স্টেটমেন্ট এবং রসিদ সংগ্রহ করুন।' },
+          { text: 'দাবিকৃত অর্থ পরিশোধের বিষয়ে সিদ্ধান্ত নিন।' }
+        ],
+        primary_deadline_card: isRelative ? {
+          has_deadline: true,
+          type: 'relative',
+          requires_trigger_input: true,
+          prompt_question: 'নোটিশটি আপনি কবে হাতে পেয়েছেন বা গ্রহণ করেছেন?',
+          period_days: 15,
+          period_days_bn: '১৫',
+          note: 'নোটিশ প্রাপ্তির ১৫ দিনের মধ্যে পদক্ষেপ গ্রহণ করতে হবে।',
+          rule_id: 'relative_period.calendar_days.v1',
+          can_confirm: false,
+          is_confirmed: false
+        } : {
+          has_deadline: true,
+          type: 'stated',
+          due_date: '2026-11-02',
+          due_date_bn: '০২ নভেম্বর ২০২৬',
+          days_left: 30,
+          days_left_text: '৩০ দিন বাকি',
+          note: 'নোটিশে লেখা তারিখ, অনুগ্রহ করে নিশ্চিত করুন',
+          calculation_steps: [
+            'নোটিশে উল্লেখিত সময়সীমা: ৩০ দিন',
+            'হিসাবের ভিত্তি তারিখ: ০৩ অক্টোবর ২০২৬',
+            'রুলস ইঞ্জিন relative_period.calendar_days.v1 প্রয়োগ করা হয়েছে',
+            'সর্বশেষ সময়সীমা: ০২ নভেম্বর ২০২৬ (৩০ দিন বাকি)'
+          ],
+          can_confirm: true,
+          is_confirmed: false
+        },
+        documents_needed: [
+          { text: 'ডাচ-বাংলা ব্যাংকের সংশ্লিষ্ট চেক ও ডিজঅনার মেমো।' },
+          { text: 'প্রেরকের সাথে বিগত চুক্তি বা রসিদপত্র।' }
+        ],
+        if_ignored: {
+          text: 'নির্ধারিত সময়ের মধ্যে অর্থ পরিশোধ না করলে নেগোশিয়েবল ইনস্ট্রুমেন্টস অ্যাক্ট ১৮৮১ এর ১৩৮ ধারায় ফৌজদারি আদালতে মামলা দায়ের করা হবে।',
+          stated_in_notice: true,
+          not_stated: false
+        },
+        questions_for_lawyer: [
+          'ডিজঅনার মেমোর আইনি মেয়াদ কি ঠিক আছে?',
+          'নোটিশের আনুষ্ঠানিক জবাব কত দিনের মধ্যে দাখিল করা বাধ্যতামূলক?'
+        ]
+      };
+    }
+
+    async function loadNotice() {
+      initDocId();
+      const urlParams = new URLSearchParams(window.location.search);
+      const variant = urlParams.get('variant') || 'standard';
+
+      if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http') || urlParams.has('mock') || variant !== 'standard') {
+        state.noticeData = getMockNoticeData(variant);
+        renderNotice(state.noticeData);
+        if (variant === 'deadline_expanded') {
+          document.getElementById('howCountedBox').classList.add('open');
+          document.getElementById('btnToggleHowCounted').setAttribute('aria-expanded', 'true');
+        } else if (variant === 'save_case') {
+          document.getElementById('saveCaseModal').classList.add('open');
+        }
+        return;
+      }
+      try {
+        const res = await fetch(`/api/v1/documents/${state.docId}/notice`);
+        if (!res.ok) {
+          throw new Error('নথি বিশ্লেষণ লোড করতে ব্যর্থ হয়েছে');
+        }
+        const data = await res.json();
+        state.noticeData = data.notice;
+        renderNotice(state.noticeData);
+      } catch (err) {
+        console.warn('API error, falling back to mock data:', err);
+        state.noticeData = getMockNoticeData(variant);
+        renderNotice(state.noticeData);
+      }
+    }
+
+    function renderNotice(notice) {
+      // 0. Fake Provider Banner
+      const fakeBanner = document.getElementById('fakeProviderBanner');
+      if (fakeBanner) {
+        fakeBanner.style.display = (notice.provider === 'fake' || !notice.provider) ? 'flex' : 'none';
+      }
+
+      // 1. Label Bar
+      const labelBar = notice.label_bar || {};
+      document.getElementById('disclaimerText').innerText = labelBar.disclaimer_text || 'AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়';
+      document.getElementById('asOfDateDisplay').innerText = 'হালনাগাদ: ' + (labelBar.as_of_date_formatted_bn || labelBar.as_of_date || '');
+      
+      const badge = document.getElementById('certaintyBadge');
+      const certainty = notice.certainty || 'clear';
+      badge.className = 'certainty-badge ' + certainty;
+      badge.innerText = labelBar.certainty_label || (certainty === 'clear' ? 'স্পষ্ট' : (certainty === 'not_sure' ? 'নিশ্চিত নই' : 'যাচাই করুন'));
+
+      // Edge case banners
+      const alertBox = document.getElementById('edgeCaseAlert');
+      const alertMsg = document.getElementById('edgeCaseMessage');
+      if (notice.multiple_notices_detected) {
+        alertBox.style.display = 'block';
+        alertMsg.innerText = 'সতর্কতা: স্ক্যানে একাধিক নোটিশ শনাক্ত হয়েছে। অনুগ্রহ করে আলাদা করে স্ক্যান বা আপলোড করুন।';
+      } else if (notice.has_handwriting) {
+        alertBox.style.display = 'block';
+        alertMsg.innerText = 'সতর্কতা: নথিতে হাতের লেখা অংশ রয়েছে — হাতের লেখা এখনও সমর্থিত নয়।';
+      } else if (notice.is_notice === false) {
+        alertBox.style.display = 'block';
+        alertMsg.innerText = 'তথ্য: এটি কোনো আনুষ্ঠানিক আইনি নোটিশ নয়। আপনি অন্যান্য সেবা গ্রহণ করতে পারেন।';
+      } else {
+        alertBox.style.display = 'none';
+      }
+
+      // 2. Summary & chips
+      document.getElementById('summaryText').innerText = notice.summary_one_line || '';
+      const chipsRow = document.getElementById('chipsRow');
+      chipsRow.innerHTML = '';
+      (notice.summary_chips || []).forEach(chip => {
+        const a = document.createElement('a');
+        a.className = 'source-chip';
+        a.href = '#';
+        a.innerText = chip.label || '[আইন রেফারেন্স]';
+        chipsRow.appendChild(a);
+      });
+
+      // 3. Who sent it, Why received, What it says
+      document.getElementById('senderText').innerText = notice.sender?.text || '—';
+      document.getElementById('whyReceivedText').innerText = notice.why_received?.text || '—';
+      
+      const saysItems = (notice.what_it_says || []).map(i => i.text).join(' ');
+      document.getElementById('whatItSaysText').innerText = saysItems || '—';
+
+      // 4. Action checklist
+      const actionsList = document.getElementById('actionsChecklist');
+      actionsList.innerHTML = '';
+      (notice.action_required || []).forEach((act, idx) => {
+        const li = document.createElement('li');
+        li.className = 'check-item';
+        li.setAttribute('data-task-id', `task_act_${idx}`);
+        li.innerHTML = `
+          <input type="checkbox" id="act_${idx}" data-idx="${idx}" data-task-id="task_act_${idx}">
+          <label for="act_${idx}" class="check-text">${act.text}</label>
+        `;
+        li.querySelector('input').addEventListener('change', (e) => {
+          if (e.target.checked) {
+            li.classList.add('done');
+            li.setAttribute('data-task-status', 'created');
+            showToast('টাস্ক তালিকায় যুক্ত হয়েছে');
+          } else {
+            li.classList.remove('done');
+            li.removeAttribute('data-task-status');
+          }
+        });
+        actionsList.appendChild(li);
+      });
+
+      // 5. DeadlineCard
+      renderDeadlineCard(notice.primary_deadline_card);
+
+      // 6. Documents needed
+      const docsList = document.getElementById('documentsNeededList');
+      docsList.innerHTML = '';
+      (notice.documents_needed || []).forEach((doc, idx) => {
+        const li = document.createElement('li');
+        li.className = 'check-item';
+        li.innerHTML = `
+          <input type="checkbox" id="doc_${idx}">
+          <label for="doc_${idx}" class="check-text">${doc.text}</label>
+        `;
+        docsList.appendChild(li);
+      });
+
+      // 7. If you ignore it
+      const ifIgnoredBox = document.getElementById('ifIgnoredBox');
+      const ignoredData = notice.if_ignored || {};
+      if (ignoredData.not_stated || !ignoredData.stated_in_notice) {
+        ifIgnoredBox.className = 'consequence-box unverified';
+        ifIgnoredBox.innerText = 'নথিতে এমন কিছু উল্লেখ নেই। একজন আইনজীবীর পরামর্শ নিন।';
+      } else {
+        ifIgnoredBox.className = 'consequence-box';
+        ifIgnoredBox.innerText = ignoredData.text;
+      }
+
+      // 8. Questions for lawyer
+      const qList = document.getElementById('questionsList');
+      qList.innerHTML = '';
+      (notice.questions_for_lawyer || []).forEach(q => {
+        const li = document.createElement('li');
+        li.innerText = q;
+        qList.appendChild(li);
+      });
+    }
+
+    function renderDeadlineCard(dl) {
+      if (!dl || !dl.has_deadline) {
+        document.getElementById('deadlineDateDisplay').innerText = 'সময়সীমা নির্ধারিত নেই';
+        document.getElementById('daysLeftBadge').style.display = 'none';
+        document.getElementById('deadlineNoteText').innerText = dl?.note || 'নোটিশে নির্দিষ্ট কোনো সময়সীমা উল্লেখ পাওয়া যায়নি।';
+        document.getElementById('btnConfirmDeadline').style.display = 'none';
+        return;
+      }
+
+      if (dl.type === 'stated') {
+        document.getElementById('deadlineDateDisplay').innerText = dl.due_date_bn || dl.due_date;
+        document.getElementById('daysLeftBadge').style.display = 'inline-block';
+        document.getElementById('daysLeftBadge').innerText = dl.days_left_text;
+        document.getElementById('deadlineNoteText').innerText = dl.note;
+        document.getElementById('relativeTriggerBox').style.display = 'none';
+        
+        state.calculatedDeadline = {
+          due_date: dl.due_date,
+          title: 'আইনি নোটিশের জবাব দাখিল',
+          calculation_steps: dl.calculation_steps,
+          note: dl.note,
+        };
+        renderHowCountedSteps(dl.calculation_steps);
+      } else if (dl.type === 'relative') {
+        document.getElementById('deadlineDateDisplay').innerText = 'প্রাপ্তির ' + dl.period_days_bn + ' দিনের মধ্যে';
+        document.getElementById('daysLeftBadge').style.display = 'inline-block';
+        document.getElementById('daysLeftBadge').innerText = 'হিসাব আবশ্যক';
+        document.getElementById('deadlineNoteText').innerText = dl.note;
+        document.getElementById('relativeTriggerBox').style.display = 'block';
+        document.getElementById('relativePromptQuestion').innerText = dl.prompt_question;
+        renderHowCountedSteps([
+          'নোটিশে আপেক্ষিক সময়সীমা দেওয়া হয়েছে (' + dl.period_days_bn + ' দিন)।',
+          'শুরুর তারিখ দিলে রুলস ইঞ্জিন স্বয়ংক্রিয়ভাবে সঠিক শেষ তারিখ গণনা করবে।'
+        ]);
+      }
+    }
+
+    function renderHowCountedSteps(steps) {
+      const list = document.getElementById('howCountedStepsList');
+      list.innerHTML = '';
+      (steps || []).forEach(s => {
+        const li = document.createElement('li');
+        li.innerText = s;
+        list.appendChild(li);
+      });
+    }
+
+    // Event Listeners
+    document.getElementById('btnToggleHowCounted').addEventListener('click', () => {
+      const box = document.getElementById('howCountedBox');
+      const isOpen = box.classList.toggle('open');
+      document.getElementById('btnToggleHowCounted').setAttribute('aria-expanded', isOpen);
+    });
+
+    document.getElementById('btnCalculateRelative').addEventListener('click', async () => {
+      const triggerDate = document.getElementById('triggerDateInput').value;
+      if (!triggerDate) {
+        showToast('অনুগ্রহ করে প্রাপ্তির তারিখ দিন');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/v1/documents/${state.docId}/notice/calculate_relative_date`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ trigger_date: triggerDate, days: 15, include_trigger_day: false })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          const calc = data.calculation;
+          state.calculatedDeadline = calc;
+          document.getElementById('deadlineDateDisplay').innerText = calc.due_date_bn;
+          document.getElementById('daysLeftBadge').innerText = calc.days_left_text;
+          document.getElementById('deadlineNoteText').innerText = 'রুলস ইঞ্জিন গণনাকৃত সময়সীমা';
+          renderHowCountedSteps(calc.calculation_steps);
+          document.getElementById('howCountedBox').classList.add('open');
+          showToast('সময়সীমা সফলভাবে গণনা করা হয়েছে');
+        }
+      } catch (err) {
+        showToast('হিসাব করতে ত্রুটি: ' + err.message);
+      }
+    });
+
+    document.getElementById('btnConfirmDeadline').addEventListener('click', async () => {
+      if (!state.calculatedDeadline) {
+        showToast('প্রথমে সময়সীমা নির্ধারণ করুন');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/v1/documents/${state.docId}/notice/confirm_deadline`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            due_date: state.calculatedDeadline.due_date,
+            title: state.calculatedDeadline.title || 'আইনি নোটিশের জবাব দাখিল',
+            calculation_steps: state.calculatedDeadline.calculation_steps,
+            note: state.calculatedDeadline.note || state.calculatedDeadline.explanation,
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          state.confirmedDeadline = data.deadline;
+          const btn = document.getElementById('btnConfirmDeadline');
+          btn.className = 'btn btn-confirmed';
+          btn.innerText = 'নিশ্চিত করা হয়েছে ✓';
+          btn.disabled = true;
+          showToast('সময়সীমা নিশ্চিত হয়েছে এবং রিমাইন্ডার শিডিউল তৈরি হয়েছে');
+        }
+      } catch (err) {
+        showToast('ত্রুটি: ' + err.message);
+      }
+    });
+
+    document.getElementById('btnSetOwnDate').addEventListener('click', () => {
+      const userDate = prompt('আপনার নির্ধারিত তারিখ লিখুন (YYYY-MM-DD):', '2026-10-25');
+      if (userDate && /^\d{4}-\d{2}-\d{2}$/.test(userDate)) {
+        state.calculatedDeadline = {
+          due_date: userDate,
+          title: 'ব্যবহারকারী নির্ধারিত সময়সীমা',
+          calculation_steps: ['ব্যবহারকারী নিজে এই তারিখ নির্ধারণ করেছেন।'],
+          note: 'ব্যবহারকারী কর্তৃক সরাসরি নির্ধারিত',
+          is_user_set: true,
+        };
+        document.getElementById('deadlineDateDisplay').innerText = userDate;
+        document.getElementById('deadlineNoteText').innerText = 'আমার নিজের তারিখ নির্ধারণ করা হয়েছে';
+        showToast('নিজস্ব তারিখ সেট করা হয়েছে');
+      }
+    });
+
+    // Save To Case Modal flow
+    document.getElementById('btnSaveToCase').addEventListener('click', () => {
+      document.getElementById('saveCaseModal').classList.add('open');
+    });
+    document.getElementById('btnCloseModal').addEventListener('click', () => {
+      document.getElementById('saveCaseModal').classList.remove('open');
+    });
+
+    document.getElementById('btnConfirmSaveCase').addEventListener('click', async () => {
+      const title = document.getElementById('caseTitleInput').value;
+      try {
+        const res = await fetch(`/api/v1/documents/${state.docId}/notice/save_to_case`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            new_case_title: title,
+            confirmed_deadline: state.confirmedDeadline || state.calculatedDeadline,
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          document.getElementById('saveCaseModal').classList.remove('open');
+          showToast('সফলভাবে মামলায় সংরক্ষিত হয়েছে! মামলা নং: ' + data.case_id.substring(0, 8));
+        }
+      } catch (err) {
+        showToast('সংরক্ষণ ত্রুটি: ' + err.message);
+      }
+    });
+
+    // Explain Simpler
+    document.getElementById('btnExplainSimpler').addEventListener('click', async () => {
+      const card = document.getElementById('simplerCard');
+      if (state.simplerActive) {
+        card.classList.remove('active');
+        state.simplerActive = false;
+        return;
+      }
+      try {
+        const res = await fetch(`/api/v1/documents/${state.docId}/notice/simpler`, { method: 'POST' });
+        const data = await res.json();
+        if (data.status === 'success' && data.simpler) {
+          const s = data.simpler;
+          document.getElementById('simplerSummaryText').innerText = s.simpler_summary;
+          document.getElementById('simplerWhatItSaysText').innerText = (s.simpler_what_it_says || []).join(' ');
+          document.getElementById('simplerActionsText').innerText = 'করণীয়: ' + (s.simpler_actions || []).join(', ');
+          document.getElementById('simplerWarningText').innerText = s.simpler_warning || '';
+          card.classList.add('active');
+          state.simplerActive = true;
+          showToast('সহজ ব্যাখ্যা প্রস্তুত হয়েছে');
+        }
+      } catch (err) {
+        showToast('সহজ ব্যাখ্যা তৈরিতে সমস্যা: ' + err.message);
+      }
+    });
+
+    // Read Aloud using Web Speech API
+    document.getElementById('btnReadAloud').addEventListener('click', () => {
+      if (!('speechSynthesis' in window)) {
+        alert('আপনার ব্রাউজারে ভয়েস স্পিচ সমর্থিত নয়।');
+        return;
+      }
+      const textToRead = document.getElementById('summaryText').innerText + '. ' + document.getElementById('whatItSaysText').innerText;
+      const utterance = new SpeechSynthesisUtterance(textToRead);
+      utterance.lang = 'bn-BD';
+      window.speechSynthesis.speak(utterance);
+      showToast('পড়া শুরু হচ্ছে...');
+    });
+
+    document.getElementById('btnAskLawyer').addEventListener('click', () => {
+      alert('আইনজীবীর পরামর্শ ও শেয়ারিং সেবা মডিউল (M08) পরবর্তী আপডেটে সংযুক্ত হচ্ছে। আপনার নোটিশের সারসংক্ষেপ নিরাপদে সংরক্ষিত রয়েছে।');
+    });
+
+    // Initial load
+    window.addEventListener('DOMContentLoaded', loadNotice);
+  </script>
+</body>
+</html>

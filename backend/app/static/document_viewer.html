@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>নথি ও তথ্য পর্যালোচনা — আইন-AI</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #0B5D4B;
+      --color-primary-soft: #E3F1EC;
+      --color-primary-hover: #084336;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-badge-clear: #DCFCE7;
+      --color-badge-clear-txt: #166534;
+      --color-badge-check: #FEF3C7;
+      --color-badge-check-txt: #92400E;
+      --color-badge-notsure: #FFEDD5;
+      --color-badge-notsure-txt: #C2410C;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* Desktop Sidebar */
+    .app-sidebar {
+      width: 240px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex; flex-direction: column; gap: 32px;
+      flex-shrink: 0; position: sticky; top: 0; height: 100vh;
+    }
+    .app-main {
+      flex: 1; display: flex; flex-direction: column; min-width: 0;
+      padding-bottom: 74px;
+    }
+
+    /* Logo & Nav */
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-badge {
+      width: 38px; height: 38px; background: var(--color-primary); color: white;
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700;
+    }
+    .brand-title { font-size: 1.15rem; font-weight: 700; color: var(--color-primary); }
+    .brand-sub { font-size: 0.75rem; color: var(--color-text-muted); }
+
+    .nav-links { display: flex; flex-direction: column; gap: 6px; list-style: none; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      border-radius: 8px; color: var(--color-text-muted); text-decoration: none;
+      font-size: 0.95rem; font-weight: 500; min-height: 48px;
+    }
+    .nav-link.active { background: var(--color-primary-soft); color: var(--color-primary); font-weight: 600; }
+
+    /* Top Header */
+    .top-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .doc-meta h1 { font-size: 1.25rem; font-weight: 700; }
+    .doc-meta span { font-size: 0.85rem; color: var(--color-text-muted); }
+
+    /* Viewer Layout (2 Columns on Desktop) */
+    .viewer-layout {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 20px;
+      padding: 20px;
+      flex: 1;
+    }
+
+    /* Left Pane: Document Canvas */
+    .canvas-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex; flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+      max-height: calc(100vh - 120px);
+    }
+    .page-sheet {
+      width: 100%;
+      max-width: 650px;
+      background: #FAF8F5;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      padding: 24px 20px;
+      position: relative;
+    }
+    .bbox-highlight {
+      border: 2px solid #0284C7;
+      background: rgba(2, 132, 199, 0.12);
+      border-radius: 4px;
+      padding: 4px 6px;
+      margin: 6px 0;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .bbox-highlight:hover, .bbox-highlight.active {
+      border-color: #0B5D4B;
+      background: rgba(11, 93, 75, 0.18);
+    }
+
+    /* Right Pane: Fields & Review State */
+    .fields-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex; flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      max-height: calc(100vh - 120px);
+    }
+    .fields-header {
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 12px;
+    }
+
+    /* Snippet Crop Box */
+    .crop-preview-box {
+      background: #F8FAFC;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .crop-preview-box img {
+      max-width: 100%;
+      border-radius: 4px;
+      border: 1px solid #E2E8F0;
+    }
+
+    /* Field Card */
+    .field-item {
+      background: #FFFFFF;
+      border: 1.5px solid var(--color-border);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex; flex-direction: column;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+    .field-item.active {
+      border-color: var(--color-primary);
+      box-shadow: 0 2px 8px rgba(11,93,75,0.1);
+    }
+
+    .field-top-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.85rem; font-weight: 600;
+    }
+    .field-value {
+      font-size: 1rem; font-weight: 600; color: #0F172A;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 6px;
+      font-size: 0.78rem; font-weight: 700;
+    }
+    .badge-clear { background: var(--color-badge-clear); color: var(--color-badge-clear-txt); }
+    .badge-check { background: var(--color-badge-check); color: var(--color-badge-check-txt); }
+    .badge-notsure { background: var(--color-badge-notsure); color: var(--color-badge-notsure-txt); }
+
+    .badge-state {
+      background: #F1F5F9; color: #475569;
+      border: 1px solid #CBD5E1;
+    }
+    .badge-state.reviewed { background: #E0F2FE; color: #0369A1; border-color: #BAE6FD; }
+    .badge-state.verified { background: #DCFCE7; color: #15803D; border-color: #BBF7D0; }
+
+    /* Field Action Buttons */
+    .field-actions {
+      display: flex; gap: 8px; margin-top: 6px;
+    }
+    .btn-action {
+      background: #F8FAFC; border: 1px solid var(--color-border);
+      padding: 6px 12px; border-radius: 6px;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      min-height: 38px;
+    }
+    .btn-action:hover { background: #E2E8F0; }
+    .btn-verify {
+      background: var(--color-primary); color: white; border: none;
+    }
+    .btn-verify:hover { background: var(--color-primary-hover); }
+
+    /* Edit Dialog Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.6); z-index: 1000;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #FFFFFF; border-radius: 12px; max-width: 480px; width: 100%;
+      padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    /* Mobile Bottom Navigation */
+    .mobile-bottom-nav {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      height: 64px; background: #FFFFFF; border-top: 1px solid var(--color-border);
+      z-index: 900; justify-content: space-around; align-items: center;
+    }
+    .bottom-tab {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--color-text-muted); text-decoration: none; font-size: 0.75rem;
+      flex: 1; height: 100%; min-height: 48px;
+    }
+    .bottom-tab.active { color: var(--color-primary); }
+
+    @media (max-width: 900px) {
+      .app-sidebar { display: none; }
+      .mobile-bottom-nav { display: flex; }
+      .viewer-layout {
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+      .canvas-card, .fields-card {
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar (Desktop) -->
+  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+    <div class="logo-area">
+      <div class="logo-badge">⚖️</div>
+      <div>
+        <div class="brand-title">আইন-AI</div>
+        <div class="brand-sub">আইনি সেবা প্ল্যাটফর্ম</div>
+      </div>
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link">হোম</a></li>
+        <li><a href="/documents/upload" class="nav-link">নথি আপলোড</a></li>
+        <li><a href="/documents/viewer" class="nav-link active">নথি রিভিউ</a></li>
+        <li><a href="/library" class="nav-link">আইন পাঠাগার</a></li>
+        <li><a href="/profile" class="nav-link">প্রোফাইল</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Area -->
+  <main class="app-main">
+    <header class="top-header">
+      <div class="doc-meta">
+        <h1>[নমুনা] আইনি নোটিশ — নথি রিভিউ প্যানেল</h1>
+        <span>আইডি: doc-sample-01 • ধরন: লিগ্যাল নোটিশ • পৃষ্ঠা সংখ্যা: ১/১</span>
+      </div>
+      <div>
+        <a href="/documents/status?doc=doc-sample-01" class="btn-action" style="text-decoration:none; display:inline-flex; align-items:center;">
+          📊 স্ট্যাটাস ও ট্র্যাকার দেখুন
+        </a>
+      </div>
+    </header>
+
+    <div class="viewer-layout">
+      <!-- Left: Document Preview Canvas -->
+      <section class="canvas-card" aria-label="নথির স্ক্যান ও ক্রপ প্রিভিউ">
+        <div class="page-sheet">
+          <div style="background:#FEF3C7; padding:6px 12px; border-radius:6px; font-size:0.85rem; color:#92400E; margin-bottom:16px;">
+            [নমুনা] আইনি পরীক্ষার দলিল (FAKE_TEST_DATA)
+          </div>
+          <h2 style="font-size:1.1rem; text-align:center; margin-bottom:16px;">আইনি নোটিশ (LEGAL NOTICE)</h2>
+
+          <div class="bbox-highlight active" onclick="highlightField('sender')">
+            <strong>প্রেরক:</strong> অ্যাডভোকেট এম. এ. সালাম (সুপ্রিম কোর্ট বার)
+          </div>
+
+          <div class="bbox-highlight" onclick="highlightField('recipient')">
+            <strong>প্রাপক:</strong> জনাব আরিফুল হক, পিতা: মরহুম কায়সার হক
+          </div>
+
+          <div class="bbox-highlight" onclick="highlightField('subject')">
+            <strong>বিষয়:</strong> বকেয়া বাড়িভাড়া বাবদ ৫০,০০০ টাকা পরিশোধের নোটিশ
+          </div>
+
+          <div style="margin: 14px 0; font-size:0.95rem; line-height:1.7;">
+            জনাব, আমার মক্কেল জনাব রফিকুল ইসলাম সাহেবের নির্দেশক্রমে আপনাকে জানানো যাইতেছে যে,
+            আপনি মিরপুর সেকশন ১০, ব্লক বি, হোল্ডিং ১২/এ ঠিকানায় অবস্থিত দোকানটির ভাড়াটিয়া।
+            <div class="bbox-highlight" onclick="highlightField('amount')">
+              বিগত ১৫ জানুয়ারি ২০২৬ তারিখ হইতে আপনি মাসিক ২৫,০০০ টাকা হারে দুই মাসের বকেয়া ভাড়া মোট <strong>৫০,০০০ (পঞ্চাশ হাজার) টাকা</strong> পরিশোধ করেন নাই।
+            </div>
+            অতএব, এই নোটিশ প্রাপ্তির ১৫ দিনের মধ্যে উক্ত বকেয়া অর্থ পরিশোধ করিবার জন্য অনুরোধ করা যাইতেছে।
+          </div>
+
+          <div class="bbox-highlight" onclick="highlightField('date')">
+            <strong>তারিখ:</strong> ১০ ফেব্রুয়ারি ২০২৬
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Extracted Fields Panel -->
+      <section class="fields-card" aria-label="নিষ্কাশিত তথ্যের তালিকা">
+        <div class="fields-header">
+          <div>
+            <h2 style="font-size:1.1rem; font-weight:700;">শনাক্তকৃত তথ্য (Fields)</h2>
+            <div style="font-size:0.8rem; color:var(--color-text-muted);">৫টি তথ্য শনাক্ত হয়েছে</div>
+          </div>
+          <span class="badge badge-clear">১০০% উদ্ধৃতি সংযুক্ত</span>
+        </div>
+
+        <!-- Crop Preview Box (AC-M03-2) -->
+        <div class="crop-preview-box" id="cropBox">
+          <div style="font-size:0.8rem; color:var(--color-text-muted); margin-bottom:6px;">চিহ্নিত মূল পাঠ্য ক্রপ (Snippet Crop)</div>
+          <div style="background:#FFF; padding:10px; border:1px solid #CBD5E1; border-radius:6px; font-weight:600; color:#0B5D4B;" id="cropSnippetText">
+            "অ্যাডভোকেট এম. এ. সালাম (সুপ্রিম কোর্ট বার)"
+          </div>
+        </div>
+
+        <!-- Field 1: Sender -->
+        <div class="field-item active" id="fld-sender">
+          <div class="field-top-row">
+            <span>প্রেরক (Sender)</span>
+            <span class="badge badge-clear">স্পষ্ট (clear)</span>
+          </div>
+          <div class="field-value" id="val-sender">অ্যাডভোকেট এম. এ. সালাম</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="badge badge-state reviewed" id="state-sender">পর্যালোচিত (reviewed)</span>
+            <div class="field-actions">
+              <button type="button" class="btn-action" onclick="openEditModal('sender', 'অ্যাডভোকেট এম. এ. সালাম')">সংশোধন</button>
+              <button type="button" class="btn-action btn-verify" onclick="verifyField('sender')">যাচাই নিশ্চিত</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Field 2: Recipient -->
+        <div class="field-item" id="fld-recipient">
+          <div class="field-top-row">
+            <span>প্রাপক (Recipient)</span>
+            <span class="badge badge-clear">স্পষ্ট (clear)</span>
+          </div>
+          <div class="field-value" id="val-recipient">জনাব আরিফুল হক</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="badge badge-state" id="state-recipient">চিহ্নিত (extracted)</span>
+            <div class="field-actions">
+              <button type="button" class="btn-action" onclick="openEditModal('recipient', 'জনাব আরিফুল হক')">সংশোধন</button>
+              <button type="button" class="btn-action btn-verify" onclick="verifyField('recipient')">যাচাই নিশ্চিত</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Field 3: Amount -->
+        <div class="field-item" id="fld-amount">
+          <div class="field-top-row">
+            <span>দাবির পরিমাণ (Amount)</span>
+            <span class="badge badge-clear">স্পষ্ট (clear)</span>
+          </div>
+          <div class="field-value" id="val-amount">৫০,০০০ টাকা</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="badge badge-state verified" id="state-amount">যাচাইকৃত (verified)</span>
+            <div class="field-actions">
+              <button type="button" class="btn-action" onclick="openEditModal('amount', '৫০,০০০ টাকা')">সংশোধন</button>
+              <button type="button" class="btn-action btn-verify" onclick="verifyField('amount')">যাচাই নিশ্চিত</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Field 4: Location / Schedule -->
+        <div class="field-item" id="fld-location">
+          <div class="field-top-row">
+            <span>সম্পত্তির বিবরণ (Property)</span>
+            <span class="badge badge-check">যাচাই করুন (check)</span>
+          </div>
+          <div class="field-value" id="val-location">মিরপুর সেকশন ১০, ব্লক বি, হোল্ডিং ১২/এ</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="badge badge-state" id="state-location">চিহ্নিত (extracted)</span>
+            <div class="field-actions">
+              <button type="button" class="btn-action" onclick="openEditModal('location', 'মিরপুর সেকশন ১০, ব্লক বি, হোল্ডিং ১২/এ')">সংশোধন</button>
+              <button type="button" class="btn-action btn-verify" onclick="verifyField('location')">যাচাই নিশ্চিত</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Field 5: Date -->
+        <div class="field-item" id="fld-date">
+          <div class="field-top-row">
+            <span>নোটিশের তারিখ (Stated Date)</span>
+            <span class="badge badge-clear">স্পষ্ট (clear)</span>
+          </div>
+          <div class="field-value" id="val-date">১০ ফেব্রুয়ারি ২০২৬</div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="badge badge-state verified" id="state-date">যাচাইকৃত (verified)</span>
+            <div class="field-actions">
+              <button type="button" class="btn-action" onclick="openEditModal('date', '১০ ফেব্রুয়ারি ২০২৬')">সংশোধন</button>
+              <button type="button" class="btn-action btn-verify" onclick="verifyField('date')">যাচাই নিশ্চিত</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Edit Confirmation Modal (AC-M03-2) -->
+  <div class="modal-overlay" id="editModal" role="dialog" aria-modal="true" aria-labelledby="modalHeading">
+    <div class="modal-box">
+      <h3 id="modalHeading" style="font-size:1.15rem; font-weight:700; margin-bottom:12px;">তথ্য সংশোধন ও নিশ্চিতকরণ</h3>
+      <p style="font-size:0.88rem; color:var(--color-text-muted); margin-bottom:16px;">
+        তথ্য পরিবর্তন নিশ্চিত করলে এর অবস্থা স্বয়ংক্রিয়ভাবে <strong>'পর্যালোচিত (reviewed)'</strong> হিসেবে চিহ্নিত হবে।
+      </p>
+      <div style="margin-bottom:16px;">
+        <label for="editInput" style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:6px;">সংশোধিত মান লিখুন:</label>
+        <input type="text" id="editInput" style="width:100%; padding:10px 14px; border:1.5px solid var(--color-border); border-radius:8px; font-size:1rem; font-family:inherit;">
+      </div>
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button type="button" class="btn-action" onclick="closeEditModal()">বাতিল</button>
+        <button type="button" class="btn-action btn-verify" onclick="confirmEdit()">সংশোধন নিশ্চিত করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="mobile-bottom-nav">
+    <a href="/" class="bottom-tab">হোম</a>
+    <a href="/documents/upload" class="bottom-tab">আপলোড</a>
+    <a href="/documents/viewer" class="bottom-tab active">রিভিউ</a>
+    <a href="/profile" class="bottom-tab">প্রোফাইল</a>
+  </nav>
+
+  <script>
+    let activeFieldKey = 'sender';
+
+    function highlightField(key) {
+      activeFieldKey = key;
+      document.querySelectorAll('.field-item').forEach(f => f.classList.remove('active'));
+      const el = document.getElementById(`fld-${key}`);
+      if (el) {
+        el.classList.add('active');
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      const val = document.getElementById(`val-${key}`);
+      if (val) {
+        document.getElementById('cropSnippetText').innerText = `"${val.innerText}"`;
+      }
+    }
+
+    function openEditModal(key, currentVal) {
+      activeFieldKey = key;
+      document.getElementById('editInput').value = currentVal;
+      document.getElementById('editModal').classList.add('open');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('open');
+    }
+
+    function confirmEdit() {
+      const newVal = document.getElementById('editInput').value.trim();
+      if (newVal) {
+        document.getElementById(`val-${activeFieldKey}`).innerText = newVal;
+        const stateBadge = document.getElementById(`state-${activeFieldKey}`);
+        stateBadge.className = 'badge badge-state reviewed';
+        stateBadge.innerText = 'পর্যালোচিত (reviewed)';
+      }
+      closeEditModal();
+    }
+
+    function verifyField(key) {
+      const stateBadge = document.getElementById(`state-${key}`);
+      stateBadge.className = 'badge badge-state verified';
+      stateBadge.innerText = 'যাচাইকৃত (verified)';
+    }
+  </script>
+</body>
+</html>

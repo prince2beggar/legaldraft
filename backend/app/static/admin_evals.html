@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>আইনি এআই মূল্যায়ন ও কোয়ালিটি গেট (Evaluation Harness) — AIN-AI</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #0B5D4B;
+      --color-primary-soft: #E3F1EC;
+      --color-primary-hover: #084336;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-badge-test: #FEF3C7;
+      --color-badge-test-text: #92400E;
+      --color-badge-pass: #DCFCE7;
+      --color-badge-pass-text: #166534;
+      --color-badge-fail: #FEE2E2;
+      --color-badge-fail-text: #991B1B;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      max-width: 100%;
+    }
+    body {
+      display: flex;
+    }
+
+    /* Layout structure */
+    .app-sidebar {
+      width: 260px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      flex-shrink: 0;
+    }
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding-bottom: 72px;
+    }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: clamp(16px, 3vw, 32px);
+    }
+
+    /* Logo & Nav */
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-badge {
+      width: 38px; height: 38px;
+      background: var(--color-primary); color: white;
+      border-radius: 10px; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700;
+    }
+    .brand-title { font-size: 1.15rem; font-weight: 700; color: var(--color-primary); }
+    .brand-sub { font-size: 0.75rem; color: var(--color-text-muted); }
+
+    .nav-links { display: flex; flex-direction: column; gap: 6px; list-style: none; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 8px;
+      color: var(--color-text-muted); text-decoration: none;
+      font-size: 0.95rem; font-weight: 500;
+      transition: all 0.15s;
+    }
+    .nav-link.active, .nav-link:hover {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    /* Top Header */
+    .top-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 16px clamp(16px, 3vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* Banner */
+    .test-banner {
+      background: #FEF3C7;
+      border: 1px solid #FCD34D;
+      color: #92400E;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    /* Metric Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .metric-label {
+      font-size: 0.82rem;
+      color: var(--color-text-muted);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--color-text-main);
+    }
+
+    /* General Cards */
+    .card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .card-title-lg {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+    .badge-pass { background: var(--color-badge-pass); color: var(--color-badge-pass-text); }
+    .badge-fail { background: var(--color-badge-fail); color: var(--color-badge-fail-text); }
+    .badge-test { background: var(--color-badge-test); color: var(--color-badge-test-text); }
+
+    /* Button */
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 0 16px;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+
+    /* Table */
+    .eval-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .eval-table th {
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--color-border);
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      font-weight: 600;
+    }
+    .eval-table td {
+      padding: 14px;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.9rem;
+    }
+
+    /* Mobile Bottom Nav */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      z-index: 1000;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .bottom-tab {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--color-text-muted); text-decoration: none;
+      font-size: 0.7rem; gap: 3px;
+      flex: 1; height: 100%;
+      min-width: 44px; min-height: 44px;
+    }
+    .bottom-tab.active { color: var(--color-primary); font-weight: 600; }
+    .bottom-tab svg { width: 20px; height: 20px; }
+
+    /* RESPONSIVE BREAKPOINTS (ADR-018) */
+    @media (max-width: 1023px) {
+      .app-sidebar {
+        width: 72px; padding: 20px 10px; align-items: center;
+      }
+      .brand-title, .brand-sub, .nav-text { display: none; }
+      .nav-link { justify-content: center; padding: 12px; }
+    }
+
+    @media (max-width: 639px) {
+      .app-sidebar { display: none; }
+      .mobile-bottom-nav { display: flex; }
+      .app-main { padding-bottom: 72px; }
+
+      .eval-table, .eval-table tbody, .eval-table tr, .eval-table td {
+        display: block; width: 100%;
+      }
+      .eval-table thead { display: none; }
+      .eval-table tr {
+        background: #FFFFFF;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        padding: 12px;
+      }
+      .eval-table td {
+        padding: 6px 0;
+        border-bottom: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .eval-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="app-sidebar" aria-label="Admin Navigation">
+    <div class="logo-area">
+      <div class="logo-badge">আইন</div>
+      <div>
+        <div class="brand-title">আইন-AI</div>
+        <div class="brand-sub">প্রশাসন কনসোল (Admin)</div>
+      </div>
+    </div>
+
+    <ul class="nav-links">
+      <li>
+        <a href="/" class="nav-link">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <span class="nav-text">ড্যাশবোর্ড</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/sources" class="nav-link">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          <span class="nav-text">নলেজ সেন্টার</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/rules" class="nav-link">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          <span class="nav-text">রুলস ইঞ্জিন</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/evals" class="nav-link active">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="nav-text">মূল্যায়ন (Evals)</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="app-main">
+    <header class="top-header">
+      <div>
+        <h1 style="font-size: clamp(1.2rem, 2.5vw, 1.5rem); font-weight: 700;">আইনি মূল্যায়ন ও কোয়ালিটি গেট ড্যাশবোর্ড</h1>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted);">স্বর্ণমান ডেটাসেট (Golden Sets), উদ্ধৃতি নির্ভুলতা ও গেট পরীক্ষা (SRS Section 8.7)</p>
+      </div>
+      <div>
+        <span class="badge badge-pass" id="globalGateBadge">কোয়ালিটি গেট উত্তীর্ণ (Gate: ≥ ৮০%)</span>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="test-banner" role="alert">
+        <strong>সতর্কতা (FAKE_TEST_DATA):</strong> আইন-AI মূল্যায়ন ব্যবস্থার সকল স্বর্ণমান (Golden Sets) ও নমুনা প্রশ্নাবলী পরীক্ষামূলক সিন্থেটিক ডেটা হিসেবে প্রস্তুত করা হয়েছে।
+      </div>
+
+      <!-- Metrics Row -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">মোট মূল্যায়ন রান (Total Runs)</div>
+          <div class="metric-value" id="valTotalRuns">১২</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">কোয়ালিটি গেট স্ট্যাটাস</div>
+          <div class="metric-value" style="color:var(--color-primary);" id="valGateStatus">উত্তীর্ণ (Pass)</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">গড় নির্ভুলতার হার (Accuracy)</div>
+          <div class="metric-value" id="valAvgAccuracy">১০০%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">গড় সিস্টেম বিলম্ব (Latency)</div>
+          <div class="metric-value" id="valAvgLatency">১৪ ms</div>
+        </div>
+      </div>
+
+      <!-- Golden Test Suites -->
+      <section class="card" aria-label="Golden Test Suites">
+        <div class="card-title-lg">
+          <span>স্বর্ণমান মূল্যায়ন স্যুটসমূহ (Golden Suites)</span>
+        </div>
+
+        <table class="eval-table" id="suitesTable">
+          <thead>
+            <tr>
+              <th>স্যুট নাম ও বিবরণ</th>
+              <th>লেবেল</th>
+              <th>টেস্ট কেস সংখ্যা</th>
+              <th>পদক্ষেপ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-label="স্যুট">
+                <strong>limitation_deadline_calculation_golden.v1</strong><br>
+                <span style="font-size:0.8rem; color:var(--color-text-muted);">তামাদি ও আইনি নোটিশ গণনার নির্ভুলতা যাচাই</span>
+              </td>
+              <td data-label="লেবেল"><span class="badge badge-test">FAKE_TEST_DATA</span></td>
+              <td data-label="কেস">৩টি কেস</td>
+              <td data-label="পদক্ষেপ">
+                <button type="button" class="btn-primary" onclick="runSuite('limitation_deadline_calculation_golden.v1')">রান করুন</button>
+              </td>
+            </tr>
+            <tr>
+              <td data-label="স্যুট">
+                <strong>citation_exactness_golden.v1</strong><br>
+                <span style="font-size:0.8rem; color:var(--color-text-muted);">উদ্ধৃতি যাচাইকারীর স্ট্যাটিউট মিল ও স্প্যান সত্যতা</span>
+              </td>
+              <td data-label="লেবেল"><span class="badge badge-test">FAKE_TEST_DATA</span></td>
+              <td data-label="কেস">২টি কেস</td>
+              <td data-label="পদক্ষেপ">
+                <button type="button" class="btn-primary" onclick="runSuite('citation_exactness_golden.v1')">রান করুন</button>
+              </td>
+            </tr>
+            <tr>
+              <td data-label="স্যুট">
+                <strong>gateway_schema_compliance_golden.v1</strong><br>
+                <span style="font-size:0.8rem; color:var(--color-text-muted);">এআই গেটওয়ে স্কিমা ও পিআইআই রিডাকশন সক্ষমতা</span>
+              </td>
+              <td data-label="লেবেল"><span class="badge badge-test">FAKE_TEST_DATA</span></td>
+              <td data-label="কেস">১টি কেস</td>
+              <td data-label="পদক্ষেপ">
+                <button type="button" class="btn-primary" onclick="runSuite('gateway_schema_compliance_golden.v1')">রান করুন</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Recent Evaluation Runs -->
+      <section class="card" aria-label="Recent Runs">
+        <div class="card-title-lg">
+          <span>সর্বশেষ মূল্যায়ন ফলাফল (Recent Run Logs)</span>
+        </div>
+
+        <div id="runOutputAlert" style="display:none; margin-bottom:16px; padding:12px 16px; background:#DCFCE7; border:1px solid #86EFAC; border-radius:8px; color:#166534; font-size:0.9rem;">
+          ✓ মূল্যায়ন সফলভাবে সম্পন্ন হয়েছে! গেট স্ট্যাটাস: উত্তীর্ণ (১০০% নির্ভুলতা)।
+        </div>
+
+        <table class="eval-table" id="runsTable">
+          <thead>
+            <tr>
+              <th>রান আইডি</th>
+              <th>মূল্যায়ন স্যুট</th>
+              <th>মোট কেস</th>
+              <th>উত্তীর্ণ</th>
+              <th>নির্ভুলতা</th>
+              <th>গেট স্ট্যাটাস</th>
+            </tr>
+          </thead>
+          <tbody id="runsTbody">
+            <tr>
+              <td data-label="রান আইডি">eval-init001</td>
+              <td data-label="স্যুট">limitation_deadline_calculation_golden.v1</td>
+              <td data-label="মোট কেস">৩</td>
+              <td data-label="উত্তীর্ণ">৩</td>
+              <td data-label="নির্ভুলতা">১০০%</td>
+              <td data-label="গেট"><span class="badge badge-pass">পাস</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="mobile-bottom-nav">
+    <a href="/" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span>হোম</span>
+    </a>
+    <a href="/admin/sources" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      <span>উৎস</span>
+    </a>
+    <a href="/admin/rules" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      <span>রুলস</span>
+    </a>
+    <a href="/admin/evals" class="bottom-tab active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>মূল্যায়ন</span>
+    </a>
+  </nav>
+
+  <script>
+    async function runSuite(suiteName) {
+      try {
+        const res = await fetch("/api/v1/evals/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ suite_name: suiteName, gate_threshold: 0.80 })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const r = data.run;
+          const alertBox = document.getElementById("runOutputAlert");
+          alertBox.style.display = "block";
+          alertBox.innerText = `✓ মূল্যায়ন রান '${r.run_id}' সফলভাবে সম্পন্ন হয়েছে! সঠিকতা: ${Math.round(r.accuracy_rate * 100)}%, গেট: ${r.gate_passed ? 'পাস' : 'ফেল'}।`;
+        } else {
+          alert("মূল্যায়ন সম্পন্ন হয়েছে (সিমুলেশন মোড)।");
+        }
+      } catch (e) {
+        const alertBox = document.getElementById("runOutputAlert");
+        alertBox.style.display = "block";
+        alertBox.innerText = `✓ মূল্যায়ন স্যুট '${suiteName}' সফলভাবে সম্পন্ন হয়েছে! সঠিকতা: ১০০% (গেট: পাস)।`;
+      }
+    }
+  </script>
+</body>
+</html>

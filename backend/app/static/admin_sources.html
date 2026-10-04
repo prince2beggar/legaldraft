@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>নলেজ সেন্টার ও উৎস প্রশাসন (Knowledge Center) — AIN-AI</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #0B5D4B;
+      --color-primary-soft: #E3F1EC;
+      --color-primary-hover: #084336;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-badge-test: #FEF3C7;
+      --color-badge-test-text: #92400E;
+      --color-badge-approved: #DCFCE7;
+      --color-badge-approved-text: #166534;
+      --color-badge-pending: #DBEAFE;
+      --color-badge-pending-text: #1E40AF;
+      --color-diff-add: #DCFCE7;
+      --color-diff-del: #FEE2E2;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Layout structure */
+    .app-sidebar {
+      width: 260px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      flex-shrink: 0;
+    }
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding-bottom: 72px;
+    }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: clamp(16px, 3vw, 32px);
+    }
+
+    /* Logo & Nav */
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-badge {
+      width: 38px; height: 38px;
+      background: var(--color-primary); color: white;
+      border-radius: 10px; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700;
+    }
+    .brand-title { font-size: 1.15rem; font-weight: 700; color: var(--color-primary); }
+    .brand-sub { font-size: 0.75rem; color: var(--color-text-muted); }
+
+    .nav-links { display: flex; flex-direction: column; gap: 6px; list-style: none; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 8px;
+      color: var(--color-text-muted); text-decoration: none;
+      font-size: 0.95rem; font-weight: 500;
+      transition: all 0.15s;
+    }
+    .nav-link.active, .nav-link:hover {
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    /* Header */
+    .top-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 16px clamp(16px, 3vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-actions { display: flex; gap: 10px; }
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 0 18px;
+      height: 44px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+
+    /* Test Banner */
+    .test-banner {
+      background: #FEF3C7;
+      border: 1px solid #FCD34D;
+      color: #92400E;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    /* Cards & Grids */
+    .card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .card-title-lg {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Ingestion Pipeline Stepper */
+    .stepper-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 80px;
+      text-align: center;
+    }
+    .step-icon {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .step-item.active .step-icon {
+      background: var(--color-primary);
+      color: white;
+    }
+    .step-name {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      font-weight: 600;
+    }
+
+    /* Responsive Table to Cards */
+    .sources-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .sources-table th {
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--color-border);
+      font-size: 0.82rem;
+      color: var(--color-text-muted);
+      font-weight: 600;
+    }
+    .sources-table td {
+      padding: 14px;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.9rem;
+    }
+
+    /* Badges */
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+    .badge-test { background: var(--color-badge-test); color: var(--color-badge-test-text); }
+    .badge-approved { background: var(--color-badge-approved); color: var(--color-badge-approved-text); }
+    .badge-pending { background: var(--color-badge-pending); color: var(--color-badge-pending-text); }
+
+    /* Diff View Styling */
+    .diff-container {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .diff-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .diff-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .diff-pane {
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .diff-added { background: #DCFCE7; padding: 8px; border-radius: 4px; margin: 4px 0; border-left: 3px solid #16A34A; }
+    .diff-removed { background: #FEE2E2; padding: 8px; border-radius: 4px; margin: 4px 0; border-left: 3px solid #DC2626; }
+
+    /* Approval Form Box */
+    .approve-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 20px;
+    }
+    .ac-m10-warning {
+      background: #FEF2F2;
+      border: 1px solid #FCA5A5;
+      color: #991B1B;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Mobile Navigation */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      z-index: 1000;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .bottom-tab {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--color-text-muted); text-decoration: none;
+      font-size: 0.7rem; gap: 3px;
+      flex: 1; height: 100%;
+      min-width: 44px; min-height: 44px;
+    }
+    .bottom-tab.active { color: var(--color-primary); font-weight: 600; }
+    .bottom-tab svg { width: 20px; height: 20px; }
+
+    /* RESPONSIVE BREAKPOINTS (SRS ADR-018) */
+    @media (max-width: 1023px) {
+      .app-sidebar {
+        width: 72px; padding: 20px 10px; align-items: center;
+      }
+      .brand-title, .brand-sub, .nav-text { display: none; }
+      .nav-link { justify-content: center; padding: 12px; }
+      .diff-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 639px) {
+      .app-sidebar { display: none; }
+      .mobile-bottom-nav { display: flex; }
+      .app-main { padding-bottom: 72px; }
+      .diff-grid { grid-template-columns: 1fr; }
+
+      /* Stepper vertical layout on mobile */
+      .stepper-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        overflow-x: visible;
+      }
+      .step-item {
+        flex-direction: row;
+        align-items: center;
+        text-align: left;
+        width: 100%;
+        min-width: auto;
+        padding: 8px 12px;
+        background: #F8FAFC;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+      }
+      .step-name {
+        font-size: 0.85rem;
+      }
+
+      /* Convert table to stacked cards on mobile */
+      .sources-table, .sources-table tbody, .sources-table tr, .sources-table td {
+        display: block; width: 100%;
+      }
+      .sources-table thead { display: none; }
+      .sources-table tr {
+        background: #FFFFFF;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        padding: 12px;
+      }
+      .sources-table td {
+        padding: 6px 0;
+        border-bottom: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .sources-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="app-sidebar" aria-label="Admin Navigation">
+    <div class="logo-area">
+      <div class="logo-badge">আইন</div>
+      <div>
+        <div class="brand-title">আইন-AI</div>
+        <div class="brand-sub">প্রশাসন কনসোল (Admin)</div>
+      </div>
+    </div>
+
+    <ul class="nav-links">
+      <li>
+        <a href="/" class="nav-link">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <span class="nav-text">ড্যাশবোর্ড</span>
+        </a>
+      </li>
+      <li>
+        <a href="/library" class="nav-link">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          <span class="nav-text">আইন পাঠাগার</span>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/sources" class="nav-link active">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          <span class="nav-text">নলেজ সেন্টার</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="app-main">
+    <header class="top-header">
+      <div>
+        <h1 style="font-size: clamp(1.2rem, 2.5vw, 1.5rem); font-weight: 700;">নলেজ সেন্টার ও উৎস ব্যবস্থাপনা</h1>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted);">আইনি উৎস আপলোড, ইনজেশন পাইপলাইন এবং সংস্করণ অনুমোদন পোর্টাল</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-primary" onclick="alert('উৎস যোগ উইন্ডো সক্রিয় হচ্ছে...')">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>নতুন উৎস যোগ করুন</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="test-banner" role="alert">
+        <strong>সতর্কতা (FAKE_TEST_DATA):</strong> আইন-AI নলেজ সেন্টারে সকল ইনজেস্টেড ও অনুমোদিত উৎস কৃত্রিম ও পরীক্ষামূলক ডাটা হিসেবে সংরক্ষিত। বাস্তব সংবিধিবদ্ধ আইন ব্যবহারের পূর্বে যাচাইকরণ আবশ্যক।
+      </div>
+
+      <!-- Ingestion Pipeline Tracker Card -->
+      <section class="card" aria-label="Ingestion Pipeline Progression">
+        <div class="card-title-lg">
+          <span>উৎস ইনজেশন পাইপলাইন ট্র্যাকার</span>
+          <span class="badge badge-approved">সর্বশেষ সমাপ্ত</span>
+        </div>
+        <div class="stepper-row">
+          <div class="step-item active">
+            <div class="step-icon">✓</div>
+            <span class="step-name">১. আপলোড (Real)</span>
+          </div>
+          <div class="step-item active" style="opacity: 0.9;">
+            <div class="step-icon" style="background: #D97706;">⚡</div>
+            <span class="step-name">২. টেক্সট (Stub: no OCR)</span>
+          </div>
+          <div class="step-item active">
+            <div class="step-icon">✓</div>
+            <span class="step-name">৩. ক্লিনিং (Real)</span>
+          </div>
+          <div class="step-item active" style="opacity: 0.9;">
+            <div class="step-icon" style="background: #D97706;">⚡</div>
+            <span class="step-name">৪. ক্লাসিফাই (Stub: Heuristic)</span>
+          </div>
+          <div class="step-item active">
+            <div class="step-icon">✓</div>
+            <span class="step-name">৫. চাঙ্কিং (Real)</span>
+          </div>
+          <div class="step-item active">
+            <div class="step-icon">✓</div>
+            <span class="step-name">৬. ইনডেক্সিং (Real: Determ.)</span>
+          </div>
+          <div class="step-item active">
+            <div class="step-icon">✓</div>
+            <span class="step-name">৭. রিভিউ পেন্ডিং (Real)</span>
+          </div>
+        </div>
+        <div style="margin-top: 14px; font-size: 0.78rem; color: #64748B; background: #F8FAFC; padding: 8px 12px; border-radius: 8px; border-left: 3px solid #D97706;">
+          <strong>পাইপলাইন অবস্থা:</strong> হোস্টে Tesseract ben+eng না থাকায় OCR/PDF নিষ্কাশন স্টাবড (কেবল UTF-8 টেক্সট ডিকোড)। ক্লাসিফিকেশন রেগুলার এক্সপ্রেশন ভিত্তিক। ইন-প্রসেস অ্যাসিনক্রোনাস এক্সেকিউশন সক্রিয় (রেডিস ওয়ার্কার ড্রাইভেন নয়)।
+        </div>
+      </section>
+
+      <!-- Sources Registry Table -->
+      <section class="card" aria-label="Knowledge Sources List">
+        <div class="card-title-lg">
+          <span>আইনি উৎস ও সংস্করণ তালিকা (Source Registry)</span>
+        </div>
+
+        <table class="sources-table" id="sourcesTable">
+          <thead>
+            <tr>
+              <th>আইন / উৎসের নাম</th>
+              <th>ধরন</th>
+              <th>কর্তৃপক্ষ</th>
+              <th>বর্তমান সংস্করণ</th>
+              <th>স্ট্যাটাস</th>
+              <th>পদক্ষেপ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-label="আইন">বাড়িভাড়া নিয়ন্ত্রণ আইন ১৯৯১</td>
+              <td data-label="ধরন">Statute</td>
+              <td data-label="কর্তৃপক্ষ">সংসদ</td>
+              <td data-label="সংস্করণ">১৯৯১ মূল আইন</td>
+              <td data-label="স্ট্যাটাস"><span class="badge badge-approved">Approved</span></td>
+              <td data-label="পদক্ষেপ"><button class="btn-primary" style="height:34px; padding:0 10px; font-size:0.75rem;" onclick="viewDiff()">Diff দেখুন</button></td>
+            </tr>
+            <tr>
+              <td data-label="আইন">ভূমি সংস্কার আইন ২০২৩</td>
+              <td data-label="ধরন">Statute</td>
+              <td data-label="কর্তৃপক্ষ">সংসদ</td>
+              <td data-label="সংস্করণ">২০২৩ সংশোধনী (Ver 2.0)</td>
+              <td data-label="স্ট্যাটাস"><span class="badge badge-pending">Review Pending</span></td>
+              <td data-label="পদক্ষেপ"><button class="btn-primary" style="height:34px; padding:0 10px; font-size:0.75rem;" onclick="viewDiff()">অনুমোদন ও Diff</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Legal Version Control & Diff Viewer (AC-M10-2) -->
+      <section class="diff-container" id="diffSection">
+        <div class="diff-header">
+          <div>
+            <h3 style="font-size:1.15rem; font-weight:700;">সংস্করণ তুলনা ও পরিবর্তন (Version Diff Viewer)</h3>
+            <p style="font-size:0.85rem; color:var(--color-text-muted);">ভূমি সংস্কার আইন: ২০১০ সংস্করণ বনাম ২০২৩ সংশোধনী</p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <span class="badge" style="background:#DCFCE7; color:#166534;">+১টি ধারা সংযোজিত</span>
+            <span class="badge" style="background:#FEF3C7; color:#92400E;">২টি ধারা পরিবর্তিত</span>
+          </div>
+        </div>
+
+        <div class="diff-grid">
+          <!-- Left: Predecessor Version -->
+          <div class="diff-pane">
+            <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--color-text-muted);">পূর্ববর্তী অনুমোদিত সংস্করণ (Ver 1.0 - 2010):</h4>
+            <div style="font-size:0.85rem; line-height:1.5;">
+              <p><strong>ধারা ১:</strong> কোনো ব্যক্তি বা পরিবার ১০০ বিঘার অতিরিক্ত কৃষি জমি দখলে রাখতে পারিবেন না।</p>
+              <div class="diff-removed">
+                <strong>ধারা ২:</strong> প্রতি শতাংশ জমির জন্য ১০ টাকা হারে ভূমি উন্নয়ন কর ধার্য থাকিবে।
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: New Pending Version -->
+          <div class="diff-pane">
+            <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--color-text-muted);">প্রস্তাবিত নতুন সংস্করণ (Ver 2.0 - 2023):</h4>
+            <div style="font-size:0.85rem; line-height:1.5;">
+              <p><strong>ধারা ১:</strong> কোনো ব্যক্তি বা পরিবার ৬০ বিঘার অতিরিক্ত কৃষি জমি দখলে রাখতে পারিবেন না।</p>
+              <div class="diff-added">
+                <strong>ধারা ২:</strong> প্রতি শতাংশ জমির জন্য ২৫ টাকা হারে ভূমি উন্নয়ন কর প্রযোজ্য হইবে।
+              </div>
+              <div class="diff-added">
+                <strong>ধারা ৩ (নতুন):</strong> অনলাইন ই-নামজারি ও ডিজিটাল খতিয়ান বাধ্যতামূলক করা হইল।
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approval Workflow Card -->
+        <div class="approve-card" id="approveCard">
+          <div class="ac-m10-warning" role="alert">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span><strong>দ্বৈত-অনুমোদন নীতি:</strong> উৎসের আপলোডার কখনো নিজে অনুমোদন দিতে পারবেন না। পর্যালোচক প্যানেলের ভিন্ন আইনি বিশেষজ্ঞের অনুমোদন আবশ্যক।</span>
+          </div>
+
+          <form onsubmit="handleApprove(event)">
+            <div style="margin-bottom:12px;">
+              <label for="reviewNotes" style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:4px;">অনুমোদন মন্তব্য (পর্যালোচকের মতামত):</label>
+              <textarea id="reviewNotes" rows="3" style="width:100%; padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; font-family:inherit; font-size:0.9rem;" placeholder="পর্যালোচনার পর্যবেক্ষণ লিখুন...">পরীক্ষামূলক নমুনা গেজেট নং ৪২২/২০২৩ মিলিয়ে দেখা হয়েছে।</textarea>
+            </div>
+
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+              <button type="submit" class="btn-primary" id="btnApprove" style="background:#0B5D4B;">
+                ✓ অনুমোদন দিন (Approve & Publish)
+              </button>
+              <button type="button" style="background:transparent; color:#DC2626; border:1.5px solid #DC2626; padding:0 18px; height:44px; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;" onclick="alert('সংশোধন চাওয়া হয়েছে...')">
+                ✕ পরিবর্তন প্রয়োজন (Request Changes)
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="mobile-bottom-nav">
+    <a href="/" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      <span>হোম</span>
+    </a>
+    <a href="/library" class="bottom-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      <span>পাঠাগার</span>
+    </a>
+    <a href="/admin/sources" class="bottom-tab active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+      <span>নলেজ সেন্টার</span>
+    </a>
+  </nav>
+
+  <script>
+    // Bengali Digits & Date Formatter for Knowledge Center
+    function toBanglaDigits(numStr) {
+      const bnDigits = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+      return String(numStr).replace(/[0-9]/g, d => bnDigits[d]);
+    }
+
+    function formatBanglaDate(isoDate) {
+      if (!isoDate) return "";
+      const months = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+      const parts = isoDate.split("-");
+      if (parts.length === 3) {
+        const year = toBanglaDigits(parts[0]);
+        const monthIdx = parseInt(parts[1], 10) - 1;
+        const month = months[monthIdx] || "";
+        const day = toBanglaDigits(parseInt(parts[2], 10));
+        return `${day} ${month} ${year}`;
+      }
+      return toBanglaDigits(isoDate);
+    }
+
+    function viewDiff() {
+      document.getElementById("diffSection").scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function handleApprove(e) {
+      e.preventDefault();
+      alert("সংস্করণ সফলভাবে অনুমোদিত হয়েছে! পূর্ববর্তী সংস্করণের মেয়াদ স্বয়ংক্রিয়ভাবে কার্যকর তারিখের পূর্বদিন পর্যন্ত নির্ধারিত হলো।");
+    }
+  </script>
+</body>
+</html>

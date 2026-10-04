@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI — মামলা বিস্তারিত ও ফোল্ডার</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #047857;
+      --color-primary-dark: #065F46;
+      --color-primary-soft: #ECFDF5;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-amber-bg: #FEF3C7;
+      --color-amber-border: #F59E0B;
+      --color-amber-text: #92400E;
+      --color-danger-bg: #FEE2E2;
+      --color-danger-border: #EF4444;
+      --color-danger-text: #991B1B;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* Sidebar */
+    .app-sidebar {
+      width: 250px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      background-color: var(--color-primary-soft);
+      color: var(--color-primary);
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding-bottom: 80px;
+    }
+
+    /* Top bar */
+    .top-bar {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .back-link:hover {
+      color: var(--color-primary);
+    }
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-delete-case {
+      background: var(--color-danger-bg);
+      color: var(--color-danger-text);
+      border: 1px solid var(--color-danger-border);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Case Header Card */
+    .case-header-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .case-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .case-title-main {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-text-main);
+    }
+    .badges-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-urgent {
+      background: var(--color-danger-bg);
+      color: var(--color-danger-text);
+      border: 1px solid var(--color-danger-border);
+    }
+    .badge-active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      border: 1px solid var(--color-primary);
+    }
+    .badge-action {
+      background: var(--color-amber-bg);
+      color: var(--color-amber-text);
+      border: 1px solid var(--color-amber-border);
+    }
+
+    /* Tabs Navigation (8 Tabs) */
+    .tabs-nav {
+      display: flex;
+      gap: 4px;
+      border-bottom: 2px solid var(--color-border);
+      overflow-x: auto;
+      background: var(--color-surface);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 6px 12px 0;
+    }
+    .tab-button {
+      background: none;
+      border: none;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.15s ease;
+    }
+    .tab-button:hover {
+      color: var(--color-primary);
+    }
+    .tab-button.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    /* Tab Contents */
+    .tab-panel {
+      display: none;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding: 24px;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--color-text-main);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* List & Cards */
+    .item-box {
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .item-box-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .item-box-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--color-text-main);
+    }
+    .item-box-sub {
+      font-size: 13px;
+      color: var(--color-text-muted);
+    }
+
+    /* Timeline specific */
+    .timeline-container {
+      position: relative;
+      padding-left: 24px;
+      border-left: 2px solid var(--color-border);
+      margin-left: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .timeline-node {
+      position: relative;
+    }
+    .timeline-dot {
+      position: absolute;
+      left: -31px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      border: 2px solid white;
+    }
+    .timeline-card {
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+    .timeline-date-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .timeline-date {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--color-primary);
+    }
+    .precision-tag {
+      font-size: 11px;
+      background: #E2E8F0;
+      color: #475569;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Deadlines card */
+    .deadline-card-box {
+      border: 2px solid var(--color-primary);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: var(--color-surface);
+      margin-bottom: 16px;
+    }
+    .deadline-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .days-badge {
+      background: var(--color-danger-bg);
+      color: var(--color-danger-text);
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .how-counted-box {
+      margin-top: 12px;
+      background: #F1F5F9;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+      color: #334155;
+    }
+
+    /* Notes specific (AC-M06-5 Note Privacy) */
+    .note-card {
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .note-privacy-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 6px;
+    }
+    .privacy-private {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+    .privacy-shared {
+      background: #D1FAE5;
+      color: #065F46;
+    }
+
+    /* AI Review specific */
+    .fake-provider-banner {
+      background: #FEE2E2;
+      border: 1px solid #EF4444;
+      color: #991B1B;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ai-label-pill {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      display: inline-block;
+      margin-bottom: 14px;
+    }
+    .review-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .review-section-card {
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 14px;
+      background: #F8FAFC;
+    }
+    .review-section-header {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--color-text-main);
+      margin-bottom: 8px;
+    }
+    .review-list {
+      list-style-type: disc;
+      padding-left: 20px;
+      font-size: 14px;
+      color: var(--color-text-main);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--color-surface);
+      border-radius: var(--radius);
+      max-width: 500px;
+      width: 100%;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-primary:hover {
+      background: var(--color-primary-dark);
+    }
+    .btn-secondary {
+      background: #F1F5F9;
+      color: var(--color-text-main);
+      border: 1px solid var(--color-border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    @media (max-width: 768px) {
+      .app-sidebar { display: none; }
+      .container { padding: 16px 12px; }
+      .tabs-nav { padding: 4px 6px 0; }
+      .tab-button { padding: 8px 10px; font-size: 13px; }
+      .tab-panel { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Desktop Sidebar -->
+  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+    <a href="/home" class="logo">
+      <span aria-hidden="true">⚖️</span>
+      <span>আইন-AI</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/home" class="nav-link">🏠 হোম</a></li>
+      <li><a href="/cases" class="nav-link active">📁 মামলা ফোল্ডার</a></li>
+      <li><a href="/documents/upload" class="nav-link">📄 নোটিশ স্ক্যান</a></li>
+      <li><a href="/notifications" class="nav-link">🔔 বিজ্ঞপ্তি</a></li>
+      <li><a href="/library" class="nav-link">📚 আইন পাঠাগার</a></li>
+      <li><a href="/notification-settings" class="nav-link">⚙️ সেটিংস</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Area -->
+  <main class="app-main">
+    <header class="top-bar">
+      <a href="/cases" class="back-link">
+        <span>←</span> সকল মামলায় ফেরত যান
+      </a>
+      <div class="top-actions">
+        <button type="button" class="btn-delete-case" id="btnOpenDeleteModal" onclick="openDeleteModal()">
+          মামলা মুছে ফেলুন
+        </button>
+      </div>
+    </header>
+
+    <div class="container">
+
+      <!-- Case Header Card -->
+      <section class="case-header-card" id="caseHeaderCard">
+        <div class="case-title-row">
+          <h1 class="case-title-main" id="caseTitleDisplay">মামলা শিরোনাম লোড হচ্ছে...</h1>
+          <div class="badges-group">
+            <span class="badge badge-action" id="caseStatusBadge">পদক্ষেপ প্রয়োজন</span>
+            <span class="badge badge-urgent" id="caseUrgencyBadge">জরুরি</span>
+            <span class="badge badge-active" id="caseTypeBadge">নোটিশ জবাব</span>
+          </div>
+        </div>
+        <p style="font-size: 15px; color: var(--color-text-muted);" id="caseObjectiveDisplay">
+          উদ্দেশ্য: আইনি নোটিশের যথাযথ জবাব প্রস্তুত ও অধিকার সংরক্ষণ।
+        </p>
+      </section>
+
+      <!-- 8-Tab Navigation -->
+      <nav class="tabs-nav" aria-label="মামলা ট্যাবসমূহ">
+        <button type="button" class="tab-button active" data-tab="overview" onclick="switchTab('overview', this)">১. সারসংক্ষেপ</button>
+        <button type="button" class="tab-button" data-tab="timeline" onclick="switchTab('timeline', this)">২. টাইমলাইন</button>
+        <button type="button" class="tab-button" data-tab="documents" onclick="switchTab('documents', this)">৩. নথিপত্র</button>
+        <button type="button" class="tab-button" data-tab="tasks" onclick="switchTab('tasks', this)">৪. করণীয় ও টাস্ক</button>
+        <button type="button" class="tab-button" data-tab="deadlines" onclick="switchTab('deadlines', this)">৫. সময়সীমা</button>
+        <button type="button" class="tab-button" data-tab="notes" onclick="switchTab('notes', this)">৬. ব্যক্তিগত নোট</button>
+        <button type="button" class="tab-button" data-tab="review" onclick="switchTab('review', this)">৭. AI পর্যালোচনা</button>
+        <button type="button" class="tab-button" data-tab="lawyer" onclick="switchTab('lawyer', this)">৮. আইনজীবী শেয়ার</button>
+      </nav>
+
+      <!-- Tab 1: Overview -->
+      <section class="tab-panel active" id="tab-overview">
+        <div class="section-title">
+          <span>মামলার বিবরণ ও মূল লক্ষ্য</span>
+        </div>
+        <p id="caseDescriptionText" style="color: var(--color-text-main); margin-bottom: 20px;">
+          নোটিশ নথি থেকে প্রস্তুতকৃত মামলা। ডাচ-বাংলা ব্যাংকের সংশ্লিষ্ট চেক সংক্রান্ত দাবি পর্যালোচনা করা হচ্ছে।
+        </p>
+
+        <div class="section-title">
+          <span>সংশ্লিষ্ট পক্ষসমূহ (Parties)</span>
+          <button type="button" class="btn-primary" style="font-size:12px; padding:4px 10px;" onclick="openPartyModal()">+ পক্ষ যুক্ত করুন</button>
+        </div>
+        <div id="partiesList">
+          <!-- Injected dynamically -->
+        </div>
+      </section>
+
+      <!-- Tab 2: Timeline -->
+      <section class="tab-panel" id="tab-timeline">
+        <div class="section-title">
+          <span>ঘটনাপঞ্জি ও সময়ক্রম (Timeline)</span>
+          <button type="button" class="btn-primary" style="font-size:12px; padding:4px 10px;" onclick="openEventModal()">+ ইভেন্ট যোগ করুন</button>
+        </div>
+        <div class="timeline-container" id="eventsTimeline">
+          <!-- Injected dynamically -->
+        </div>
+      </section>
+
+      <!-- Tab 3: Documents -->
+      <section class="tab-panel" id="tab-documents">
+        <div class="section-title">
+          <span>সংযুক্ত নথিপত্র (Documents)</span>
+          <a href="/documents/upload" class="btn-primary" style="font-size:12px; padding:4px 10px; text-decoration:none;">+ নথি আপলোড</a>
+        </div>
+        <div id="documentsList">
+          <!-- Injected dynamically -->
+        </div>
+      </section>
+
+      <!-- Tab 4: Tasks -->
+      <section class="tab-panel" id="tab-tasks">
+        <div class="section-title">
+          <span>করণীয় তালিকা (Checklist & Tasks)</span>
+        </div>
+        <div id="tasksList">
+          <!-- Injected dynamically -->
+        </div>
+      </section>
+
+      <!-- Tab 5: Deadlines -->
+      <section class="tab-panel" id="tab-deadlines">
+        <div class="section-title">
+          <span>আইনি সময়সীমা ও রিমাইন্ডার (Deadlines)</span>
+        </div>
+        <div id="deadlinesList">
+          <!-- Injected dynamically -->
+        </div>
+      </section>
+
+      <!-- Tab 6: Notes (AC-M06-5 Privacy) -->
+      <section class="tab-panel" id="tab-notes">
+        <div class="section-title">
+          <span>ব্যক্তিগত নোট (Private Notes)</span>
+        </div>
+        <div style="background: #F1F5F9; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+          <h4 style="font-size: 14px; margin-bottom: 8px;">নতুন নোট লিখুন</h4>
+          <textarea id="newNoteText" class="form-control" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--color-border); font-family:inherit;" rows="3" placeholder="মামলা সংক্রান্ত নিজস্ব পর্যালোচনা বা পর্যবেক্ষণ..."></textarea>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <label style="font-size: 13px; display:flex; align-items:center; gap:6px; color:var(--color-text-muted);">
+                <input type="checkbox" id="noteIncludeInAnalysis" />
+                <span>AI বিশ্লেষণে অন্তর্ভুক্ত করুন (Include in AI analysis)</span>
+              </label>
+              <label style="font-size: 13px; display:flex; align-items:center; gap:6px; color:var(--color-text-muted);">
+                <input type="checkbox" id="noteIncludeInBrief" />
+                <span>আইনজীবীর ব্রিফে অন্তর্ভুক্ত করুন (Include in lawyer brief - AC-M06-5)</span>
+              </label>
+            </div>
+            <button type="button" class="btn-primary" style="font-size:13px;" onclick="handleAddNote()">নোট সংরক্ষণ করুন</button>
+          </div>
+          <div style="font-size: 12px; color: #64748B; margin-top: 6px;">
+            🔒 নোট গোপনীয়তা: বক্সগুলো চেক না করলে এই নোটটি সম্পূর্ণ ব্যক্তিগত থাকবে এবং AI প্রম্পট বা আইনজীবী ব্রিফে কখনোই পাঠানো হবে না (AC-M06-5)।
+          </div>
+        </div>
+        <div id="notesContainer">
+          <!-- Injected dynamically -->
+        </div>
+      </section>
+
+      <!-- Tab 7: AI Case Review -->
+      <section class="tab-panel" id="tab-review">
+        <!-- Fake Model Banner -->
+        <div class="fake-provider-banner" id="reviewFakeBanner">
+          <span aria-hidden="true">⚠️</span>
+          <span>পরীক্ষামূলক মোড: এটি আসল AI বিশ্লেষণ নয়।</span>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <span class="ai-label-pill">AI বিশ্লেষণ, আইনি পরামর্শ নয়</span>
+          <button type="button" class="btn-primary" id="btnRunCaseReview" onclick="runCaseReview()">
+            ⚡ AI পর্যালোচনা পরিচালনা করুন
+          </button>
+        </div>
+
+        <div class="review-grid" id="reviewOutputContainer">
+          <!-- Injected dynamically -->
+        </div>
+      </section>
+
+      <!-- Tab 8: Lawyer Sharing (M08 Placeholder) -->
+      <section class="tab-panel" id="tab-lawyer">
+        <div class="section-title">
+          <span>আইনজীবীর সাথে শেয়ার করুন (Share a brief — placeholder for S9)</span>
+        </div>
+        <div style="border: 1px dashed var(--color-primary); border-radius: var(--radius); padding: 24px; text-align: center; background: var(--color-primary-soft);">
+          <div style="font-size: 36px; margin-bottom: 10px;">👨‍⚖️</div>
+          <h3 style="font-size: 18px; color: var(--color-primary-dark); margin-bottom: 8px;">আইনজীবী পরামর্শ ব্রিফ মডিউল</h3>
+          <p style="font-size: 14px; color: var(--color-text-main); max-width: 500px; margin: 0 auto 16px;">
+            এই মামলার সারসংক্ষেপ, টাইমলাইন এবং সংযুক্ত নথিপত্র দিয়ে এক ক্লিকে আইনজীবীর জন্য একটি গোপনীয় আইনি ব্রিফ প্রস্তুত করতে পারবেন।
+          </p>
+          <button type="button" class="btn-primary" onclick="alert('আইনজীবী প্ল্যাটফর্ম সংযোগ সেবা (M08/S9) পরবর্তী ধাপে উন্মুক্ত হবে। আপনার নথিগুলো সুরক্ষিত রয়েছে।')">
+            আইনি ব্রিফ তৈরি করুন (শীঘ্রই আসছে)
+          </button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modal: Delete Case -->
+  <div class="modal-overlay" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="modal-box">
+      <h3 class="modal-title" id="deleteModalTitle" style="color: var(--color-danger-text);">মামলা ফোল্ডার মুছে ফেলার নিশ্চিতকরণ</h3>
+      <p style="font-size: 14px; color: var(--color-text-muted);">
+        আপনি কি নিশ্চিতভাবে এই মামলা ফোল্ডারটি মুছে ফেলতে চান? সংযুক্ত নথিপত্র সম্পর্কে আপনার সিদ্ধান্ত নির্বাচন করুন:
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="radio" name="docAction" value="keep" checked />
+          <span>ডকুমেন্ট লাইব্রেরিতে সংরক্ষণ করুন (Keep files in library - Recommended)</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="radio" name="docAction" value="unlink" />
+          <span>মামলা থেকে বিচ্ছিন্ন করুন (Unlink from case)</span>
+        </label>
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="radio" name="docAction" value="delete" />
+          <span>স্থায়ীভাবে নথি মুছে ফেলুন (Permanently delete files)</span>
+        </label>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
+        <button type="button" class="btn-secondary" onclick="closeDeleteModal()">বাতিল</button>
+        <button type="button" class="btn-delete-case" onclick="confirmDeleteCase()">মুছে ফেলুন</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentCase = null;
+    let caseId = null;
+
+    function toBanglaDigits(num) {
+      const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+      return String(num).replace(/[0-9]/g, d => bnDigits[Number(d)]);
+    }
+
+    function initCaseId() {
+      const parts = window.location.pathname.split('/');
+      const idx = parts.indexOf('cases');
+      if (idx !== -1 && parts[idx + 1]) {
+        caseId = parts[idx + 1];
+      } else {
+        caseId = new URLSearchParams(window.location.search).get('id') || 'case-mock-01';
+      }
+    }
+
+    function getMockCaseDetail(id) {
+      return {
+        id: id || 'case-mock-01',
+        title: 'আইনি নোটিশ বিষয়: এনআই অ্যাক্ট ১৩৮ চেক ডিজঅনার',
+        case_type: 'notice_response',
+        status: 'action_required',
+        urgency: 'urgent',
+        objective: 'নোটিশের যথাযথ জবাব প্রদান ও ফৌজদারি মামলার ঝুঁকি হ্রাস।',
+        description: 'ডাচ-বাংলা ব্যাংকের সংশ্লিষ্ট চেক ডিজঅনারের প্রেক্ষিতে প্রেরিত নোটিশের প্রতিক্রিয়া ও কাগজপত্র সংকলন।',
+        parties: [
+          { id: 'p1', name: 'মোঃ আব্দুর রহিম', role: 'petitioner', contact_info: '০১৭XXXXXXXX' },
+          { id: 'p2', name: 'জনাব কাজী হাসান (প্রেরক)', role: 'respondent', contact_info: 'নোটিশে উল্লিখিত' }
+        ],
+        events: [
+          { id: 'e1', title: 'আইনি নোটিশ গ্রহণ', event_date: '2026-10-01', date_precision: 'day', event_type: 'notice_received', description: 'রেজিস্ট্রি ডাকযোগে নোটিশ প্রাপ্তি।' },
+          { id: 'e2', title: 'আইন-AI দ্বারা নোটিশ বিশ্লেষণ সম্পন্ন', event_date: '2026-10-02', date_precision: 'day', event_type: 'analyzed', description: 'প্রাথমিক সারসংক্ষেপ ও চেকলিস্ট প্রস্তুত।' },
+          { id: 'e3', title: 'জবাব দাখিলের শেষ সময়সীমা', event_date: '2026-10-16', date_precision: 'day', event_type: 'deadline_confirmed', description: 'আইন অনুযায়ী ১৫ দিনের মেয়াদ।' }
+        ],
+        documents: [
+          { id: 'd1', filename: 'legal_notice_cheque_dishonor.pdf', file_size: 245000, created_at: '2026-10-01' }
+        ],
+        tasks: [
+          { id: 't1', title: 'ব্যাংক স্টেটমেন্ট ও চেক রিটার্ন স্লিপ সংগ্রহ', status: 'not_started' },
+          { id: 't2', title: 'আইনজীবীর মাধ্যমে নোটিশের জবাব প্রেরণ', status: 'not_started' }
+        ],
+        deadlines: [
+          {
+            id: 'dl1',
+            title: 'আইনি নোটিশের জবাব দাখিল',
+            due_date: '2026-10-16',
+            days_left: 13,
+            confirmed_by_user: true,
+            calculation_steps: [
+              'নোটিশ গ্রহণের তারিখ: ০১ অক্টোবর ২০২৬',
+              'এনআই অ্যাক্ট ১৩৮ ধারা মোতাবেক মেয়াদ: ১৫ দিন',
+              'চুড়ান্ত নির্ধারিত তারিখ: ১৬ অক্টোবর ২০২৬'
+            ]
+          }
+        ],
+        notes: [
+          {
+            id: 'n1',
+            note_text: 'ব্যাংক ম্যানেজারের সাথে প্রাথমিক কথা হয়েছে, চেকের স্বাক্ষর মিল রয়েছে।',
+            include_in_analysis: false,
+            created_at: '২০২৬-১০-০২'
+          }
+        ]
+      };
+    }
+
+    async function loadCaseDetail() {
+      initCaseId();
+      const urlParams = new URLSearchParams(window.location.search);
+
+      if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http') || urlParams.has('mock')) {
+        currentCase = getMockCaseDetail(caseId);
+        renderCase(currentCase);
+        handleVariant(urlParams.get('variant'));
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/v1/cases/${caseId}`);
+        if (!res.ok) throw new Error('মামলা তথ্য লোড করা যায়নি');
+        const data = await res.json();
+        currentCase = data.case;
+        renderCase(currentCase);
+        handleVariant(urlParams.get('variant'));
+      } catch (err) {
+        console.warn('Fallback to mock case:', err);
+        currentCase = getMockCaseDetail(caseId);
+        renderCase(currentCase);
+        handleVariant(urlParams.get('variant'));
+      }
+    }
+
+    function handleVariant(variant) {
+      if (variant === 'timeline') {
+        const btn = document.querySelector('[data-tab="timeline"]');
+        if (btn) switchTab('timeline', btn);
+      } else if (variant === 'deadlines') {
+        const btn = document.querySelector('[data-tab="deadlines"]');
+        if (btn) switchTab('deadlines', btn);
+      } else if (variant === 'overview') {
+        const btn = document.querySelector('[data-tab="overview"]');
+        if (btn) switchTab('overview', btn);
+      }
+    }
+
+    function renderCase(c) {
+      document.getElementById('caseTitleDisplay').innerText = c.title;
+      document.getElementById('caseObjectiveDisplay').innerText = 'উদ্দেশ্য: ' + (c.objective || 'আইনি অধিকার সংরক্ষণ');
+      document.getElementById('caseDescriptionText').innerText = c.description || 'কোনো বিবরণ যোগ করা হয়নি।';
+
+      // Status
+      const statusBadge = document.getElementById('caseStatusBadge');
+      statusBadge.innerText = c.status === 'action_required' ? 'পদক্ষেপ প্রয়োজন' : 'সক্রিয়';
+
+      // Urgency
+      const urgencyBadge = document.getElementById('caseUrgencyBadge');
+      urgencyBadge.innerText = c.urgency === 'urgent' ? 'জরুরি' : 'নিয়মিত';
+      urgencyBadge.className = 'badge ' + (c.urgency === 'urgent' ? 'badge-urgent' : 'badge-active');
+
+      // Parties
+      const partiesBox = document.getElementById('partiesList');
+      partiesBox.innerHTML = '';
+      (c.parties || []).forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'item-box';
+        div.innerHTML = `
+          <div class="item-box-content">
+            <span class="item-box-title">${p.name} (${p.role === 'petitioner' ? 'বাদি / গ্রহীতা' : 'বিবাদি / প্রেরক'})</span>
+            <span class="item-box-sub">যোগাযোগ: ${p.contact_info || 'উল্লিখিত নেই'}</span>
+          </div>
+        `;
+        partiesBox.appendChild(div);
+      });
+
+      // Events / Timeline
+      const timelineBox = document.getElementById('eventsTimeline');
+      timelineBox.innerHTML = '';
+      (c.events || []).forEach(ev => {
+        const node = document.createElement('div');
+        node.className = 'timeline-node';
+        node.innerHTML = `
+          <div class="timeline-dot"></div>
+          <div class="timeline-card">
+            <div class="timeline-date-row">
+              <span class="timeline-date">${ev.event_date}</span>
+              <span class="precision-tag">নির্ভুলতা: ${ev.date_precision === 'day' ? 'দিন' : 'মাস'}</span>
+            </div>
+            <div class="item-box-title">${ev.title}</div>
+            <div class="item-box-sub">${ev.description || ''}</div>
+          </div>
+        `;
+        timelineBox.appendChild(node);
+      });
+
+      // Documents
+      const docsBox = document.getElementById('documentsList');
+      docsBox.innerHTML = '';
+      (c.documents || []).forEach(d => {
+        const div = document.createElement('div');
+        div.className = 'item-box';
+        div.innerHTML = `
+          <div class="item-box-content">
+            <span class="item-box-title">${d.filename}</span>
+            <span class="item-box-sub">সংযুক্ত হয়েছে: ${d.created_at || 'সম্প্রতি'}</span>
+          </div>
+          <div>
+            <a href="/documents/viewer?id=${d.id}" class="btn-secondary" style="font-size:12px; text-decoration:none;">ভিউয়ার</a>
+          </div>
+        `;
+        docsBox.appendChild(div);
+      });
+
+      // Tasks
+      const tasksBox = document.getElementById('tasksList');
+      tasksBox.innerHTML = '';
+      (c.tasks || []).forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'item-box';
+        div.innerHTML = `
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input type="checkbox" ${t.status === 'completed' ? 'checked' : ''} />
+            <span class="item-box-title" style="${t.status === 'completed' ? 'text-decoration:line-through; color:var(--color-text-muted);' : ''}">${t.title}</span>
+          </label>
+        `;
+        tasksBox.appendChild(div);
+      });
+
+      // Deadlines
+      const deadlinesBox = document.getElementById('deadlinesList');
+      deadlinesBox.innerHTML = '';
+      (c.deadlines || []).forEach(dl => {
+        const card = document.createElement('div');
+        card.className = 'deadline-card-box';
+        const steps = dl.calculation_steps || [];
+        card.innerHTML = `
+          <div class="deadline-header-row">
+            <span class="item-box-title" style="font-size:17px;">${dl.title}</span>
+            <span class="days-badge">${toBanglaDigits(dl.days_left || 13)} দিন বাকি</span>
+          </div>
+          <div style="font-size:14px; margin-bottom:8px;">
+            নির্ধারিত তারিখ: <strong>${dl.due_date}</strong> (ব্যবহারকারী দ্বারা নিশ্চিত)
+          </div>
+          <div class="how-counted-box">
+            <div style="font-weight:700; margin-bottom:4px;">হিসাব যেভাবে করা হয়েছে (Rules Engine):</div>
+            <ul style="padding-left:18px;">
+              ${steps.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+        deadlinesBox.appendChild(card);
+      });
+
+      // Notes
+      renderNotes(c.notes || []);
+    }
+
+    function renderNotes(notes) {
+      const container = document.getElementById('notesContainer');
+      container.innerHTML = '';
+      if (notes.length === 0) {
+        container.innerHTML = '<div style="font-size:13px; color:var(--color-text-muted);">কোনো নোট সংরক্ষিত নেই।</div>';
+        return;
+      }
+      notes.forEach(n => {
+        const card = document.createElement('div');
+        card.className = 'note-card';
+        const isShared = n.include_in_analysis;
+        const isBrief = n.include_in_brief;
+        card.innerHTML = `
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;">
+            <span class="note-privacy-tag ${isShared ? 'privacy-shared' : 'privacy-private'}">
+              ${isShared ? '✓ AI বিশ্লেষণে অন্তর্ভুক্ত' : '🔒 AI থেকে গোপন'}
+            </span>
+            <span class="note-privacy-tag ${isBrief ? 'privacy-shared' : 'privacy-private'}">
+              ${isBrief ? '✓ আইনজীবীর ব্রিফে অন্তর্ভুক্ত' : '🔒 ব্রিফে দেখানো হবে না'}
+            </span>
+          </div>
+          <p style="font-size:14px; margin-bottom:6px;">${n.note_text}</p>
+          <div style="font-size:12px; color:var(--color-text-muted);">${n.created_at || 'আজ'}</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function switchTab(tabKey, btn) {
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const panel = document.getElementById('tab-' + tabKey);
+      if (panel) panel.classList.add('active');
+    }
+
+    async function handleAddNote() {
+      const text = document.getElementById('newNoteText').value.trim();
+      const includeInAnalysis = document.getElementById('noteIncludeInAnalysis').checked;
+      const includeInBrief = document.getElementById('noteIncludeInBrief') ? document.getElementById('noteIncludeInBrief').checked : false;
+      if (!text) return;
+
+      if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http')) {
+        const mockNote = {
+          id: 'n-' + Date.now(),
+          note_text: text,
+          include_in_analysis: includeInAnalysis,
+          include_in_brief: includeInBrief,
+          created_at: 'আজ'
+        };
+        currentCase.notes = currentCase.notes || [];
+        currentCase.notes.unshift(mockNote);
+        document.getElementById('newNoteText').value = '';
+        renderNotes(currentCase.notes);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/v1/cases/${caseId}/notes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            note_text: text,
+            is_private: true,
+            include_in_analysis: includeInAnalysis,
+            include_in_brief: includeInBrief
+          })
+        });
+        const data = await res.json();
+        document.getElementById('newNoteText').value = '';
+        loadCaseDetail();
+      } catch (err) {
+        alert('নোট সংরক্ষণে সমস্যা: ' + err.message);
+      }
+    }
+
+    async function runCaseReview() {
+      const btn = document.getElementById('btnRunCaseReview');
+      btn.disabled = true;
+      btn.innerText = 'পর্যালোচনা চলছে...';
+
+      const mockReview = {
+        possible_issues: ['এনআই অ্যাক্ট ১৩৮ ধারা মোতাবেক ৩০ দিনের নোটিশ মেয়াদ সঠিকভাবে গণনা করা হয়েছে কিনা।', 'চেক ডিজঅনারের কারণ মেমোতে স্পষ্ট আছে কিনা।'],
+        missing_information: ['প্রেরকের সাথে পূর্ববর্তী চুক্তির মূল কপি এখনো ফোল্ডারে নেই।'],
+        required_documents: ['ব্যাংক হিসাব বিবরণী (গত ৬ মাস)', 'চুক্তিপত্র বা রসিদ বই'],
+        possible_processes: ['নির্ধারিত ১৫ দিনের মধ্যে আইনজীবীর মাধ্যমে লিখিত জবাব দাখিল।', 'পারস্পরিক সমঝোতা বৈঠক।'],
+        questions_for_lawyer: ['মেমোর তারিখের পর নোটিশ পাঠাতে কোনো কালক্ষেপণ হয়েছে কি?', 'চেকের মূল স্বাক্ষর ও সিল পরীক্ষার দাবি করা যাবে কি?'],
+        options_to_discuss: ['সালিশি প্রক্রিয়ায় অর্থ পরিশোধের সময় বৃদ্ধির আবেদন।', 'দাবি অস্বীকার করে আইনি নোটিশের জবাব দাখিল।']
+      };
+
+      if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http')) {
+        renderReview(mockReview);
+        btn.disabled = false;
+        btn.innerText = '⚡ AI পর্যালোচনা পরিচালনা করুন';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/v1/cases/${caseId}/review`, { method: 'POST' });
+        const data = await res.json();
+        renderReview(data.review || mockReview);
+      } catch (err) {
+        console.warn('API review failed, showing mock review:', err);
+        renderReview(mockReview);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '⚡ AI পর্যালোচনা পরিচালনা করুন';
+      }
+    }
+
+    function renderReview(review) {
+      const container = document.getElementById('reviewOutputContainer');
+      container.innerHTML = `
+        <div class="review-section-card">
+          <div class="review-section-header">১. সম্ভাব্য আইনি সমস্যা (Possible Legal Issues)</div>
+          <ul class="review-list">
+            ${(review.possible_issues || []).map(i => `<li>${i}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="review-section-card">
+          <div class="review-section-header">২. অনুপস্থিত তথ্য (Missing Information)</div>
+          <ul class="review-list">
+            ${(review.missing_information || []).map(i => `<li>${i}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="review-section-card">
+          <div class="review-section-header">৩. প্রয়োজনীয় কাগজপত্র (Required Documents)</div>
+          <ul class="review-list">
+            ${(review.required_documents || []).map(i => `<li>${i}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="review-section-card">
+          <div class="review-section-header">৪. সম্ভাব্য আইনি প্রক্রিয়া (Possible Processes)</div>
+          <ul class="review-list">
+            ${(review.possible_processes || []).map(i => `<li>${i}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="review-section-card">
+          <div class="review-section-header">৫. আইনজীবীকে জিজ্ঞাসা করার প্রশ্ন (Questions for Lawyer)</div>
+          <ul class="review-list">
+            ${(review.questions_for_lawyer || []).map(i => `<li>${i}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="review-section-card">
+          <div class="review-section-header">৬. আলোচনাযোগ্য বিকল্পসমূহ (Options to Discuss)</div>
+          <ul class="review-list">
+            ${(review.options_to_discuss || []).map(i => `<li>${i}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    function openDeleteModal() {
+      document.getElementById('deleteModal').classList.add('open');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('open');
+    }
+
+    async function confirmDeleteCase() {
+      const selected = document.querySelector('input[name="docAction"]:checked').value;
+      if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http')) {
+        alert('মামলা ফোল্ডার মুছে ফেলা হয়েছে (নথি সংরক্ষণ: ' + selected + ')');
+        window.location.href = '/cases';
+        return;
+      }
+      try {
+        const res = await fetch(`/api/v1/cases/${caseId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ document_action: selected })
+        });
+        if (res.ok) {
+          window.location.href = '/cases';
+        } else {
+          throw new Error('মুছে ফেলা ব্যর্থ হয়েছে');
+        }
+      } catch (err) {
+        alert('ত্রুটি: ' + err.message);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadCaseDetail);
+  </script>
+</body>
+</html>

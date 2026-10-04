@@ -1,0 +1,20 @@
+[
+  {
+    "id": "proc-placeholder-001",
+    "case_types": ["rent_tenancy"],
+    "title": "Eviction Notice and Rent Controller Procedure (Placeholder)",
+    "title_bn": "ভাড়াটিয়া উচ্ছেদ নোটিশ ও ভাড়া আদালত প্রক্রিয়া (খসড়া প্লেসহোল্ডার)",
+    "forum": "Rent Controller Court / Civil Court",
+    "steps": [
+      {"step_no": 1, "title_bn": "লিখিত আইনি নোটিশ প্রদান", "description_bn": "বাড়ি ভাড়া নিয়ন্ত্রণ আইনের ১৮ ধারা অনুযায়ী নির্ধারিত মেয়াদের পূর্বে রেজিস্ট্রি ডাকযোগে নোটিশ প্রেরণ।"},
+      {"step_no": 2, "title_bn": "ভাড়া নিয়ন্ত্রক আদালতে আবেদন দাখিল", "description_bn": "নোটিশের মেয়াদান্তে প্রতিকার না পাইলে সংশ্লিষ্ট সহকারী জজ আদালতে মোকদ্দমা দায়ের।"}
+    ],
+    "documents": [
+      "ভাড়া চুক্তিপত্র (মৌলিক)",
+      "স্বাক্ষরিত ভাড়ার রসিদ বই",
+      "আইনি নোটিশের কপি ও এ/ডি প্রাপ্তিস্বীকার রসিদ"
+    ],
+    "status": "DRAFT_NOT_REVIEWED",
+    "note": "PLACEHOLDER ONLY: Requires formal validation by enrolled Advocate."
+  }
+]

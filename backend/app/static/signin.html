@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI (AIN-AI) — প্রবেশ ও অ্যাকাউন্ট তৈরি</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --color-primary: #047857;
+      --color-primary-dark: #065F46;
+      --color-primary-soft: #ECFDF5;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background-color: var(--color-bg, #f8fafc);
+      color: var(--color-text-main, #0f172a);
+      font-family: var(--font-bn, 'Noto Sans Bengali', 'Inter', sans-serif);
+      font-size: 16px;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .hidden { display: none !important; }
+    main {
+      width: 100%;
+      max-width: 448px;
+      background: var(--color-surface, #ffffff);
+      border-radius: 1rem;
+      border: 1px solid var(--color-border, #e2e8f0);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    header {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .space-y-4 > * + * { margin-top: 1rem; }
+    .space-y-3 > * + * { margin-top: 0.75rem; }
+    .space-y-2 > * + * { margin-top: 0.5rem; }
+    .grid { display: grid; }
+    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .gap-3 { gap: 0.75rem; }
+    .gap-2 { gap: 0.5rem; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-center { justify-content: center; }
+    .justify-between { justify-content: space-between; }
+    .flex-col { flex-direction: column; }
+    .flex-1 { flex: 1 1 0%; }
+    .w-full { width: 100%; }
+    .text-center { text-align: center; }
+    .rounded-xl { border-radius: 0.75rem; }
+    .rounded-2xl { border-radius: 1rem; }
+    .border { border: 1px solid #e2e8f0; }
+    .border-2 { border: 2px solid; }
+    .border-emerald-600 { border-color: #059669; }
+    .border-emerald-200 { border-color: #a7f3d0; }
+    .border-slate-200 { border-color: #e2e8f0; }
+    .border-slate-300 { border-color: #cbd5e1; }
+    .p-6 { padding: 1.5rem; }
+    .p-3\.5 { padding: 0.875rem; }
+    .p-2\.5 { padding: 0.625rem; }
+    .p-2 { padding: 0.5rem; }
+    .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .bg-slate-50 { background-color: #f8fafc; }
+    .bg-slate-100 { background-color: #f1f5f9; }
+    .bg-slate-900 { background-color: #0f172a; }
+    .bg-emerald-50 { background-color: #ecfdf5; }
+    .bg-emerald-600 { background-color: #059669; }
+    .bg-emerald-700 { background-color: #047857; }
+    .text-white { color: #ffffff; }
+    .text-slate-500 { color: #64748b; }
+    .text-slate-600 { color: #475569; }
+    .text-slate-700 { color: #334155; }
+    .text-slate-900 { color: #0f172a; }
+    .text-emerald-400 { color: #34d399; }
+    .text-emerald-700 { color: #047857; }
+    .text-emerald-900 { color: #064e3b; }
+    .text-rose-600 { color: #e11d48; }
+    .font-bold { font-weight: 700; }
+    .font-semibold { font-weight: 600; }
+    .font-medium { font-weight: 500; }
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-base { font-size: 1rem; line-height: 1.5rem; }
+    .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+    .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+    input, select, button {
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    button {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center p-4">
+
+  <main class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+    <!-- Header -->
+    <header class="bg-slate-900 text-white p-6 text-center">
+      <div class="w-12 h-12 rounded-xl bg-emerald-600 mx-auto flex items-center justify-center text-2xl shadow-md mb-2">
+        ⚖️
+      </div>
+      <h1 class="text-xl font-bold tracking-tight">আইন-AI (Ain-AI)</h1>
+      <p class="text-xs text-emerald-400 font-medium">বাংলাদেশ লিগ্যাল ইন্টেলিজেন্স ও ড্রাফটিং ওএস</p>
+    </header>
+
+    <div class="p-6">
+      <!-- Step 1: Welcome & Language -->
+      <section id="stepWelcome" class="space-y-4">
+        <h2 class="text-base font-bold text-slate-900 text-center">ভাষা নির্বাচন করুন / Select Language</h2>
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button type="button" onclick="setLang('bn')" id="btnLangBn" class="p-3.5 border-2 border-emerald-600 bg-emerald-50 rounded-xl font-bold text-emerald-900 text-center shadow-sm">
+            বাংলা (ডিফল্ট)
+          </button>
+          <button type="button" onclick="setLang('en')" id="btnLangEn" class="p-3.5 border border-slate-200 rounded-xl font-semibold text-slate-700 text-center hover:bg-slate-50">
+            English
+          </button>
+        </div>
+
+        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs space-y-2 mt-4 text-slate-600">
+          <div class="flex items-center space-x-2">
+            <span class="text-emerald-600 font-bold">✓</span>
+            <span>যাচাইকৃত আইন ও বিধিমালা (১০০% উদ্ধৃতি সমর্থিত)</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-emerald-600 font-bold">✓</span>
+            <span>স্বয়ংক্রিয় তামাদি ও আইনি নোটিশ ক্যালকুলেটর</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-emerald-600 font-bold">✓</span>
+            <span>নিরাপদ ডেটা সুরক্ষা ও এন্ড-টু-এন্ড অডিট ট্রেইল</span>
+          </div>
+        </div>
+
+        <button type="button" onclick="goToStep('Signin')" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow transition">
+          এগিয়ে যান (Continue)
+        </button>
+
+        <!-- Quick 1-Click Demo Login -->
+        <div class="pt-4 border-t border-slate-200">
+          <p class="text-xs text-slate-500 font-semibold mb-2.5 text-center">⚡ দ্রুত ডেমো প্রবেশ (Quick 1-Click Access):</p>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="quickLogin('citizen')" id="btnQuickCitizen" class="p-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center">
+              <span class="text-base mb-1">⚖️</span>
+              <span>এডভোকেট ড্যাশবোর্ড</span>
+            </button>
+            <button type="button" onclick="quickLogin('admin')" id="btnQuickAdmin" class="p-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex flex-col items-center justify-center">
+              <span class="text-base mb-1">🛡️</span>
+              <span>অ্যাডমিন প্যানেল</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 2: Mobile Number Sign-in -->
+      <section id="stepSignin" class="hidden space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">মোবাইল নম্বর প্রবেশ করুন</h2>
+          <p class="text-xs text-slate-500 mt-0.5">আপনার ১১ ডিজিটের বাংলাদেশি মোবাইল নম্বরে ৬ ডিজিটের কোড পাঠানো হবে।</p>
+        </div>
+
+        <div class="space-y-2">
+          <label for="phoneInput" class="block text-xs font-semibold text-slate-700">মোবাইল নম্বর:</label>
+          <div class="flex">
+            <span class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-300 bg-slate-100 text-slate-600 text-sm font-semibold">
+              +880
+            </span>
+            <input type="tel" id="phoneInput" placeholder="01711000000" maxlength="11" class="flex-1 rounded-r-xl border border-slate-300 p-2.5 text-sm focus:border-emerald-600 focus:outline-hidden" />
+          </div>
+          <p id="phoneError" class="text-xs text-rose-600 hidden font-medium"></p>
+        </div>
+
+        <button type="button" id="btnRequestOtp" onclick="requestOtp()" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow transition">
+          ভেরিফিকেশন কোড পাঠান
+        </button>
+      </section>
+
+      <!-- Step 3: OTP Verification -->
+      <section id="stepOtp" class="hidden space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">কোড প্রবেশ করুন</h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            <span id="displayPhone"></span> নম্বরে পাঠানো ৬-ডিজিটের কোডটি লিখুন।
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <div id="otpDevBadge" class="hidden p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-800 font-semibold text-center">
+            💡 টেস্ট মোড কোড: <span id="devOtpSpan" class="font-mono text-sm underline font-bold">123456</span> (নিচে অটো-ফিল্ড হয়েছে)
+          </div>
+          <label for="otpCodeInput" class="block text-xs font-semibold text-slate-700">৬-ডিজিট কোড:</label>
+          <input type="text" id="otpCodeInput" maxlength="6" placeholder="123456" class="w-full text-center tracking-widest text-2xl font-mono font-bold rounded-xl border border-slate-300 p-2.5 focus:border-emerald-600 focus:outline-hidden" />
+          <p id="otpError" class="text-xs text-rose-600 hidden font-medium"></p>
+        </div>
+
+        <button type="button" id="btnVerifyOtp" onclick="verifyOtp()" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow transition">
+          কোড নিশ্চিত করুন
+        </button>
+
+        <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t">
+          <span id="timerText">পুনরায় কোড পাঠানোর সময়: <strong id="timerSec">60</strong>s</span>
+          <button type="button" id="btnResend" onclick="resendOtp()" disabled class="text-emerald-700 font-bold opacity-50 cursor-not-allowed">
+            পুনরায় পাঠান
+          </button>
+        </div>
+      </section>
+
+      <!-- Step 4: Onboarding & Consents -->
+      <section id="stepOnboarding" class="hidden space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">প্রাথমিক তথ্য ও সম্মতি (Onboarding)</h2>
+          <p class="text-xs text-slate-500 mt-0.5">আইনি সেবার জন্য আপনার তথ্য এবং সম্মতি প্রদান করুন।</p>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label for="userNameInput" class="block text-xs font-semibold text-slate-700">আপনার নাম (ঐচ্ছিক):</label>
+            <input type="text" id="userNameInput" placeholder="উদাঃ ব্যারিস্টার তানভীর আহমেদ" class="w-full rounded-xl border border-slate-300 p-2 text-sm focus:border-emerald-600 focus:outline-hidden" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="userLangSelect" class="block text-xs font-semibold text-slate-700">ভাষা:</label>
+              <select id="userLangSelect" class="w-full rounded-xl border border-slate-300 p-2 text-xs bg-white">
+                <option value="bn" selected>বাংলা</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div>
+              <label for="userNumeralSelect" class="block text-xs font-semibold text-slate-700">সংখ্যার রূপ:</label>
+              <select id="userNumeralSelect" class="w-full rounded-xl border border-slate-300 p-2 text-xs bg-white">
+                <option value="bn" selected>বাংলা সংখ্যা (১২৩৪)</option>
+                <option value="en">English (1234)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Mandatory Separate Consents (SRS M01) -->
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5 text-xs text-slate-700">
+            <span class="font-bold text-slate-900 block text-[11px] uppercase tracking-wider">বাধ্যতামূলক আইনি সম্মতিপত্র:</span>
+            
+            <label class="flex items-start space-x-2 cursor-pointer">
+              <input type="checkbox" id="consentTerms" class="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500" />
+              <span>আমি আইন-AI এর <strong>ব্যবহারের সাধারণ শর্তাবলী (Terms of Service v1.0)</strong> পড়েছি এবং সম্মতি দিচ্ছি।</span>
+            </label>
+
+            <label class="flex items-start space-x-2 cursor-pointer">
+              <input type="checkbox" id="consentPrivacy" class="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500" />
+              <span>আমি <strong>ব্যক্তিগত উপাত্ত সুরক্ষা ও গোপনীয়তা নীতিমালা (PDPO Notice v1.0)</strong> গ্রহণ করছি।</span>
+            </label>
+
+            <label class="flex items-start space-x-2 cursor-pointer">
+              <input type="checkbox" id="consentAiDisclaimer" class="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500" />
+              <span>আমি অবগত যে, <strong>এই সিস্টেম কৃত্রিম বুদ্ধিমত্তা চালিত সহায়তা ব্যবস্থা, এটি কোনো আইনজীবী বা আদালতের বিকল্প নয় (v1.0)।</strong></span>
+            </label>
+          </div>
+          <p id="onboardingError" class="text-xs text-rose-600 hidden font-medium"></p>
+        </div>
+
+        <button type="button" onclick="submitOnboarding()" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow transition">
+          সম্মতি নিশ্চিত করুন ও প্রবেশ করুন
+        </button>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    let selectedLang = 'bn';
+    let userPhone = '';
+    let accessToken = '';
+    let countdownInterval;
+
+    function setLang(lang) {
+      selectedLang = lang;
+      document.getElementById('btnLangBn').className = lang === 'bn' ? 'p-3.5 border-2 border-emerald-600 bg-emerald-50 rounded-xl font-bold text-emerald-900 text-center shadow-sm' : 'p-3.5 border border-slate-200 rounded-xl font-semibold text-slate-700 text-center hover:bg-slate-50';
+      document.getElementById('btnLangEn').className = lang === 'en' ? 'p-3.5 border-2 border-emerald-600 bg-emerald-50 rounded-xl font-bold text-emerald-900 text-center shadow-sm' : 'p-3.5 border border-slate-200 rounded-xl font-semibold text-slate-700 text-center hover:bg-slate-50';
+      document.getElementById('userLangSelect').value = lang;
+    }
+
+    function goToStep(step) {
+      ['Welcome', 'Signin', 'Otp', 'Onboarding'].forEach(s => {
+        document.getElementById('step' + s).classList.add('hidden');
+      });
+      document.getElementById('step' + step).classList.remove('hidden');
+    }
+
+    async function requestOtp() {
+      const phoneInput = document.getElementById('phoneInput').value.trim();
+      const errBox = document.getElementById('phoneError');
+      errBox.classList.add('hidden');
+
+      if (!phoneInput) {
+        errBox.textContent = 'দয়া করে একটি সঠিক মোবাইল নম্বর লিখুন।';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const res = await fetch('/auth/otp/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: phoneInput, lang: selectedLang })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errBox.textContent = data.detail || 'কোড পাঠাতে ব্যর্থ হয়েছে।';
+          errBox.classList.remove('hidden');
+          return;
+        }
+
+        userPhone = phoneInput;
+        document.getElementById('displayPhone').textContent = userPhone;
+        goToStep('Otp');
+        startResendTimer(data.resend_after_seconds || 60);
+
+        if (data.dev_otp) {
+          console.log('[Dev OTP]:', data.dev_otp);
+          document.getElementById('otpCodeInput').value = data.dev_otp;
+          const badge = document.getElementById('otpDevBadge');
+          if (badge) {
+            document.getElementById('devOtpSpan').textContent = data.dev_otp;
+            badge.classList.remove('hidden');
+          }
+        }
+      } catch (err) {
+        errBox.textContent = 'নেটওয়ার্ক বা সার্ভার ত্রুটি। পুনরায় চেষ্টা করুন।';
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    function startResendTimer(seconds) {
+      clearInterval(countdownInterval);
+      let rem = seconds;
+      const secSpan = document.getElementById('timerSec');
+      const btnResend = document.getElementById('btnResend');
+      btnResend.disabled = true;
+      btnResend.classList.add('opacity-50', 'cursor-not-allowed');
+
+      countdownInterval = setInterval(() => {
+        rem--;
+        secSpan.textContent = rem;
+        if (rem <= 0) {
+          clearInterval(countdownInterval);
+          btnResend.disabled = false;
+          btnResend.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      }, 1000);
+    }
+
+    async function resendOtp() {
+      await requestOtp();
+    }
+
+    async function verifyOtp() {
+      const code = document.getElementById('otpCodeInput').value.trim();
+      const errBox = document.getElementById('otpError');
+      errBox.classList.add('hidden');
+
+      if (code.length !== 6) {
+        errBox.textContent = 'সঠিক ৬-ডিজিট কোড লিখুন।';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const res = await fetch('/auth/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: userPhone, code: code })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errBox.textContent = data.detail || 'কোড যাচাই ব্যর্থ হয়েছে।';
+          errBox.classList.remove('hidden');
+          return;
+        }
+
+        accessToken = data.access_token;
+        localStorage.setItem('ain_ai_token', accessToken);
+        document.cookie = "ain_ai_token=" + accessToken + "; path=/; max-age=86400; SameSite=Lax";
+
+        if (data.user && data.user.is_onboarded) {
+          window.location.href = '/';
+        } else {
+          goToStep('Onboarding');
+        }
+      } catch (err) {
+        errBox.textContent = 'যাচাইকালে ত্রুটি ঘটেছে।';
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    async function submitOnboarding() {
+      const terms = document.getElementById('consentTerms').checked;
+      const privacy = document.getElementById('consentPrivacy').checked;
+      const ai = document.getElementById('consentAiDisclaimer').checked;
+      const errBox = document.getElementById('onboardingError');
+      errBox.classList.add('hidden');
+
+      if (!terms || !privacy || !ai) {
+        errBox.textContent = 'আপনাকে অবশ্যই ৩টি শর্ত ও নীতিমালায় আলাদাভাবে সম্মতি দিতে হবে।';
+        errBox.classList.remove('hidden');
+        return;
+      }
+
+      const name = document.getElementById('userNameInput').value.trim();
+      const lang = document.getElementById('userLangSelect').value;
+      const numeral = document.getElementById('userNumeralSelect').value;
+
+      try {
+        const res = await fetch('/auth/onboarding', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + accessToken
+          },
+          body: JSON.stringify({
+            name: name || undefined,
+            preferred_lang: lang,
+            numeral_style: numeral,
+            terms_of_service: terms,
+            privacy_policy: privacy,
+            ai_disclaimer: ai
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errBox.textContent = data.detail || 'অনবোর্ডিং তথ্য সংরক্ষণ করা যায়নি।';
+          errBox.classList.remove('hidden');
+          return;
+        }
+
+        // Onboarding complete, navigate to Home
+        localStorage.setItem('ain_ai_token', accessToken);
+        document.cookie = "ain_ai_token=" + accessToken + "; path=/; max-age=86400; SameSite=Lax";
+        window.location.href = '/';
+      } catch (err) {
+        errBox.textContent = 'অনবোর্ডিং প্রক্রিয়াকরণে ত্রুটি।';
+        errBox.classList.remove('hidden');
+      }
+    }
+
+    async function quickLogin(role) {
+      const phone = role === 'admin' ? '01700000001' : '01711223344';
+      try {
+        // Step 1: Request OTP
+        const resReq = await fetch('/auth/otp/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: phone, lang: selectedLang })
+        });
+        const dataReq = await resReq.json();
+        const code = dataReq.dev_otp || '123456';
+
+        // Step 2: Verify OTP
+        const resVer = await fetch('/auth/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: phone, code: code })
+        });
+        const dataVer = await resVer.json();
+        accessToken = dataVer.access_token;
+        localStorage.setItem('ain_ai_token', accessToken);
+        document.cookie = "ain_ai_token=" + accessToken + "; path=/; max-age=86400; SameSite=Lax";
+
+        // Step 3: Complete onboarding if needed
+        if (!dataVer.user || !dataVer.user.is_onboarded) {
+          await fetch('/auth/onboarding', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + accessToken
+            },
+            body: JSON.stringify({
+              name: role === 'admin' ? 'সিস্টেম অ্যাডমিন' : 'এডভোকেট ডেমো ইউজার',
+              preferred_lang: 'bn',
+              numeral_style: 'bn',
+              terms_of_service: true,
+              privacy_policy: true,
+              ai_disclaimer: true
+            })
+          });
+        }
+
+        // Step 4: Seamless redirect
+        if (role === 'admin') {
+          window.location.href = '/admin';
+        } else {
+          window.location.href = '/';
+        }
+      } catch (err) {
+        alert('ডেমো লগইনে ত্রুটি ঘটেছে: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

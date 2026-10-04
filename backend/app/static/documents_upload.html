@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>নথি আপলোড ও যাচাইকরণ — আইন-AI</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #0B5D4B;
+      --color-primary-soft: #E3F1EC;
+      --color-primary-hover: #084336;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-accent: #0284C7;
+      --radius: 14px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* Desktop Sidebar */
+    .app-sidebar {
+      width: 250px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .app-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      padding: clamp(16px, 3vw, 32px);
+    }
+
+    /* Logo & Nav */
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-badge {
+      width: 40px; height: 40px;
+      background: var(--color-primary); color: white;
+      border-radius: 10px; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 700;
+    }
+    .brand-title { font-size: 1.2rem; font-weight: 700; color: var(--color-primary); }
+    .brand-sub { font-size: 0.78rem; color: var(--color-text-muted); }
+
+    .nav-links { display: flex; flex-direction: column; gap: 6px; list-style: none; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 8px;
+      color: var(--color-text-muted); text-decoration: none;
+      font-size: 1rem; font-weight: 500; min-height: 48px;
+    }
+    .nav-link.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary); font-weight: 600;
+    }
+
+    /* Header */
+    .top-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 20px clamp(16px, 3vw, 32px);
+    }
+    .top-header h1 { font-size: clamp(1.25rem, 2.5vw, 1.5rem); font-weight: 700; }
+    .top-header p { font-size: 0.9rem; color: var(--color-text-muted); margin-top: 4px; }
+
+    /* Cards & Upload Area */
+    .card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: clamp(16px, 3vw, 28px);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      margin-bottom: 24px;
+    }
+
+    .dropzone {
+      border: 2px dashed #CBD5E1;
+      border-radius: 12px;
+      padding: clamp(24px, 5vw, 48px) 16px;
+      text-align: center;
+      background: #F8FAFC;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft);
+    }
+
+    .dropzone-icon {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: #E2E8F0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; color: var(--color-primary);
+    }
+
+    .btn-file {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-file:hover { background: var(--color-primary-hover); }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      color: var(--color-text-main);
+      border: 1.5px solid var(--color-border);
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Offline Queue Alert */
+    .offline-banner {
+      display: none;
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      margin-bottom: 20px;
+      align-items: center;
+      gap: 10px;
+    }
+    .offline-banner.active { display: flex; }
+
+    /* Progress Bar */
+    .progress-box {
+      display: none;
+      margin-top: 20px;
+      background: #F1F5F9;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 10px;
+    }
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: var(--color-primary);
+      transition: width 0.3s;
+    }
+
+    /* Feature Chips */
+    .feature-chips {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .feature-chip {
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Mobile Bottom Navigation */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 64px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      z-index: 1000;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .bottom-tab {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--color-text-muted); text-decoration: none;
+      font-size: 0.75rem; flex: 1; height: 100%; min-height: 48px;
+    }
+    .bottom-tab.active { color: var(--color-primary); }
+
+    @media (max-width: 768px) {
+      .app-sidebar { display: none; }
+      .mobile-bottom-nav { display: flex; }
+      .app-main { padding-bottom: 74px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar (Desktop & Tablet) -->
+  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+    <div class="logo-area">
+      <div class="logo-badge">⚖️</div>
+      <div>
+        <div class="brand-title">আইন-AI</div>
+        <div class="brand-sub">আইনি সেবা প্ল্যাটফর্ম</div>
+      </div>
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="/" class="nav-link">হোম</a></li>
+        <li><a href="/documents/upload" class="nav-link active">নথি আপলোড</a></li>
+        <li><a href="/library" class="nav-link">আইন পাঠাগার</a></li>
+        <li><a href="/matters" class="nav-link">মামলা ও নোটিশ</a></li>
+        <li><a href="/profile" class="nav-link">প্রোফাইল</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="app-main">
+    <header class="top-header">
+      <div class="container" style="padding-top:0; padding-bottom:0;">
+        <h1>আইনি নথি আপলোড</h1>
+        <p>লিগ্যাল নোটিশ, দলিল, আদালতের আদেশ বা আবেদনপত্র আপলোড করে সহজ বিশ্লেষণ ও যাচাইকরণ করুন</p>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- Offline Queue Indicator -->
+      <div class="offline-banner" id="offlineBanner" role="status">
+        <span>📶</span>
+        <div><strong>অফলাইন মোড সক্রিয়:</strong> ইন্টারনেট সংযোগ বিচ্ছিন্ন হলেও নথি কিউতে সংরক্ষিত থাকবে এবং সংযোগ ফিরলে স্বয়ংক্রিয়ভাবে আপলোড সম্পন্ন হবে।</div>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 8px;">নথি নির্বাচন করুন</h2>
+        <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 20px;">
+          পিডিএফ ফাইল অথবা স্ক্যান করা স্পষ্ট ছবি নির্বাচন করুন (সর্বোচ্চ ৫০ মেগাবাইট)।
+        </p>
+
+        <div class="dropzone" id="dropArea" onclick="document.getElementById('fileInput').click()">
+          <div class="dropzone-icon">📄</div>
+          <div style="font-size: 1.05rem; font-weight: 600;">ফাইল টেনে এনে এখানে ছাড়ুন</div>
+          <div style="font-size: 0.85rem; color: var(--color-text-muted);">অথবা আপনার ডিভাইস থেকে বেছে নিন</div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 8px;">
+            <button type="button" id="btnSelectFile" class="btn-file" onclick="event.stopPropagation(); document.getElementById('fileInput').click();">
+              📁 ফাইল নির্বাচন করুন
+            </button>
+            <button type="button" id="btnCamera" class="btn-secondary" onclick="event.stopPropagation(); triggerCamera();">
+              📷 ছবি তুলুন (মোবাইল ক্যামেরা)
+            </button>
+          </div>
+          <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.webp" style="display: none;" onchange="handleFileSelect(this.files)">
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;" onchange="handleFileSelect(this.files)">
+        </div>
+
+        <div id="offlineQueuedBadge" style="display: none; background: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-top: 14px; font-weight: 600;">
+          ⏳ অফলাইনে সংরক্ষিত: নথি কিউতে অপেক্ষমান (সংযোগ ফিরলে স্বয়ংক্রিয়ভাবে আপলোড হবে)
+        </div>
+        <div id="uploadSuccessBadge" style="display: none; background: #DCFCE7; border: 1px solid #16A34A; color: #166534; padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-top: 14px; font-weight: 600;">
+          ✓ নথি সফলভাবে আপলোড সম্পন্ন হয়েছে!
+        </div>
+        <div id="queuedDocsContainer" style="margin-top: 14px; display: none;">
+          <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 6px;">অফলাইন কিউতে থাকা নথিসমূহ:</h4>
+          <ul id="queuedDocsList" style="list-style: none; font-size: 0.85rem; color: var(--color-text-muted);"></ul>
+        </div>
+
+        <div class="progress-box" id="progressContainer">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div id="statusText" style="margin-top: 10px; font-size: 0.88rem; color: var(--color-primary); font-weight: 600; display: none;"></div>
+      </div>
+
+      <!-- Safety & Privacy Guarantee Cards -->
+      <div class="card">
+        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--color-primary);">নিরাপত্তা ও গোপনীয়তার প্রতিশ্রুতি</h3>
+        <div class="feature-chips">
+          <div class="feature-chip">
+            <span>🛡️</span>
+            <span>ম্যালওয়্যার ও ভাইরাস স্ক্যান নিশ্চিত</span>
+          </div>
+          <div class="feature-chip">
+            <span>🔒</span>
+            <span>এন্ড-টু-এন্ড এনক্রিপশন ও অডিট ট্রেইল</span>
+          </div>
+          <div class="feature-chip">
+            <span>🗑️</span>
+            <span>যে কোনো সময় সম্পূর্ণ মুছে ফেলার অধিকার</span>
+          </div>
+          <div class="feature-chip">
+            <span>⚡</span>
+            <span>রিজিউমেবল খণ্ড আপলোড (Resumable)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="mobile-bottom-nav">
+    <a href="/" class="bottom-tab">হোম</a>
+    <a href="/documents/upload" class="bottom-tab active">আপলোড</a>
+    <a href="/library" class="bottom-tab">পাঠাগার</a>
+    <a href="/profile" class="bottom-tab">প্রোফাইল</a>
+  </nav>
+
+  <script>
+    // Service Worker Registration for PWA Offline Caching
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+    }
+
+    // IndexedDB Setup for Offline Upload Queue (AC-M03-6)
+    const DB_NAME = 'ain_offline_uploads_db';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'upload_queue';
+
+    function openOfflineDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME, { keyPath: 'idempotency_key' });
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function enqueueOfflineUpload(record) {
+      const db = await openOfflineDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.put(record);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function getQueuedUploads() {
+      const db = await openOfflineDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function removeQueuedUpload(idempotencyKey) {
+      const db = await openOfflineDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        store.delete(idempotencyKey);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    function triggerCamera() {
+      document.getElementById('cameraInput').click();
+    }
+
+    async function computeIdempotencyKey(file) {
+      try {
+        const buffer = await file.arrayBuffer();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      } catch (e) {
+        return 'idemp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8);
+      }
+    }
+
+    async function handleFileSelect(files) {
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      const idempotencyKey = await computeIdempotencyKey(file);
+
+      const pContainer = document.getElementById('progressContainer');
+      const pBar = document.getElementById('progressBar');
+      const statusText = document.getElementById('statusText');
+      const offlineBadge = document.getElementById('offlineQueuedBadge');
+      const successBadge = document.getElementById('uploadSuccessBadge');
+
+      pContainer.style.display = 'block';
+      statusText.style.display = 'block';
+      pBar.style.width = '30%';
+
+      if (!navigator.onLine) {
+        // Device is OFFLINE: Store in IndexedDB PWA queue (AC-M03-6)
+        pBar.style.width = '100%';
+        pBar.style.background = '#F59E0B';
+        statusText.innerText = 'অফলাইন মোড: নথি স্থানীয় ডিভাইসে সংরক্ষিত হয়েছে।';
+        offlineBadge.style.display = 'block';
+        successBadge.style.display = 'none';
+
+        const reader = new FileReader();
+        reader.onload = async () => {
+          await enqueueOfflineUpload({
+            idempotency_key: idempotencyKey,
+            filename: file.name,
+            mime: file.type || 'application/octet-stream',
+            size: file.size,
+            data_url: reader.result,
+            queued_at: new Date().toISOString()
+          });
+          renderQueuedList();
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      // Device is ONLINE: upload directly
+      await performUpload(file, idempotencyKey);
+    }
+
+    async function performUpload(file, idempotencyKey) {
+      const pBar = document.getElementById('progressBar');
+      const statusText = document.getElementById('statusText');
+      const offlineBadge = document.getElementById('offlineQueuedBadge');
+      const successBadge = document.getElementById('uploadSuccessBadge');
+
+      statusText.innerText = `আপলোড হচ্ছে: ${file.name || 'নথি'}...`;
+      pBar.style.width = '60%';
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('idempotency_key', idempotencyKey);
+
+      try {
+        const token = localStorage.getItem('ain_token') || '';
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch('/api/v1/documents/upload', {
+          method: 'POST',
+          body: formData,
+          headers: headers
+        });
+
+        pBar.style.width = '100%';
+        pBar.style.background = 'var(--color-primary)';
+        offlineBadge.style.display = 'none';
+        successBadge.style.display = 'block';
+        statusText.innerText = 'আপলোড সম্পন্ন!';
+
+        if (res.ok) {
+          const data = await res.json();
+          const docId = data.document ? data.document.id : (data.id || 'doc-ready');
+          setTimeout(() => {
+            window.location.href = `/documents/intent?doc=${encodeURIComponent(docId)}&name=${encodeURIComponent(file.name || 'document')}`;
+          }, 800);
+        }
+      } catch (err) {
+        // Network fail while sending -> queue offline
+        offlineBadge.style.display = 'block';
+        statusText.innerText = 'নেটওয়ার্ক বিচ্ছিন্ন — নথি অফলাইন কিউতে সংরক্ষিত হয়েছে।';
+      }
+    }
+
+    async function renderQueuedList() {
+      const items = await getQueuedUploads();
+      const container = document.getElementById('queuedDocsContainer');
+      const list = document.getElementById('queuedDocsList');
+      if (items.length > 0) {
+        container.style.display = 'block';
+        list.innerHTML = items.map(it => `<li>📄 ${it.filename} (অপেক্ষমান) [ID: ${it.idempotency_key.slice(0, 10)}]</li>`).join('');
+      } else {
+        container.style.display = 'none';
+        list.innerHTML = '';
+      }
+    }
+
+    async function flushOfflineQueue() {
+      const queued = await getQueuedUploads();
+      if (!queued || queued.length === 0) return;
+
+      const banner = document.getElementById('offlineBanner');
+      banner.classList.add('active');
+      banner.innerHTML = '<span>🔄</span><div><strong>সংযোগ পুনরুদ্ধার:</strong> অফলাইনে সংরক্ষিত নথি স্বয়ংক্রিয়ভাবে আপলোড হচ্ছে...</div>';
+
+      for (const item of queued) {
+        const res = await fetch(item.data_url);
+        const blob = await res.blob();
+        const file = new File([blob], item.filename, { type: item.mime });
+        await performUpload(file, item.idempotency_key);
+        await removeQueuedUpload(item.idempotency_key);
+      }
+
+      banner.classList.remove('active');
+      renderQueuedList();
+    }
+
+    window.addEventListener('online', () => {
+      document.getElementById('offlineBanner').classList.remove('active');
+      flushOfflineQueue();
+    });
+
+    window.addEventListener('offline', () => {
+      document.getElementById('offlineBanner').classList.add('active');
+    });
+
+    // Check queued on initial load
+    renderQueuedList();
+  </script>
+</body>
+</html>

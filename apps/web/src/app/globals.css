@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #0B5D4B;
+  --color-primary-soft: #E3F1EC;
+  --color-attention: #C77D0A;
+  --color-attention-soft: #FFF3DC;
+  --color-urgent: #B3261E;
+  --color-urgent-soft: #FDECEA;
+  --color-bg: #F8FAFC;
+  --color-text: #12343B;
+  --font-bangla: 'Noto Sans Bengali', sans-serif;
+  --font-latin: 'Inter', sans-serif;
+}
+
+body {
+  font-family: var(--font-bangla), var(--font-latin);
+  line-height: 1.6;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ensure minimum touch target for accessibility */
+button, a, input, select {
+  min-height: 44px;
+}

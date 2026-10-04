@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.config import settings
 from app.models.document import Document, DocumentVersion
+from app.models.matter import Matter
 from app.schemas.document import (
     DocumentDetailResponse, 
     ClauseSelectionItem,
@@ -14,8 +15,21 @@ from app.schemas.document import (
     DocumentVersionItem
 )
 from app.services.export_service import export_service
+from packages.trust_kernel.policy_consent import policy_consent
+from services.api.app.routers.auth import get_current_user
 
 router = APIRouter()
+
+
+def _check_document_access(doc: Document, current_user: dict, action: str = "read") -> None:
+    owner_id = doc.matter.user_id if doc.matter else None
+    actor = {"id": current_user["sub"], "role": current_user.get("role", "citizen")}
+    obj = {"id": doc.id, "owner_id": owner_id, "object_type": "document"}
+    if not policy_consent.can(actor=actor, action=action, obj=obj):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Forbidden. You do not have permission to {action} this document.",
+        )
 
 
 def _audit_fields(doc: Document) -> dict:
@@ -28,11 +42,24 @@ def _audit_fields(doc: Document) -> dict:
     }
 
 @router.get("/", response_model=List[DocumentListItem])
-def list_documents(db: Session = Depends(get_db)):
+def list_documents(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     """
-    Returns all generated legal documents and contracts.
+    Returns legal documents scoped by user ownership and role.
     """
-    docs = db.query(Document).order_by(Document.created_at.desc()).all()
+    role = current_user.get("role", "citizen")
+    if role in ("admin", "reviewer"):
+        docs = db.query(Document).order_by(Document.created_at.desc()).all()
+    else:
+        docs = (
+            db.query(Document)
+            .join(Matter, Document.matter_id == Matter.id)
+            .filter(Matter.user_id == current_user["sub"])
+            .order_by(Document.created_at.desc())
+            .all()
+        )
     return [
         DocumentListItem(
             id=d.id,
@@ -48,10 +75,16 @@ def list_documents(db: Session = Depends(get_db)):
     ]
 
 @router.get("/{document_id}", response_model=DocumentDetailResponse)
-def get_document(document_id: str, db: Session = Depends(get_db)):
+def get_document(
+    document_id: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+
+    _check_document_access(doc, current_user, "read")
 
     selected_clauses = [
         ClauseSelectionItem(**c) if isinstance(c, dict) else c
@@ -77,7 +110,12 @@ def get_document(document_id: str, db: Session = Depends(get_db)):
     )
 
 @router.put("/{document_id}", response_model=DocumentDetailResponse)
-def update_document(document_id: str, data: DocumentUpdateRequest, db: Session = Depends(get_db)):
+def update_document(
+    document_id: str,
+    data: DocumentUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     """
     Updates document full_text, saves a new version in DocumentVersion history,
     and automatically re-exports updated DOCX & PDF files.
@@ -85,6 +123,8 @@ def update_document(document_id: str, data: DocumentUpdateRequest, db: Session =
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+
+    _check_document_access(doc, current_user, "edit")
 
     # Update document text
     doc.full_text = data.full_text
@@ -140,10 +180,20 @@ def update_document(document_id: str, data: DocumentUpdateRequest, db: Session =
     )
 
 @router.get("/{document_id}/versions", response_model=List[DocumentVersionItem])
-def get_document_versions(document_id: str, db: Session = Depends(get_db)):
+def get_document_versions(
+    document_id: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     """
     Retrieves full chronological revision and version history for the document.
     """
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    _check_document_access(doc, current_user, "read")
+
     versions = (
         db.query(DocumentVersion)
         .filter(DocumentVersion.document_id == document_id)
@@ -161,9 +211,18 @@ def get_document_versions(document_id: str, db: Session = Depends(get_db)):
     ]
 
 @router.get("/{document_id}/export/docx")
-def download_docx(document_id: str, db: Session = Depends(get_db)):
+def download_docx(
+    document_id: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     doc = db.query(Document).filter(Document.id == document_id).first()
-    if not doc or not doc.docx_path or not os.path.exists(doc.docx_path):
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    _check_document_access(doc, current_user, "export")
+
+    if not doc.docx_path or not os.path.exists(doc.docx_path):
         raise HTTPException(status_code=404, detail="DOCX file not generated or not found")
     return FileResponse(
         doc.docx_path,
@@ -172,9 +231,18 @@ def download_docx(document_id: str, db: Session = Depends(get_db)):
     )
 
 @router.get("/{document_id}/export/pdf")
-def download_pdf(document_id: str, db: Session = Depends(get_db)):
+def download_pdf(
+    document_id: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     doc = db.query(Document).filter(Document.id == document_id).first()
-    if not doc or not doc.pdf_path or not os.path.exists(doc.pdf_path):
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    _check_document_access(doc, current_user, "export")
+
+    if not doc.pdf_path or not os.path.exists(doc.pdf_path):
         raise HTTPException(status_code=404, detail="PDF file not generated or not found")
     return FileResponse(
         doc.pdf_path,
