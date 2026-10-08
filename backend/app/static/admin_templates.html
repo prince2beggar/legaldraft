@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI — টেমপ্লেট অ্যাডমিন ও অনুমোদন</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #047857;
+      --color-primary-dark: #065F46;
+      --color-primary-soft: #ECFDF5;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --radius: 10px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+
+    /* App Shell */
+    .app-sidebar {
+      width: 240px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      font-weight: 600;
+    }
+
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .app-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .container {
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    /* Tables */
+    .data-table-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      overflow-x: auto;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      background: #F8FAFC;
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #F1F5F9;
+      font-size: 13px;
+      color: #1E293B;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    /* Badges */
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-approved { background: #DCFCE7; color: #166534; }
+    .badge-draft { background: #FEF3C7; color: #92400E; }
+    .badge-retired { background: #F1F5F9; color: #64748B; }
+
+    .btn-action {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .btn-action:hover {
+      background: #F8FAFC;
+    }
+    .btn-approve {
+      background: #047857;
+      color: #FFFFFF;
+      border-color: #047857;
+    }
+    .btn-approve:hover {
+      background: #065F46;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-box {
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      max-width: 650px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 768px) {
+      .app-sidebar { width: 72px; padding: 16px 8px; align-items: center; }
+      .brand-title span { display: none; }
+      .nav-link { flex-direction: column; gap: 4px; font-size: 10px; text-align: center; }
+    }
+    @media (max-width: 500px) {
+      .app-sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="app-sidebar">
+    <a href="/admin" class="brand-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <span>অ্যাডমিন</span>
+    </a>
+    <ul class="nav-list">
+      <li><a href="/admin" class="nav-link"><span>ড্যাশবোর্ড</span></a></li>
+      <li><a href="/admin/sources" class="nav-link"><span>নলেজ সেন্টার</span></a></li>
+      <li><a href="/admin/templates" class="nav-link active"><span>টেমপ্লেট রেজিস্ট্রি</span></a></li>
+      <li><a href="/admin/emergency-contacts" class="nav-link"><span>জরুরি নম্বর</span></a></li>
+      <li><a href="/home" class="nav-link"><span>সিটিজেন ভিউ</span></a></li>
+    </ul>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-wrapper">
+    <header class="app-header">
+      <h1 style="font-size: 16px; font-weight: 700;">দলিল টেমপ্লেট রেজিস্ট্রি ও অনুমোদন</h1>
+      <div style="font-size: 12px; color: var(--color-text-muted);">দ্বৈত অভিভাবকত্ব নীতি (Dual Custody Enforced)</div>
+    </header>
+
+    <main class="container">
+      <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 700;">সকল দলিল টেমপ্লেট</h2>
+          <p style="font-size: 13px; color: var(--color-text-muted);">আইনজীবী দ্বারা পর্যালোচিত না হওয়া পর্যন্ত সিটিজেন ড্রাফটিংয়ে অপ্রকাশিত থাকে।</p>
+        </div>
+      </div>
+
+      <div class="data-table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>কোড</th>
+              <th>দলিলের নাম</th>
+              <th>ক্যাটাগরি</th>
+              <th>ভার্সন</th>
+              <th>অবস্থা</th>
+              <th>লেখক / প্রণেতা</th>
+              <th>অনুমোদনকারী</th>
+              <th>কার্যকর তারিখ</th>
+              <th>পদক্ষেপ</th>
+            </tr>
+          </thead>
+          <tbody id="templatesTableBody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal for Test-Render -->
+  <div class="modal-backdrop" id="renderModal">
+    <div class="modal-box">
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;" id="renderModalTitle">টেস্ট রেন্ডার প্রিভিউ</h3>
+      <div id="renderClausesContent" style="background:#F8FAFC; border:1px solid #E2E8F0; padding:16px; border-radius:8px; max-height:400px; overflow-y:auto; margin-bottom:16px;"></div>
+      <div style="text-align: right;">
+        <button class="btn-action" onclick="closeModal('renderModal')">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Approve -->
+  <div class="modal-backdrop" id="approveModal">
+    <div class="modal-box">
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">টেমপ্লেট অনুমোদন (Approve Template)</h3>
+      <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 14px;">
+        টেমপ্লেটটির আইনি ভাষা ও শর্তাবলী নির্ভুল হিসেবে সত্যায়ন করুন। প্রণেতা নিজে অনুমোদন দিতে পারবেন না।
+      </p>
+
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 12px; font-weight: 700;">অনুমোদন নোট / রেফারেন্স (বাধ্যতামূলক):</label>
+        <textarea id="approveNoteInput" style="width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; min-height: 80px; margin-top: 4px;" placeholder="যেমন: বাংলাদেশ সুপ্রিম কোর্টের প্র্যাকটিস ও স্ট্যাম্প আইন অনুযায়ী যাচাই সম্পন্ন।"></textarea>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div>
+          <label style="font-size: 12px; font-weight: 700;">কার্যকর শুরু:</label>
+          <input type="date" id="effectiveFromInput" style="width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; margin-top: 4px;" value="2026-10-01">
+        </div>
+        <div>
+          <label style="font-size: 12px; font-weight: 700;">কার্যকর সমাপ্তি (ঐচ্ছিক):</label>
+          <input type="date" id="effectiveToInput" style="width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; margin-top: 4px;">
+        </div>
+      </div>
+
+      <div id="approveError" style="color: #991B1B; font-size: 12px; margin-bottom: 12px; display: none;"></div>
+
+      <div style="text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn-action" onclick="closeModal('approveModal')">বাতিল</button>
+        <button class="btn-action btn-approve" onclick="submitApprove()">অনুমোদন নিশ্চিত করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let activeTemplates = [];
+    let targetTemplateId = null;
+
+    async function loadAdminTemplates() {
+      try {
+        const res = await fetch('/templates');
+        const data = await res.json();
+        activeTemplates = data.templates || [];
+        renderTable(activeTemplates);
+      } catch (e) {
+        console.error("Failed loading templates", e);
+      }
+    }
+
+    function renderTable(templates) {
+      const tbody = document.getElementById('templatesTableBody');
+      tbody.innerHTML = '';
+      templates.forEach(t => {
+        const tr = document.createElement('tr');
+        let statusBadge = '<span class="status-badge badge-draft">খসড়া (অযাচাইকৃত)</span>';
+        if (t.status === 'approved') statusBadge = '<span class="status-badge badge-approved">অনুমোদিত</span>';
+        if (t.status === 'retired') statusBadge = '<span class="status-badge badge-retired">অবসরপ্রাপ্ত</span>';
+
+        tr.innerHTML = `
+          <td><strong>${t.code}</strong></td>
+          <td>${t.title_bn}</td>
+          <td>${t.category}</td>
+          <td>v${t.version}</td>
+          <td>${statusBadge}</td>
+          <td><span style="font-size:11px; color:#64748B;">${t.author_id}</span></td>
+          <td><span style="font-size:11px; color:#64748B;">${t.approver_id || '—'}</span></td>
+          <td>${t.effective_from || '—'}</td>
+          <td>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn-action" onclick="openTestRender('${t.id}')">টেস্ট রেন্ডার</button>
+              ${t.status !== 'approved' ? `<button class="btn-action btn-approve" onclick="openApproveModal('${t.id}')">অনুমোদন</button>` : ''}
+              ${t.status === 'approved' ? `<button class="btn-action" onclick="retireTemplate('${t.id}')">অবসর</button>` : ''}
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function openTestRender(templateId) {
+      try {
+        const res = await fetch(`/admin/templates/${templateId}/test-render`, { method: 'POST' });
+        const data = await res.json();
+        document.getElementById('renderModalTitle').textContent = `টেস্ট রেন্ডার: ${data.template_code}`;
+        const container = document.getElementById('renderClausesContent');
+        container.innerHTML = '';
+        (data.clauses || []).forEach(cl => {
+          const div = document.createElement('div');
+          div.style.marginBottom = '12px';
+          div.innerHTML = `<div style="font-weight:700; color:#0F172A; margin-bottom:2px;">${cl.title_bn}</div><div style="color:#334155; font-size:13px;">${cl.text}</div>`;
+          container.appendChild(div);
+        });
+        document.getElementById('renderModal').style.display = 'flex';
+      } catch (e) {
+        alert("টেস্ট রেন্ডার করা সম্ভব হয়নি।");
+      }
+    }
+
+    function openApproveModal(templateId) {
+      targetTemplateId = templateId;
+      document.getElementById('approveNoteInput').value = '';
+      document.getElementById('approveError').style.display = 'none';
+      document.getElementById('approveModal').style.display = 'flex';
+    }
+
+    async function submitApprove() {
+      const note = document.getElementById('approveNoteInput').value;
+      const effective_from = document.getElementById('effectiveFromInput').value;
+      const effective_to = document.getElementById('effectiveToInput').value;
+      const errEl = document.getElementById('approveError');
+      errEl.style.display = 'none';
+
+      if (!note || !note.strip) {
+        errEl.textContent = 'অনুমোদন নোট লেখা আবশ্যক।';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/admin/templates/${targetTemplateId}/approve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note, effective_from, effective_to })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          errEl.textContent = err.detail || 'অনুমোদন ব্যর্থ হয়েছে।';
+          errEl.style.display = 'block';
+          return;
+        }
+        closeModal('approveModal');
+        await loadAdminTemplates();
+      } catch (e) {
+        errEl.textContent = 'সার্ভার ত্রুটি।';
+        errEl.style.display = 'block';
+      }
+    }
+
+    async function retireTemplate(templateId) {
+      if (!confirm("আপনি কি নিশ্চিত যে এই টেমপ্লেটটি অবসর দিতে চান?")) return;
+      try {
+        const res = await fetch(`/admin/templates/${templateId}/retire`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note: 'অ্যাডমিন দ্বারা অবসরপ্রাপ্ত' })
+        });
+        if (res.ok) {
+          await loadAdminTemplates();
+        } else {
+          alert("ব্যর্থ হয়েছে।");
+        }
+      } catch (e) {
+        alert("সার্ভার ত্রুটি।");
+      }
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    window.addEventListener('DOMContentLoaded', loadAdminTemplates);
+  </script>
+  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+  <script src="/static/sw-register.js"></script>
+</body>
+</html>

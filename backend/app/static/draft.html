@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI — নির্দেশিত দলিল ড্রাফটিং</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #047857;
+      --color-primary-dark: #065F46;
+      --color-primary-soft: #ECFDF5;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-amber-bg: #FEF3C7;
+      --color-amber-border: #F59E0B;
+      --color-amber-text: #92400E;
+      --color-danger-bg: #FEE2E2;
+      --color-danger-border: #EF4444;
+      --color-danger-text: #991B1B;
+      --color-info-bg: #EFF6FF;
+      --color-info-border: #3B82F6;
+      --color-info-text: #1E40AF;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+
+    /* -----------------------------------------------------------------------
+       App Shell: Desktop Sidebar (1280px) & Tablet Rail (768px)
+       ----------------------------------------------------------------------- */
+    .app-sidebar {
+      width: 240px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      color: var(--color-primary);
+    }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      font-weight: 600;
+    }
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    /* Main Area */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .app-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .container {
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    /* Banners */
+    .fake-mode-banner {
+      background: #FEF3C7;
+      border: 1.5px solid #F59E0B;
+      color: #92400E;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .staging-warning-banner {
+      background: #FFFBEB;
+      border: 1.5px solid #F59E0B;
+      color: #B45309;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Template Cards */
+    .category-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+    .cat-chip {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      color: var(--color-text-main);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .cat-chip.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .template-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .template-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    }
+    .template-code-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .template-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-text-main);
+      margin-top: 4px;
+    }
+    .template-desc {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+    .template-what-needed {
+      font-size: 12px;
+      color: #475569;
+      background: #F1F5F9;
+      padding: 8px 10px;
+      border-radius: 6px;
+    }
+
+    /* Wizard Screen */
+    .wizard-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 24px;
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: var(--color-border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--color-primary);
+      width: 0%;
+      transition: width 0.25s ease;
+    }
+    .question-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--color-text-main);
+    }
+    .question-help {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      margin-bottom: 16px;
+    }
+
+    .prefill-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .prefill-clear-btn {
+      background: transparent;
+      border: none;
+      color: #1E40AF;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 15px;
+      background: #FFFFFF;
+      transition: border-color 0.15s;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+    textarea.input-field {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .field-error {
+      color: var(--color-danger-text);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .wizard-actions {
+      display: flex;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid var(--color-border);
+      gap: 12px;
+    }
+    .btn-primary {
+      background: var(--color-primary);
+      color: #FFFFFF;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      transition: background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary:hover {
+      background: var(--color-primary-dark);
+    }
+    .btn-secondary {
+      background: #FFFFFF;
+      color: var(--color-text-main);
+      border: 1.5px solid var(--color-border);
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    .btn-text {
+      background: transparent;
+      border: none;
+      color: var(--color-text-muted);
+      padding: 10px 14px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    /* AI Helper Card */
+    .ai-helper-btn {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      color: #166534;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .ai-helper-box {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      padding: 14px;
+      margin-top: 12px;
+      display: none;
+    }
+    .ai-helper-box.open {
+      display: block;
+    }
+
+    /* Live Preview & Watermark */
+    .preview-container {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 24px;
+    }
+    .watermark-overlay {
+      position: absolute;
+      top: 35%;
+      left: 10%;
+      right: 10%;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 800;
+      color: rgba(220, 38, 38, 0.18);
+      transform: rotate(-25deg);
+      pointer-events: none;
+      user-select: none;
+      border: 2px dashed rgba(220, 38, 38, 0.25);
+      padding: 16px;
+      border-radius: 12px;
+    }
+    .preview-clause {
+      margin-bottom: 18px;
+    }
+    .preview-clause-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 4px;
+    }
+    .preview-clause-body {
+      font-size: 14px;
+      color: #334155;
+      line-height: 1.7;
+    }
+    .preview-footer {
+      border-top: 1px solid var(--color-border);
+      padding-top: 12px;
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #64748B;
+    }
+
+    /* Execution Checklist */
+    .checklist-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .checklist-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .checklist-row:last-child { border-bottom: none; }
+    .checklist-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      accent-color: var(--color-primary);
+      cursor: pointer;
+    }
+
+    /* Split View on Desktop >= 1024px */
+    @media (min-width: 1024px) {
+      .split-screen {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+    }
+
+    /* Mobile Bottom Tab Bar (360px viewport) */
+    .mobile-tab-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      z-index: 100;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    .mobile-tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 600;
+      flex: 1;
+      height: 100%;
+    }
+    .mobile-tab-item.active {
+      color: var(--color-primary);
+    }
+    .mobile-tab-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .app-sidebar {
+        width: 72px;
+        padding: 16px 8px;
+        align-items: center;
+      }
+      .brand-title span:last-child {
+        display: none;
+      }
+      .nav-link {
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 4px;
+        font-size: 11px;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .app-sidebar {
+        display: none;
+      }
+      .mobile-tab-bar {
+        display: flex;
+      }
+      .container {
+        padding: 16px 12px 140px;
+      }
+    }
+    .build-stamp {
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Desktop / Tablet Navigation Shell -->
+  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+    <a href="/home" class="brand-title">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <span>আইন-AI</span>
+    </a>
+    <ul class="nav-list">
+      <li>
+        <a href="/home" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <span>হোম</span>
+        </a>
+      </li>
+      <li>
+        <a href="/cases" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          <span>মামলা</span>
+        </a>
+      </li>
+      <li>
+        <a href="/intake" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          <span>ইনটেক</span>
+        </a>
+      </li>
+      <li>
+        <a href="/draft" class="nav-link active">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          <span>ড্রাফটিং</span>
+        </a>
+      </li>
+      <li>
+        <a href="/notifications" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span>বিজ্ঞপ্তি</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Area -->
+  <div class="main-wrapper">
+    <header class="app-header">
+      <div style="font-weight: 700; font-size: 16px; color: var(--color-text-main);" id="headerTitle">
+        দলিল ড্রাফটিং (খসড়া প্রস্তুত)
+      </div>
+      <div>
+        <span style="font-size: 12px; background: #E2E8F0; padding: 4px 8px; border-radius: 4px; color: #475569;" id="draftIdBadge" style="display:none;"></span>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- Fake Mode Banner -->
+      <div class="fake-mode-banner">
+        <span>⚠️</span>
+        <span>পরীক্ষামূলক মোড: এটি আসল AI বিশ্লেষণ নয়।</span>
+      </div>
+
+      <!-- VIEW 1: Template Picker Screen -->
+      <section id="viewPicker">
+        <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 4px;">একটি দলিলের ধরণ নির্বাচন করুন</h2>
+        <p style="color: var(--color-text-muted); font-size: 14px; margin-bottom: 20px;">
+          আইনজীবী অনুমোদিত কাঠামোর ভিত্তিতে প্রশ্নোত্তরের মাধ্যমে নির্ভুল খসড়া দলিল প্রস্তুত করুন।
+        </p>
+
+        <!-- Category Filter -->
+        <div class="category-chips">
+          <button class="cat-chip active" onclick="filterCategory('all')">সকল দলিল</button>
+          <button class="cat-chip" onclick="filterCategory('rental')">বাড়িভাড়া</button>
+          <button class="cat-chip" onclick="filterCategory('affidavit')">হলফনামা</button>
+          <button class="cat-chip" onclick="filterCategory('notice_reply')">নোটিশের জবাব</button>
+          <button class="cat-chip" onclick="filterCategory('police')">জিডি আবেদন</button>
+          <button class="cat-chip" onclick="filterCategory('commercial')">সেবা চুক্তি</button>
+        </div>
+
+        <div class="templates-grid" id="templatesGrid">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- VIEW 2: Question-by-Question Wizard -->
+      <section id="viewWizard" style="display: none;">
+        <div class="wizard-card">
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="wizardProgress"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-size: 13px; font-weight: 700; color: var(--color-primary);" id="stepLabel">প্রশ্ন ১ / ১০</span>
+            <span style="font-size: 12px; color: var(--color-text-muted);" id="templateNameBadge"></span>
+          </div>
+
+          <h3 class="question-title" id="qTitle">প্রশ্নের শিরোনাম</h3>
+          <p class="question-help" id="qHelp">সহায়ক বিবরণ</p>
+
+          <!-- Prefill Chip -->
+          <div id="prefillChipContainer" style="display: none;">
+            <div class="prefill-chip">
+              <span>📋</span>
+              <span id="prefillSourceText">নথি থেকে পূরণকৃত</span>
+              <button class="prefill-clear-btn" onclick="clearPrefill()" title="মুছে ফেলুন">×</button>
+            </div>
+          </div>
+
+          <!-- Dynamic Input Container -->
+          <div id="inputContainer"></div>
+          <div id="fieldError" class="field-error" style="display: none;"></div>
+
+          <!-- AI Helper -->
+          <div>
+            <button class="ai-helper-btn" onclick="toggleAIHelp()">
+              <span>💡</span>
+              <span>আইনি সহায়তা (সহজ ব্যাখ্যা)</span>
+            </button>
+            <div class="ai-helper-box" id="aiHelperBox">
+              <div style="font-size: 11px; font-weight: 700; color: #B45309; margin-bottom: 4px;">AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়</div>
+              <div id="aiRephrasedText" style="font-size: 13px; margin-bottom: 8px;"></div>
+              <div id="aiTermExplanation" style="font-size: 12px; color: #475569; background: #FFFFFF; padding: 8px; border-radius: 6px; border: 1px solid #E2E8F0;"></div>
+            </div>
+          </div>
+
+          <!-- Wizard Actions -->
+          <div class="wizard-actions">
+            <button id="prevBtn" class="btn-secondary" onclick="wizardPrev()">পূর্ববর্তী</button>
+            <div style="display: flex; gap: 8px; margin-left: auto;">
+              <button id="skipBtn" class="btn-text" onclick="wizardSkip()">আপাতত বাদ দিন</button>
+              <button id="nextBtn" class="btn-primary" onclick="wizardNext()">পরবর্তী</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: Consistency Checks Screen -->
+      <section id="viewCheck" style="display: none;">
+        <div class="wizard-card">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">ধারাবাহিকতা ও সঠিকতা যাচাই</h3>
+          <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 16px;">
+            চূড়ান্ত করার পূর্বে তারিখের ক্রম, টাকার অংক এবং পক্ষগণের নামের সামঞ্জস্য পরীক্ষা করা হয়েছে।
+          </p>
+
+          <div id="checkResultsList" style="margin-bottom: 20px;">
+            <!-- Dynamically populated -->
+          </div>
+
+          <div style="display: flex; gap: 12px;">
+            <button class="btn-secondary" onclick="switchView('wizard')">প্রশ্নমালায় ফিরে যান</button>
+            <button class="btn-primary" onclick="switchView('preview')">দলিল প্রিভিউ ও চেকলিস্টে যান</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: Live Preview & Execution Checklist -->
+      <section id="viewPreview" style="display: none;">
+        <div class="split-screen">
+          <!-- Left/Top: Document Preview with Watermark -->
+          <div>
+            <div class="preview-container" id="previewContainer">
+              <div class="watermark-overlay" id="watermarkOverlay">খসড়া — AI-সহায়তায় তৈরি, আইনি পরামর্শ নয়</div>
+              <h2 style="text-align: center; font-size: 20px; font-weight: 700; color: #047857; margin-bottom: 16px;" id="docPreviewTitle">দলিলের শিরোনাম</h2>
+              <div id="docClausesList"></div>
+              <div class="preview-footer" id="docPreviewFooter">
+                <span id="footerTmpl">DT-01 (v1)</span>
+                <span id="footerDate">তারিখ: ২০২৬-১০-০১</span>
+                <span>AIN-AI দ্বারা প্রস্তুতকৃত</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right/Bottom: Execution Checklist & Finalize -->
+          <div>
+            <div class="checklist-card">
+              <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">সম্পাদন চেকলিস্ট (বাধ্যতামূলক)</h3>
+              <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 14px;">
+                দলিলটি চূড়ান্ত করতে এবং ওয়াটারমার্ক অপসারণ করতে নিচের প্রতিটি প্রয়োজনীয় শর্ত নিশ্চিত করুন:
+              </p>
+              <div id="checklistItemsList"></div>
+
+              <div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--color-border);">
+                <button id="finalizeBtn" class="btn-primary" style="width: 100%; justify-content: center; padding: 12px;" onclick="finalizeDraft()">
+                  <span>চূড়ান্ত করুন</span>
+                </button>
+                <p id="finalizeErrorMsg" class="field-error" style="display: none; text-align: center; margin-top: 8px;"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 5: Finalized Export & Signing Checklist -->
+      <section id="viewExport" style="display: none;">
+        <div class="wizard-card" style="text-align: center; padding: 32px 20px;">
+          <div style="font-size: 40px; margin-bottom: 12px;">✅</div>
+          <h2 style="font-size: 22px; font-weight: 700; color: #047857; margin-bottom: 6px;">দলিল চূড়ান্তকরণ সম্পন্ন হয়েছে!</h2>
+          <p style="color: var(--color-text-muted); font-size: 14px; max-width: 520px; margin: 0 auto 24px;">
+            আপনার দলিলের খসড়া সফলভাবে তৈরি হয়েছে এবং ওয়াটারমার্ক মুক্ত করা হয়েছে। প্রয়োজনীয় ফরম্যাটে ডাউনলোড করুন।
+          </p>
+
+          <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 32px;">
+            <button class="btn-primary" onclick="downloadExport('pdf')">
+              <span>📄</span>
+              <span>পিডিএফ ডাউনলোড (PDF)</span>
+            </button>
+            <button class="btn-secondary" onclick="downloadExport('docx')">
+              <span>📝</span>
+              <span>ওয়ার্ড ফাইল (DOCX)</span>
+            </button>
+          </div>
+
+          <!-- Signing Checklist -->
+          <div style="text-align: left; background: #F8FAFC; border: 1px solid var(--color-border); border-radius: 8px; padding: 20px;">
+            <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px; color: #0F172A;">দলিল স্বাক্ষরের পরবর্তী পদক্ষেপ (Next Steps):</h3>
+            <div id="signingStepsList"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Tab Bar (360px viewport) -->
+  <nav class="mobile-tab-bar" aria-label="মোবাইল নেভিগেশন">
+    <a href="/home" class="mobile-tab-item">
+      <svg class="mobile-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>হোম</span>
+    </a>
+    <a href="/cases" class="mobile-tab-item">
+      <svg class="mobile-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      <span>মামলা</span>
+    </a>
+    <a href="/intake" class="mobile-tab-item">
+      <svg class="mobile-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+      <span>ইনটেক</span>
+    </a>
+    <a href="/draft" class="mobile-tab-item active">
+      <svg class="mobile-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+      <span>ড্রাফটিং</span>
+    </a>
+    <a href="/notifications" class="mobile-tab-item">
+      <svg class="mobile-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+      <span>বিজ্ঞপ্তি</span>
+    </a>
+  </nav>
+
+  <script>
+    const _origFetch = window.fetch;
+    window.fetch = async function(url, options = {}) {
+      options = options || {};
+      options.headers = options.headers || {};
+      const token = localStorage.getItem('auth_token');
+      if (token && !(options.headers instanceof Headers) && !options.headers['Authorization']) {
+        options.headers['Authorization'] = 'Bearer ' + token;
+      } else if (token && options.headers instanceof Headers && !options.headers.has('Authorization')) {
+        options.headers.set('Authorization', 'Bearer ' + token);
+      }
+      return _origFetch(url, options);
+    };
+
+    let allTemplates = [];
+    let currentDraft = null;
+    let currentTemplate = null;
+    let currentQuestionIndex = 0;
+    let questionsList = [];
+    let draftAnswers = {};
+
+    function toBanglaDigits(str) {
+      if (str === null || str === undefined) return '';
+      const bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      return String(str).replace(/[0-9]/g, d => bn[Number(d)]);
+    }
+
+    async function init() {
+      // Check url if editing specific draft
+      const path = window.location.pathname;
+      const match = path.match(/\/draft\/([^\/]+)/);
+      if (match && match[1] && match[1] !== 'new') {
+        const draftId = match[1];
+        await loadDraft(draftId);
+      } else {
+        await loadTemplates();
+      }
+    }
+
+    async function loadTemplates() {
+      try {
+        const res = await fetch('/templates');
+        const data = await res.json();
+        allTemplates = data.templates || [];
+        renderTemplatesGrid(allTemplates);
+      } catch (e) {
+        console.error("Templates load error", e);
+      }
+    }
+
+    function renderTemplatesGrid(templates) {
+      const grid = document.getElementById('templatesGrid');
+      grid.innerHTML = '';
+      if (!templates.length) {
+        grid.innerHTML = '<div style="color: #64748B; padding: 20px;">কোনো অনুমোদিত দলিল পাওয়া যায়নি।</div>';
+        return;
+      }
+      templates.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'template-card';
+        let warningHtml = '';
+        if (t.staging_warning) {
+          warningHtml = `<div class="staging-warning-banner">${t.staging_warning}</div>`;
+        }
+        card.innerHTML = `
+          <div>
+            ${warningHtml}
+            <span class="template-code-badge">${t.code}</span>
+            <h3 class="template-title">${t.title_bn}</h3>
+            <p class="template-desc">${t.description_bn || ''}</p>
+          </div>
+          <div>
+            ${t.what_needed_bn ? `<div class="template-what-needed"><strong>প্রয়োজনীয় তথ্য:</strong> ${t.what_needed_bn}</div>` : ''}
+            <button class="btn-primary" style="width: 100%; justify-content: center; margin-top: 12px;" onclick="startNewDraft('${t.id}')">
+              খসড়া শুরু করুন
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterCategory(cat) {
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      if (cat === 'all') {
+        renderTemplatesGrid(allTemplates);
+      } else {
+        renderTemplatesGrid(allTemplates.filter(t => t.category === cat));
+      }
+    }
+
+    async function startNewDraft(templateId) {
+      try {
+        const res = await fetch('/drafts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ template_id: templateId })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.detail || "ড্রাফট শুরু করা সম্ভব হয়নি।");
+          return;
+        }
+        const draft = await res.json();
+        window.history.pushState({}, '', `/draft/${draft.id}`);
+        await loadDraft(draft.id);
+      } catch (e) {
+        alert("সার্ভার ত্রুটি।");
+      }
+    }
+
+    async function loadDraft(draftId) {
+      try {
+        const res = await fetch(`/drafts/${draftId}`);
+        if (!res.ok) throw new Error("Draft not found");
+        const data = await res.json();
+        currentDraft = data.draft;
+        currentTemplate = data.template;
+        draftAnswers = currentDraft.answers || {};
+        questionsList = currentTemplate.questions_schema || [];
+        currentQuestionIndex = 0;
+
+        document.getElementById('draftIdBadge').textContent = currentDraft.id;
+        document.getElementById('draftIdBadge').style.display = 'inline-block';
+
+        if (currentDraft.is_finalized) {
+          switchView('export');
+        } else {
+          switchView('wizard');
+          renderCurrentQuestion();
+        }
+      } catch (e) {
+        console.error("Load draft error", e);
+        switchView('picker');
+      }
+    }
+
+    function switchView(viewName) {
+      ['viewPicker', 'viewWizard', 'viewCheck', 'viewPreview', 'viewExport'].forEach(v => {
+        document.getElementById(v).style.display = 'none';
+      });
+      if (viewName === 'picker') document.getElementById('viewPicker').style.display = 'block';
+      if (viewName === 'wizard') document.getElementById('viewWizard').style.display = 'block';
+      if (viewName === 'check') {
+        document.getElementById('viewCheck').style.display = 'block';
+        loadConsistencyChecks();
+      }
+      if (viewName === 'preview') {
+        document.getElementById('viewPreview').style.display = 'block';
+        loadPreview();
+      }
+      if (viewName === 'export') {
+        document.getElementById('viewExport').style.display = 'block';
+        loadSigningChecklist();
+      }
+    }
+
+    function renderCurrentQuestion() {
+      if (!questionsList.length) return;
+      const q = questionsList[currentQuestionIndex];
+      const total = questionsList.length;
+
+      // Update progress
+      const pct = Math.round(((currentQuestionIndex + 1) / total) * 100);
+      document.getElementById('wizardProgress').style.width = `${pct}%`;
+      document.getElementById('stepLabel').textContent = `প্রশ্ন ${toBanglaDigits(currentQuestionIndex + 1)} / ${toBanglaDigits(total)}`;
+      document.getElementById('templateNameBadge').textContent = currentTemplate.title_bn;
+      document.getElementById('qTitle').textContent = q.label_bn;
+      document.getElementById('qHelp').textContent = q.help_bn || '';
+
+      // Prefill chip
+      const origins = draftAnswers._prefill_origins || {};
+      const prefillSource = origins[q.id];
+      const prefillChip = document.getElementById('prefillChipContainer');
+      if (prefillSource) {
+        document.getElementById('prefillSourceText').textContent = prefillSource;
+        prefillChip.style.display = 'block';
+      } else {
+        prefillChip.style.display = 'none';
+      }
+
+      // Hide AI helper box by default
+      document.getElementById('aiHelperBox').classList.remove('open');
+
+      // Render Input
+      const container = document.getElementById('inputContainer');
+      container.innerHTML = '';
+      const curVal = draftAnswers[q.id] || '';
+
+      if (q.type === 'yes_no') {
+        container.innerHTML = `
+          <div style="display:flex; gap:16px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="radio" name="q_${q.id}" value="yes" ${curVal === 'yes' ? 'checked' : ''} onchange="saveAnswer('${q.id}', 'yes')"> হ্যাঁ
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="radio" name="q_${q.id}" value="no" ${curVal === 'no' ? 'checked' : ''} onchange="saveAnswer('${q.id}', 'no')"> না
+            </label>
+          </div>
+        `;
+      } else if (q.type === 'choice') {
+        let optionsHtml = (q.choices || []).map(opt => `
+          <option value="${opt}" ${curVal === opt ? 'selected' : ''}>${opt}</option>
+        `).join('');
+        container.innerHTML = `
+          <select class="input-field" onchange="saveAnswer('${q.id}', this.value)">
+            <option value="">নির্বাচন করুন</option>
+            ${optionsHtml}
+          </select>
+        `;
+      } else if (q.type === 'address' || q.type === 'text' && q.id.includes('details')) {
+        container.innerHTML = `
+          <textarea class="input-field" placeholder="বিস্তারিত লিখুন..." oninput="saveAnswer('${q.id}', this.value)">${curVal}</textarea>
+        `;
+      } else if (q.type === 'date') {
+        container.innerHTML = `
+          <input type="date" class="input-field" value="${curVal}" onchange="saveAnswer('${q.id}', this.value)">
+        `;
+      } else if (q.type === 'amount' || q.type === 'number') {
+        container.innerHTML = `
+          <input type="number" class="input-field" value="${curVal}" placeholder="সংখ্যাত্মক মান লিখুন" oninput="saveAnswer('${q.id}', this.value)">
+        `;
+      } else {
+        container.innerHTML = `
+          <input type="text" class="input-field" value="${curVal}" placeholder="উত্তর লিখুন..." oninput="saveAnswer('${q.id}', this.value)">
+        `;
+      }
+
+      document.getElementById('prevBtn').style.display = currentQuestionIndex === 0 ? 'none' : 'inline-block';
+      document.getElementById('nextBtn').textContent = currentQuestionIndex === total - 1 ? 'পর্যালোচনা ও যাচাই' : 'পরবর্তী';
+    }
+
+    function saveAnswer(key, value) {
+      draftAnswers[key] = value;
+      // Auto-save debounce
+      fetch(`/drafts/${currentDraft.id}/answers`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers: draftAnswers })
+      });
+    }
+
+    function clearPrefill() {
+      const q = questionsList[currentQuestionIndex];
+      draftAnswers[q.id] = '';
+      if (draftAnswers._prefill_origins) delete draftAnswers._prefill_origins[q.id];
+      renderCurrentQuestion();
+      saveAnswer(q.id, '');
+    }
+
+    function wizardPrev() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        renderCurrentQuestion();
+      }
+    }
+
+    function wizardNext() {
+      const q = questionsList[currentQuestionIndex];
+      const val = draftAnswers[q.id];
+      if (q.required && (!val || String(val).trim() === '')) {
+        const errEl = document.getElementById('fieldError');
+        errEl.textContent = 'এই তথ্যটি প্রদান করা আবশ্যক।';
+        errEl.style.display = 'block';
+        return;
+      }
+      document.getElementById('fieldError').style.display = 'none';
+
+      if (currentQuestionIndex < questionsList.length - 1) {
+        currentQuestionIndex++;
+        renderCurrentQuestion();
+      } else {
+        switchView('check');
+      }
+    }
+
+    function wizardSkip() {
+      if (currentQuestionIndex < questionsList.length - 1) {
+        currentQuestionIndex++;
+        renderCurrentQuestion();
+      } else {
+        switchView('check');
+      }
+    }
+
+    async function toggleAIHelp() {
+      const box = document.getElementById('aiHelperBox');
+      if (box.classList.contains('open')) {
+        box.classList.remove('open');
+        return;
+      }
+      box.classList.add('open');
+      const q = questionsList[currentQuestionIndex];
+      document.getElementById('aiRephrasedText').textContent = 'সহায়ক তথ্য প্রস্তুত হচ্ছে...';
+      document.getElementById('aiTermExplanation').textContent = '';
+
+      try {
+        const res = await fetch(`/drafts/${currentDraft.id}/ai-help`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question_id: q.id, user_query: q.label_bn })
+        });
+        const data = await res.json();
+        document.getElementById('aiRephrasedText').textContent = data.rephrased_question || q.label_bn;
+        if (data.term_explanation) {
+          document.getElementById('aiTermExplanation').innerHTML = `
+            <strong>${data.term_explanation.term}:</strong> ${data.term_explanation.explanation_bn}
+            ${data.term_explanation.source_chip ? `<br><span style="font-size:11px; color:#1E40AF;">উৎস: ${data.term_explanation.source_chip}</span>` : ''}
+          `;
+        }
+      } catch (e) {
+        document.getElementById('aiRephrasedText').textContent = 'সহজ বাংলায় তথ্য প্রদান করুন।';
+      }
+    }
+
+    async function loadConsistencyChecks() {
+      const list = document.getElementById('checkResultsList');
+      list.innerHTML = 'পরীক্ষা চলছে...';
+      try {
+        const res = await fetch(`/drafts/${currentDraft.id}/check`, { method: 'POST' });
+        const data = await res.json();
+
+        list.innerHTML = '';
+        if (data.is_valid && (!data.warnings || !data.warnings.length)) {
+          list.innerHTML = `
+            <div style="background: #F0FDF4; border: 1px solid #BBF7D0; padding: 14px; border-radius: 8px; color: #166534;">
+              ✓ সকল প্রয়োজনীয় তথ্য, তারিখ ও টাকার অংকের কথায় লেখার সামঞ্জস্য সঠিকভাবে যাচাই করা হয়েছে।
+            </div>
+          `;
+        } else {
+          if (data.errors && data.errors.length) {
+            data.errors.forEach(err => {
+              const item = document.createElement('div');
+              item.style.cssText = 'background: #FEE2E2; border: 1px solid #EF4444; color: #991B1B; padding: 10px; border-radius: 6px; margin-bottom: 8px; font-size: 13px;';
+              item.textContent = `❌ ${err}`;
+              list.appendChild(item);
+            });
+          }
+          if (data.warnings && data.warnings.length) {
+            data.warnings.forEach(warn => {
+              const item = document.createElement('div');
+              item.style.cssText = 'background: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; padding: 10px; border-radius: 6px; margin-bottom: 8px; font-size: 13px;';
+              item.textContent = `⚠️ ${warn}`;
+              list.appendChild(item);
+            });
+          }
+        }
+      } catch (e) {
+        list.innerHTML = '<div class="field-error">যাচাইকরণে সমস্যা হয়েছে।</div>';
+      }
+    }
+
+    async function loadPreview() {
+      try {
+        const res = await fetch(`/drafts/${currentDraft.id}/generate`, { method: 'POST' });
+        const data = await res.json();
+        document.getElementById('docPreviewTitle').textContent = data.title;
+        const clausesList = document.getElementById('docClausesList');
+        clausesList.innerHTML = '';
+
+        (data.clauses || []).forEach(cl => {
+          const div = document.createElement('div');
+          div.className = 'preview-clause';
+          div.innerHTML = `
+            <div class="preview-clause-title">${cl.title_bn}</div>
+            <div class="preview-clause-body">${cl.text}</div>
+          `;
+          clausesList.appendChild(div);
+        });
+
+        // Watermark
+        const wmEl = document.getElementById('watermarkOverlay');
+        if (data.watermark) {
+          wmEl.textContent = data.watermark;
+          wmEl.style.display = 'block';
+        } else {
+          wmEl.style.display = 'none';
+        }
+
+        // Checklist
+        const chkList = document.getElementById('checklistItemsList');
+        chkList.innerHTML = '';
+        (data.checklist_schema || []).forEach(item => {
+          const isChecked = data.checklist_states[item.id] || false;
+          const row = document.createElement('div');
+          row.className = 'checklist-row';
+          row.innerHTML = `
+            <input type="checkbox" id="chk_${item.id}" ${isChecked ? 'checked' : ''} onchange="toggleChecklistItem('${item.id}', this.checked)">
+            <div>
+              <label for="chk_${item.id}" style="font-weight: 700; font-size: 14px; cursor: pointer;">${item.title_bn}</label>
+              <div style="font-size: 12px; color: #64748B;">${item.description_bn}</div>
+              ${item.legal_ref ? `<div style="font-size: 11px; color: #047857; margin-top: 2px;">আইনি ভিত্তি: ${item.legal_ref}</div>` : ''}
+            </div>
+          `;
+          chkList.appendChild(row);
+        });
+      } catch (e) {
+        console.error("Preview load error", e);
+      }
+    }
+
+    async function toggleChecklistItem(itemId, confirmed) {
+      try {
+        await fetch(`/drafts/${currentDraft.id}/checklist/${itemId}/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ confirmed })
+        });
+      } catch (e) {
+        console.error("Checklist toggle error", e);
+      }
+    }
+
+    async function finalizeDraft() {
+      const errEl = document.getElementById('finalizeErrorMsg');
+      errEl.style.display = 'none';
+      try {
+        const res = await fetch(`/drafts/${currentDraft.id}/finalize`, { method: 'POST' });
+        if (!res.ok) {
+          const err = await res.json();
+          errEl.textContent = err.detail || 'চূড়ান্ত করা সম্ভব হয়নি। সকল চেকলিস্ট সম্পন্ন করুন।';
+          errEl.style.display = 'block';
+          return;
+        }
+        currentDraft.is_finalized = true;
+        switchView('export');
+      } catch (e) {
+        errEl.textContent = 'সার্ভার ত্রুটি।';
+        errEl.style.display = 'block';
+      }
+    }
+
+    async function loadSigningChecklist() {
+      try {
+        const res = await fetch(`/drafts/${currentDraft.id}/signing-checklist`);
+        const data = await res.json();
+        const list = document.getElementById('signingStepsList');
+        list.innerHTML = '';
+        (data.actionable_steps || []).forEach((st, idx) => {
+          const row = document.createElement('div');
+          row.className = 'checklist-row';
+          row.innerHTML = `
+            <input type="checkbox" id="sgn_${st.step_id}">
+            <div>
+              <label for="sgn_${st.step_id}" style="font-weight: 700; font-size: 14px; cursor: pointer;">${st.title_bn}</label>
+              <div style="font-size: 12px; color: #64748B;">${st.description_bn}</div>
+            </div>
+          `;
+          list.appendChild(row);
+        });
+      } catch (e) {
+        console.error("Signing checklist error", e);
+      }
+    }
+
+    function downloadExport(format) {
+      window.location.href = `/drafts/${currentDraft.id}/export?format=${format}`;
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+  <script src="/static/sw-register.js"></script>
+</body>
+</html>
