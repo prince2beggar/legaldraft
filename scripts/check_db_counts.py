@@ -12,5 +12,6 @@ def check_counts():
             print(f"  {tbl}: {cnt} rows")
         conn.close()
 
+
 if __name__ == "__main__":
     check_counts()

@@ -14,7 +14,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-DEST_PATH = Path(__file__).resolve().parent.parent / "tests" / "data" / "synthetic_notices_golden_set.json"
+DEST_PATH = (
+    Path(__file__).resolve().parent.parent / "tests" / "data" / "synthetic_notices_golden_set.json"
+)
 
 
 def get_synthetic_notices() -> list[dict[str, Any]]:
@@ -509,72 +511,133 @@ def get_synthetic_notices() -> list[dict[str, Any]]:
             "category": "specific_performance",
             "title": "[নমুনা] FAKE_TEST_DATA: জমি বায়না চুক্তি কার্যকরের আইনি নোটিশ",
             "raw_text": "[নমুনা] FAKE_TEST_DATA\nবায়না চুক্তি কার্যকরের নোটিশ\nপ্রেরক: অ্যাডভোকেট মোশাররফ হোসেন, পক্ষে ক্রেতা আবদুর রহিম।\nপ্রাপক: জমির মালিক কাদির মিয়া।\nবাকি টাকা গ্রহণ করে আগামী ১৫ দিনের মধ্যে সাফ কবলা দলিল রেজিস্ট্রি করে দিন।",
-            "expected": {"is_notice": True, "certainty": "clear", "has_relative_deadline": True, "period_days": 15, "period_unit": "days"},
+            "expected": {
+                "is_notice": True,
+                "certainty": "clear",
+                "has_relative_deadline": True,
+                "period_days": 15,
+                "period_unit": "days",
+            },
         },
         {
             "id": "SYNTH_NOTICE_22",
             "category": "easement_rights",
             "title": "[নমুনা] FAKE_TEST_DATA: চলাচলের সাধারণ পথ বন্ধের বিরুদ্ধে নোটিশ",
             "raw_text": "[নমুনা] FAKE_TEST_DATA\nচলাচলের অধিকার সংক্রান্ত নোটিশ (সুখাধিকার আইন)\nপ্রেরক: মো: শফিক উল্লাহ।\nপ্রাপক: মো: জাকির হোসেন।\nআমাদের সাধারণ চলাচলের রাস্তায় তৈরি প্রাচীর ৭ দিনের মধ্যে অপসারণ করুন।",
-            "expected": {"is_notice": True, "certainty": "clear", "has_relative_deadline": True, "period_days": 7, "period_unit": "days"},
+            "expected": {
+                "is_notice": True,
+                "certainty": "clear",
+                "has_relative_deadline": True,
+                "period_days": 7,
+                "period_unit": "days",
+            },
         },
         {
             "id": "SYNTH_NOTICE_23",
             "category": "copyright_infringement",
             "title": "[নমুনা] FAKE_TEST_DATA: বই অননুমোদিত মুদ্রণের বিরুদ্ধে কপিরাইট নোটিশ",
             "raw_text": "[নমুনা] FAKE_TEST_DATA\nকপিরাইট লঙ্ঘন আইনি নোটিশ (কপিরাইট আইন ২০২৩)\nপ্রেরক: রোদেলা প্রকাশনী।\nপ্রাপক: প্রগতি প্রেস, বাংলাবাজার।\nঅনুমতিহীন মুদ্রণ অবিলম্বে বন্ধ করুন এবং ১৫ দিনের মধ্যে ক্ষতিপূরণ পরিশোধ করুন।",
-            "expected": {"is_notice": True, "certainty": "clear", "has_relative_deadline": True, "period_days": 15, "period_unit": "days"},
+            "expected": {
+                "is_notice": True,
+                "certainty": "clear",
+                "has_relative_deadline": True,
+                "period_days": 15,
+                "period_unit": "days",
+            },
         },
         {
             "id": "SYNTH_NOTICE_24",
             "category": "partnership_dissolution",
             "title": "[নমুনা] FAKE_TEST_DATA: অংশীদারি কারবার অবসানের নোটিশ",
             "raw_text": "[নমুনা] FAKE_TEST_DATA\nঅংশীদারি কারবার বিলোপের নোটিশ (অংশীদারি আইন ১৯৩২)\nপ্রেরক: অংশীদার মো: কামরুল ইসলাম।\nপ্রাপক: অন্যান্য অংশীদারগণ।\nএই নোটিশের ৩০ দিন পর অংশীদারি কারবার অবলুপ্ত হবে এবং হিসাব চূড়ান্ত করার আহ্বান জানানো হলো।",
-            "expected": {"is_notice": True, "certainty": "clear", "has_relative_deadline": True, "period_days": 30, "period_unit": "days"},
+            "expected": {
+                "is_notice": True,
+                "certainty": "clear",
+                "has_relative_deadline": True,
+                "period_days": 30,
+                "period_unit": "days",
+            },
         },
         {
             "id": "SYNTH_NOTICE_25",
             "category": "possession_recovery",
             "title": "[নমুনা] FAKE_TEST_DATA: বেআইনি দখল প্রত্যাহারের নোটিশ",
             "raw_text": "[নমুনা] FAKE_TEST_DATA\nবেদখল প্রত্যাহারের আইনি নোটিশ\nপ্রেরক: অ্যাডভোকেট তসলিম উদ্দিন।\nপ্রাপক: দখলদার রমিজ মিয়া।\nদখলকৃত দোকান ঘর আগামী ১৫ দিনের মধ্যে প্রকৃত মালিককে হস্তান্তর করুন। অন্যথায় মামলা করা হবে।",
-            "expected": {"is_notice": True, "certainty": "clear", "has_relative_deadline": True, "period_days": 15, "period_unit": "days", "if_ignored_stated": True},
+            "expected": {
+                "is_notice": True,
+                "certainty": "clear",
+                "has_relative_deadline": True,
+                "period_days": 15,
+                "period_unit": "days",
+                "if_ignored_stated": True,
+            },
         },
         {
             "id": "SYNTH_NOTICE_26",
             "category": "public_nuisance",
             "title": "[নমুনা] FAKE_TEST_DATA: গণউপদ্রব সৃষ্টির বিরুদ্ধে নোটিশ",
             "raw_text": "[নমুনা] FAKE_TEST_DATA\nগণউপদ্রব বন্ধের নোটিশ (ফৌজদারি কার্যবিধি ১৩৩ ধারা)\nপ্রেরক: এলাকাবাসীর পক্ষে সভাপতি।\nপ্রাপক: মেসার্স কেমিক্যাল ওয়ার্কস।\nআবাসিক এলাকায় বিষাক্ত গ্যাস নির্গমন বন্ধ করুন ৭ দিনের মধ্যে।",
-            "expected": {"is_notice": True, "certainty": "clear", "has_relative_deadline": True, "period_days": 7, "period_unit": "days"},
+            "expected": {
+                "is_notice": True,
+                "certainty": "clear",
+                "has_relative_deadline": True,
+                "period_days": 7,
+                "period_unit": "days",
+            },
         },
         {
             "id": "SYNTH_NOTICE_27",
             "category": "motor_accident_claim",
             "title": "[নমুনা] FAKE_TEST_DATA: সড়ক দুর্ঘটনায় ক্ষতিপূরণ দাবির নোটিশ",
             "raw_text": "[নমুনা] FAKE_TEST_DATA\nআইনি নোটিশ (সড়ক পরিবহন আইন ২০১৮)\nপ্রেরক: অ্যাডভোকেট মোস্তফা কামাল।\nপ্রাপক: দিগন্ত পরিবহন।\nবাসের ধাক্কায় আহত পথচারীর চিকিৎসা ব্যয় বাবদ ৩,০০,০০০ টাকা আগামী ৩০ দিনের মধ্যে পরিশোধ করুন।",
-            "expected": {"is_notice": True, "certainty": "clear", "has_relative_deadline": True, "period_days": 30, "period_unit": "days"},
+            "expected": {
+                "is_notice": True,
+                "certainty": "clear",
+                "has_relative_deadline": True,
+                "period_days": 30,
+                "period_unit": "days",
+            },
         },
         {
             "id": "SYNTH_NOTICE_28",
             "category": "electricity_disconnection",
             "title": "[নমুনা] FAKE_TEST_DATA: বকেয়া বিদ্যুৎ বিল ও সংযোগ বিচ্ছিন্নকরণ নোটিশ",
             "raw_text": "[নমুনা] FAKE_TEST_DATA\nসংযোগ বিচ্ছিন্নকরণ নোটিশ (ডেসকো)\nপ্রেরক: সহকারী প্রকৌশলী, ডেসকো, মিরপুর।\nপ্রাপক: গ্রাহক হিসাব নং ৯৮৭৬৫।\nবকেয়া ৪৫,০০০ টাকা নোটিশ প্রাপ্তির ১৫ দিনের মধ্যে পরিশোধ না করলে সংযোগ বিচ্ছিন্ন করা হবে।",
-            "expected": {"is_notice": True, "certainty": "clear", "has_relative_deadline": True, "period_days": 15, "period_unit": "days", "if_ignored_stated": True},
+            "expected": {
+                "is_notice": True,
+                "certainty": "clear",
+                "has_relative_deadline": True,
+                "period_days": 15,
+                "period_unit": "days",
+                "if_ignored_stated": True,
+            },
         },
         {
             "id": "SYNTH_NOTICE_29",
             "category": "vat_demand",
             "title": "[নমুনা] FAKE_TEST_DATA: বকেয়া মূসক দাবিনামা নোটিশ",
             "raw_text": "[নমুনা] FAKE_TEST_DATA\nমূসক দাবি নোটিশ (মূল্য সংযোজন কর ও সম্পূরক শুল্ক আইন ২০১২)\nপ্রেরক: কাস্টমস এক্সাইজ ও ভ্যাট কমিশনারেট।\nপ্রাপক: মেসার্স জনতা বেকার্স।\nবকেয়া ভ্যাট ১,২০,০০০ টাকা ৩০ দিনের মধ্যে সরকারি ট্রেজারিতে জমা দিন।",
-            "expected": {"is_notice": True, "certainty": "clear", "has_relative_deadline": True, "period_days": 30, "period_unit": "days"},
+            "expected": {
+                "is_notice": True,
+                "certainty": "clear",
+                "has_relative_deadline": True,
+                "period_days": 30,
+                "period_unit": "days",
+            },
         },
         {
             "id": "SYNTH_NOTICE_30",
             "category": "preemption_hakk_e_shufa",
             "title": "[নমুনা] FAKE_TEST_DATA: অগ্রক্রয়াধিকার (হক-শুফা) দাবির নোটিশ",
             "raw_text": "[নমুনা] FAKE_TEST_DATA\nহক-শুফা আইনি নোটিশ (রাষ্ট্রীয় অধিগ্রহণ ও প্রজাস্বত্ব আইন ৯৬ ধারা)\nপ্রেরক: অ্যাডভোকেট আনোয়ার হোসেন।\nপ্রাপক: ক্রেতা শামসুল হক।\nশরিকদার হিসেবে জমি ক্রয়ের অগ্রাধিকার দাবি করছি। ১৫ দিনের মধ্যে আলোচনায় অংশ নিন।",
-            "expected": {"is_notice": True, "certainty": "clear", "has_relative_deadline": True, "period_days": 15, "period_unit": "days"},
+            "expected": {
+                "is_notice": True,
+                "certainty": "clear",
+                "has_relative_deadline": True,
+                "period_days": 15,
+                "period_unit": "days",
+            },
         },
-
         # Negative & Edge Cases
         # 31. Scan too blurry / partial
         {

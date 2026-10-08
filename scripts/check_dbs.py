@@ -17,6 +17,7 @@ def inspect_db(db_path):
         print(f"  Table '{t}': {cnt} rows")
     conn.close()
 
+
 if __name__ == "__main__":
     inspect_db("legal_saas.db")
     inspect_db("ain_ai.db")

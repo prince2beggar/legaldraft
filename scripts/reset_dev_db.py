@@ -116,6 +116,7 @@ def reset_dev_db(skip_confirm: bool = False) -> None:
     # 6. Migrate clean legacy baseline from legal_saas.db
     print("\n[STEP 6] Migrating baseline legacy data from legal_saas.db...")
     from scripts.migrate_legacy_data import compare_and_migrate
+
     compare_and_migrate()
 
     # 7. Capture after counts
@@ -125,11 +126,21 @@ def reset_dev_db(skip_confirm: bool = False) -> None:
         print(f"  - {tbl}: {count}")
 
     # Verify that exactly the legacy rows are present
-    assert after_counts.get("matters") == 15, f"Expected 15 matters, got {after_counts.get('matters')}"
-    assert after_counts.get("documents") == 5, f"Expected 5 documents, got {after_counts.get('documents')}"
-    assert after_counts.get("organizations") == 1, f"Expected 1 organization, got {after_counts.get('organizations')}"
-    assert after_counts.get("document_versions") == 5, f"Expected 5 document_versions, got {after_counts.get('document_versions')}"
-    print("\n[SUCCESS] Clean dev database verified! Exactly 15 matters, 5 documents, 1 organization, 5 document_versions present.")
+    assert after_counts.get("matters") == 15, (
+        f"Expected 15 matters, got {after_counts.get('matters')}"
+    )
+    assert after_counts.get("documents") == 5, (
+        f"Expected 5 documents, got {after_counts.get('documents')}"
+    )
+    assert after_counts.get("organizations") == 1, (
+        f"Expected 1 organization, got {after_counts.get('organizations')}"
+    )
+    assert after_counts.get("document_versions") == 5, (
+        f"Expected 5 document_versions, got {after_counts.get('document_versions')}"
+    )
+    print(
+        "\n[SUCCESS] Clean dev database verified! Exactly 15 matters, 5 documents, 1 organization, 5 document_versions present."
+    )
 
 
 if __name__ == "__main__":

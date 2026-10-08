@@ -13,7 +13,14 @@ import pypdf
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 OUTPUT_DIR = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "synthetic_scans"
-FONT_PATH = Path(__file__).resolve().parents[1] / "backend" / "app" / "static" / "fonts" / "NotoSansBengali-Regular.ttf"
+FONT_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "backend"
+    / "app"
+    / "static"
+    / "fonts"
+    / "NotoSansBengali-Regular.ttf"
+)
 
 
 def get_font(size: int = 20):
@@ -25,7 +32,9 @@ def get_font(size: int = 20):
     return ImageFont.load_default()
 
 
-def create_base_canvas(width: int = 800, height: int = 1100, bg_color: str = "#FAF8F5") -> Image.Image:
+def create_base_canvas(
+    width: int = 800, height: int = 1100, bg_color: str = "#FAF8F5"
+) -> Image.Image:
     img = Image.new("RGB", (width, height), bg_color)
     draw = ImageDraw.Draw(img)
     # Border
@@ -35,7 +44,9 @@ def create_base_canvas(width: int = 800, height: int = 1100, bg_color: str = "#F
     font_sub = get_font(16)
     draw.rectangle([(20, 20), (width - 20, 80)], fill="#FEF3C7")
     draw.text((40, 28), "[নমুনা] আইনি পরীক্ষার দলিল (FAKE_TEST_DATA)", fill="#92400E", font=font_large)
-    draw.text((40, 56), "সতর্কতা: এটি সম্পূর্ণ কৃত্রিম ও সফটওয়্যার পরীক্ষার জন্য তৈরি।", fill="#B45309", font=font_sub)
+    draw.text(
+        (40, 56), "সতর্কতা: এটি সম্পূর্ণ কৃত্রিম ও সফটওয়্যার পরীক্ষার জন্য তৈরি।", fill="#B45309", font=font_sub
+    )
     return img
 
 
@@ -53,7 +64,9 @@ def generate_clean_notice() -> Image.Image:
     y += 35
     draw.text((50, y), "প্রাপক: জনাব আরিফুল হক, পিতা: মরহুম কায়সার হক", fill="#0F172A", font=font_bold)
     y += 35
-    draw.text((50, y), "বিষয়: বকেয়া বাড়িভাড়া বাবদ ৫০,০০০ টাকা পরিশোধের নোটিশ", fill="#0F172A", font=font_bold)
+    draw.text(
+        (50, y), "বিষয়: বকেয়া বাড়িভাড়া বাবদ ৫০,০০০ টাকা পরিশোধের নোটিশ", fill="#0F172A", font=font_bold
+    )
     y += 45
     draw.line([(50, y), (750, y)], fill="#CBD5E1", width=1)
     y += 25
@@ -87,13 +100,30 @@ def generate_mixed_deed() -> Image.Image:
     y = 110
     draw.text((220, y), "চুক্তিপত্র ও দলিল (DEED OF AGREEMENT)", fill="#0F172A", font=font_title)
     y += 50
-    draw.text((50, y), "১ম পক্ষ (First Party): মেসার্স গোল্ডেন ট্রেডিং (Golden Trading Ltd)", fill="#0F172A", font=font_bold)
+    draw.text(
+        (50, y),
+        "১ম পক্ষ (First Party): মেসার্স গোল্ডেন ট্রেডিং (Golden Trading Ltd)",
+        fill="#0F172A",
+        font=font_bold,
+    )
     y += 35
-    draw.text((50, y), "জাতীয় পরিচয়পত্র (NID): 198526925000123, Phone: +8801711223344", fill="#0F172A", font=font_body)
+    draw.text(
+        (50, y),
+        "জাতীয় পরিচয়পত্র (NID): 198526925000123, Phone: +8801711223344",
+        fill="#0F172A",
+        font=font_body,
+    )
     y += 35
-    draw.text((50, y), "২য় পক্ষ (Second Party): জনাব বশির উদ্দিন (Bashir Uddin)", fill="#0F172A", font=font_bold)
+    draw.text(
+        (50, y),
+        "২য় পক্ষ (Second Party): জনাব বশির উদ্দিন (Bashir Uddin)",
+        fill="#0F172A",
+        font=font_bold,
+    )
     y += 35
-    draw.text((50, y), "NID No: 199026925000456, Passport: BD-9876543", fill="#0F172A", font=font_body)
+    draw.text(
+        (50, y), "NID No: 199026925000456, Passport: BD-9876543", fill="#0F172A", font=font_body
+    )
     y += 45
     draw.line([(50, y), (750, y)], fill="#CBD5E1", width=1)
     y += 25
@@ -156,10 +186,30 @@ def generate_all_scans():
         f_head = get_font(22)
         f_txt = get_font(18)
         draw.text((220, 120), f"[নমুনা] মামলার নথি — পৃষ্ঠা নং {page_num}", fill="#0F172A", font=f_head)
-        draw.text((50, 180), f"Page {page_num} of 5: Synthetic Court Pleadings & Exhibits (FAKE_TEST_DATA)", fill="#334155", font=f_txt)
-        draw.text((50, 220), f"অনুচ্ছেদ {page_num}: বিজ্ঞ সিনিয়র সহকারী জজ আদালত, ঢাকা। মোকদ্দমা নং {page_num}৫/২০২৬।", fill="#1E293B", font=f_txt)
-        draw.text((50, 260), "বাদী: হাজি কাশেম আলী বনাম বিবাদী: মেসার্স সোনালী ট্রেডার্স।", fill="#1E293B", font=f_txt)
-        draw.text((50, 300), f"দাবির পরিমাণ: {page_num * 10000} টাকা। তারিখ: {page_num} মার্চ ২০২৬।", fill="#1E293B", font=f_txt)
+        draw.text(
+            (50, 180),
+            f"Page {page_num} of 5: Synthetic Court Pleadings & Exhibits (FAKE_TEST_DATA)",
+            fill="#334155",
+            font=f_txt,
+        )
+        draw.text(
+            (50, 220),
+            f"অনুচ্ছেদ {page_num}: বিজ্ঞ সিনিয়র সহকারী জজ আদালত, ঢাকা। মোকদ্দমা নং {page_num}৫/২০২৬।",
+            fill="#1E293B",
+            font=f_txt,
+        )
+        draw.text(
+            (50, 260),
+            "বাদী: হাজি কাশেম আলী বনাম বিবাদী: মেসার্স সোনালী ট্রেডার্স।",
+            fill="#1E293B",
+            font=f_txt,
+        )
+        draw.text(
+            (50, 300),
+            f"দাবির পরিমাণ: {page_num * 10000} টাকা। তারিখ: {page_num} মার্চ ২০২৬।",
+            fill="#1E293B",
+            font=f_txt,
+        )
         page_pdf_path = OUTPUT_DIR / f"temp_page_{page_num}.pdf"
         page_img.save(page_pdf_path, "PDF", resolution=100.0)
         temp_images.append(page_pdf_path)

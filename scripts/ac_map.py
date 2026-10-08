@@ -2,6 +2,7 @@
 Generates an AC-ID to Test Name mapping table from reports/junit_latest.xml.
 Usage: python scripts/ac_map.py
 """
+
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -9,6 +10,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 JUNIT_PATH = REPO_ROOT / "reports" / "junit_latest.xml"
+
 
 def generate_ac_map():
     if not JUNIT_PATH.exists():
@@ -32,7 +34,9 @@ def generate_ac_map():
         duration = tc.get("time", "0.000")
         failure = tc.find("failure")
         skipped = tc.find("skipped")
-        status = "FAILED" if failure is not None else ("SKIPPED" if skipped is not None else "PASSED")
+        status = (
+            "FAILED" if failure is not None else ("SKIPPED" if skipped is not None else "PASSED")
+        )
 
         match = pattern.search(name)
         if match:
@@ -51,6 +55,7 @@ def generate_ac_map():
 
     # Print summary counts
     print(f"\nTotal AC tests identified: {len(ac_entries)}")
+
 
 if __name__ == "__main__":
     generate_ac_map()

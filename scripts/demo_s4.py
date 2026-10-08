@@ -42,7 +42,9 @@ def run_demo():
     # 1. Upload 5-Page Synthetic Court Pleadings PDF
     pdf_file = FIXTURES_DIR / "synthetic_5page_sample.pdf"
     if not pdf_file.exists():
-        print(f"Error: Fixture {pdf_file} not found. Run scripts/generate_synthetic_scans.py first.")
+        print(
+            f"Error: Fixture {pdf_file} not found. Run scripts/generate_synthetic_scans.py first."
+        )
         return
 
     print("\n[ধাপ ১] ৫ পৃষ্ঠার আদালত ফাইলিং নমুনা PDF আপলোড...")
@@ -67,14 +69,16 @@ def run_demo():
     fields = document_service.db.list_document_fields(doc["id"])
     for f in fields[:6]:
         crop_status = "ক্রপ প্রস্তুত" if f.get("crop_key") else "ক্রপ নেই"
-        print(f"  - [{f['confidence_word'].upper()}] {f['key']}: \"{f['value']}\" (পৃষ্ঠা {f['page_no']}, {crop_status})")
+        print(
+            f'  - [{f["confidence_word"].upper()}] {f["key"]}: "{f["value"]}" (পৃষ্ঠা {f["page_no"]}, {crop_status})'
+        )
 
     # 3. Field State Machine: Edit & Confirm (AC-M03-2)
     if fields:
         fld = fields[0]
         fld_id = fld["id"]
         print("\n[ধাপ ৩] তথ্য সংশোধন ও পর্যালোচনা স্টেট মেশিন (AC-M03-2):")
-        print(f"  * বর্তমান অবস্থা: {fld['state']} | মান: \"{fld['value']}\"")
+        print(f'  * বর্তমান অবস্থা: {fld["state"]} | মান: "{fld["value"]}"')
 
         # Edit with confirm=True
         updated = document_service.edit_field_value(
@@ -99,7 +103,9 @@ def run_demo():
         intent="prepare_matter",
     )
     if doc_dup["id"] == doc["id"] and doc_dup.get("is_deduplicated"):
-        print("  ✓ সফল: একই নথির দ্বিতীয় আপলোড শনাক্ত হয়েছে। অতিরিক্ত স্টোরেজ খরচ ব্যতিরেকে পূর্বের নথি ফেরত দেওয়া হয়েছে।")
+        print(
+            "  ✓ সফল: একই নথির দ্বিতীয় আপলোড শনাক্ত হয়েছে। অতিরিক্ত স্টোরেজ খরচ ব্যতিরেকে পূর্বের নথি ফেরত দেওয়া হয়েছে।"
+        )
 
     # 5. Purge Document with Immutable Audit Log
     print("\n[ধাপ ৫] নিরাপদ ডেটা পার্জ ও অডিট লেজার সংরক্ষণ:")
@@ -109,9 +115,18 @@ def run_demo():
     print("  ✓ ডাটাবেস ও অবজেক্ট স্টোরেজ থেকে নথি সম্পূর্ণ মুছে ফেলা হয়েছে।")
 
     recent_audits = audit_logger.get_recent_logs(limit=5)
-    purge_log = next((entry for entry in recent_audits if entry["action"] == "document.purge" and entry["object_id"] == doc["id"]), None)
+    purge_log = next(
+        (
+            entry
+            for entry in recent_audits
+            if entry["action"] == "document.purge" and entry["object_id"] == doc["id"]
+        ),
+        None,
+    )
     if purge_log:
-        print(f"  ✓ অডিট ট্রেইলে অপরিবর্তনীয় রেকর্ড সংরক্ষিত: অ্যাকশন={purge_log['action']}, মেটা={purge_log['meta']}")
+        print(
+            f"  ✓ অডিট ট্রেইলে অপরিবর্তনীয় রেকর্ড সংরক্ষিত: অ্যাকশন={purge_log['action']}, মেটা={purge_log['meta']}"
+        )
 
     print("\n" + "=" * 70)
     print("Sprint S4 ডেমো সফলভাবে সম্পন্ন হয়েছে। সকল নিরাপত্তা ও আইনি যাচাই কার্যকর।")
