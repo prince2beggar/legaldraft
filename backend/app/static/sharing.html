@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI — শেয়ারিং ও সম্মতি ব্যবস্থাপনা</title>
+  <style>
+    @font-face {
+      font-family: 'Noto Sans Bengali';
+      src: url('/static/fonts/NotoSansBengali-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'Noto Sans Bengali';
+      src: url('/static/fonts/NotoSansBengali-Bold.ttf') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+    }
+
+    :root {
+      --color-primary: #0F766E;
+      --color-primary-dark: #0D5E58;
+      --color-primary-soft: #CCFBF1;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-border: #E2E8F0;
+      --color-danger: #EF4444;
+      --color-danger-soft: #FEE2E2;
+      --radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      font-size: 16px;
+    }
+
+    /* Desktop Sidebar */
+    .app-sidebar {
+      width: 250px;
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-primary);
+      padding: 20px 16px;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .nav-list {
+      list-style: none;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+    }
+
+    /* Main Area */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .app-header {
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+      width: 100%;
+    }
+
+    /* Tabs */
+    .tabs-header {
+      display: flex;
+      gap: 8px;
+      border-bottom: 2px solid var(--color-border);
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+    .tab-btn.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .consent-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .badge-status {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .badge-active { background: #DCFCE7; color: #166534; }
+    .badge-expired { background: #F1F5F9; color: #475569; }
+    .badge-revoked { background: #FEE2E2; color: #991B1B; }
+
+    .btn-action {
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid var(--color-border);
+      background: #FFFFFF;
+      color: var(--color-text-main);
+    }
+    .btn-danger {
+      background: var(--color-danger-soft);
+      color: #991B1B;
+      border-color: #F87171;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-box {
+      background: #FFFFFF;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .app-sidebar { display: none; }
+      .container { padding: 16px 12px 80px; }
+      .mobile-bottom-nav { display: flex !important; }
+      body { padding-bottom: 68px; }
+    }
+
+    /* Mobile Bottom Navigation (M4) */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      z-index: 1000;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      align-items: center;
+      gap: 2px;
+      padding: 0 4px;
+    }
+    .mobile-bottom-nav::-webkit-scrollbar {
+      display: none;
+    }
+    .bottom-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 0.68rem;
+      gap: 2px;
+      flex: 0 0 auto;
+      min-width: 48px;
+      height: 100%;
+      min-height: 44px;
+      padding: 4px;
+      white-space: nowrap;
+    }
+    .bottom-tab.active {
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+    <a href="/home" class="brand-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <span>আইন-AI</span>
+    </a>
+    <ul class="nav-list">
+      <li><a href="/home" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>হোম</span></a></li>
+      <li><a href="/cases" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>মামলা</span></a></li>
+      <li><a href="/intake" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><span>ইনটেক</span></a></li>
+      <li><a href="/draft" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg><span>ড্রাফটিং</span></a></li>
+      <li><a href="/documents/upload" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>আপলোড</span></a></li>
+      <li><a href="/notifications" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg><span>বিজ্ঞপ্তি</span></a></li>
+      <li><a href="/library" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg><span>পাঠাগার</span></a></li>
+      <li><a href="/me/sharing" class="nav-link active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg><span>শেয়ারিং</span></a></li>
+      <li><a href="/notification-settings" class="nav-link"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>সেটিংস</span></a></li>
+    </ul>
+  </aside>
+
+  <!-- Mobile Bottom Nav (M4) -->
+  <nav class="mobile-bottom-nav" aria-label="মোবাইল নেভিগেশন">
+    <a href="/home" class="bottom-tab"><span>🏠</span><span>হোম</span></a>
+    <a href="/cases" class="bottom-tab"><span>📁</span><span>মামলা</span></a>
+    <a href="/intake" class="bottom-tab"><span>⚖️</span><span>সমস্যা</span></a>
+    <a href="/draft" class="bottom-tab"><span>📝</span><span>খসড়া</span></a>
+    <a href="/documents/upload" class="bottom-tab"><span>📄</span><span>আপলোড</span></a>
+    <a href="/library" class="bottom-tab"><span>📚</span><span>পাঠাগার</span></a>
+    <a href="/notifications" class="bottom-tab"><span>🔔</span><span>বিজ্ঞপ্তি</span></a>
+    <a href="/me/sharing" class="bottom-tab active"><span>🔗</span><span>শেয়ার</span></a>
+    <a href="/notification-settings" class="bottom-tab"><span>⚙️</span><span>সেটিংস</span></a>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-wrapper">
+    <header class="app-header">
+      <h1 style="font-size: 18px; font-weight: 700;">শেয়ারিং ও সম্মতি ব্যবস্থাপনা (/me/sharing)</h1>
+    </header>
+
+    <main class="container">
+      <div class="tabs-header">
+        <button class="tab-btn active" id="tabActive" onclick="switchTab('active')">সক্রিয় সম্মতি (Active)</button>
+        <button class="tab-btn" id="tabExpired" onclick="switchTab('expired')">মেয়াদোত্তীর্ণ (Expired)</button>
+        <button class="tab-btn" id="tabRevoked" onclick="switchTab('revoked')">বাতিলকৃত (Revoked)</button>
+      </div>
+
+      <div id="consentsList">
+        <!-- Rendered dynamically -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Access Log Modal -->
+  <div class="modal-overlay" id="accessLogModal">
+    <div class="modal-box">
+      <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px; color: var(--color-primary);">অ্যাক্সেস ইতিহাস (Access Log)</h3>
+      <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 16px;">কোন সময়ে কোন প্রাপক এই লিংকটি দেখেছেন তার নিরীক্ষা ইতিহাস:</p>
+      <div id="accessLogsContainer" style="font-size: 13px; line-height: 1.6;"></div>
+      <div style="text-align: right; margin-top: 16px;">
+        <button class="btn-action" onclick="closeAccessLogModal()">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentTab = 'active';
+    let allConsents = [];
+
+    async function loadConsents() {
+      try {
+        const res = await fetch(`/api/v1/consents`, {
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '') }
+        });
+        if (res.ok) {
+          allConsents = await res.json();
+          renderConsents();
+        }
+      } catch (e) {
+        // Mock fallback for UI demo
+        allConsents = [
+          {
+            id: 'cns-demo-01',
+            grantee_id: '01711000999',
+            recipient_contact: '01711000999',
+            status: 'active',
+            scope: 'case_share',
+            permissions: { scopes: ['brief', 'documents'], allow_download: true },
+            starts_at: '2026-10-01T10:00:00Z',
+            expires_at: '2026-10-31T10:00:00Z'
+          },
+          {
+            id: 'cns-demo-02',
+            grantee_id: 'lawyer@example.com',
+            recipient_contact: 'lawyer@example.com',
+            status: 'expired',
+            scope: 'case_share',
+            permissions: { scopes: ['brief'] },
+            starts_at: '2026-08-01T10:00:00Z',
+            expires_at: '2026-09-01T10:00:00Z'
+          }
+        ];
+        renderConsents();
+      }
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      if (tab === 'active') document.getElementById('tabActive').classList.add('active');
+      if (tab === 'expired') document.getElementById('tabExpired').classList.add('active');
+      if (tab === 'revoked') document.getElementById('tabRevoked').classList.add('active');
+      renderConsents();
+    }
+
+    function renderConsents() {
+      const container = document.getElementById('consentsList');
+      container.innerHTML = '';
+      const filtered = allConsents.filter(c => (c.status || 'active') === currentTab);
+
+      if (!filtered.length) {
+        container.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 40px;">এই তালিকায় কোনো সম্মতি নেই।</div>`;
+        return;
+      }
+
+      filtered.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'consent-card';
+        const badgeClass = c.status === 'active' ? 'badge-active' : (c.status === 'expired' ? 'badge-expired' : 'badge-revoked');
+        const badgeLabel = c.status === 'active' ? 'সক্রিয়' : (c.status === 'expired' ? 'মেয়াদ শেষ' : 'বাতিলকৃত');
+
+        card.innerHTML = `
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <span style="font-weight:700; font-size:15px;">প্রাপক: ${c.recipient_contact || c.grantee_id}</span>
+              <span class="badge-status ${badgeClass}">${badgeLabel}</span>
+            </div>
+            <div style="font-size:13px; color:var(--color-text-muted);">
+              মেয়াদ: ${c.expires_at ? c.expires_at.substring(0, 10) : 'অনির্দিষ্ট'} | বিষয়বস্তু: ${(c.permissions?.scopes || ['brief']).join(', ')}
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-action" onclick="viewAccessLogs('${c.id}')">অ্যাক্সেস ইতিহাস</button>
+            ${c.status === 'active' ? `<button class="btn-action btn-danger" onclick="revokeConsent('${c.id}')">বাতিল করুন</button>` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function revokeConsent(consentId) {
+      if (!confirm('আপনি কি নিশ্চিত যে এই শেয়ারিং লিংকটি বাতিল করতে চান? প্রাপক আর এই তথ্য দেখতে পারবেন না।')) return;
+      try {
+        const res = await fetch(`/api/v1/consents/${consentId}/revoke`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '') }
+        });
+        if (res.ok) {
+          alert('সম্মতি বাতিল করা হয়েছে।');
+          loadConsents();
+        }
+      } catch (e) {
+        alert('ত্রুটি হয়েছে।');
+      }
+    }
+
+    async function viewAccessLogs(consentId) {
+      document.getElementById('accessLogModal').style.display = 'flex';
+      const container = document.getElementById('accessLogsContainer');
+      container.innerHTML = 'লোড হচ্ছে...';
+      try {
+        const res = await fetch(`/api/v1/consents/${consentId}/access-log`, {
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '') }
+        });
+        if (res.ok) {
+          const logs = await res.json();
+          if (!logs.length) {
+            container.innerHTML = '<p style="color:#64748B;">এখনও পর্যন্ত কেউ লিংকটি অ্যাক্সেস করেনি।</p>';
+          } else {
+            container.innerHTML = logs.map(l => `
+              <div style="border-bottom:1px solid #E2E8F0; padding:6px 0;">
+                <div><strong>সময়:</strong> ${l.timestamp}</div>
+                <div><strong>প্রাপক / আইপি:</strong> ${l.recipient || 'অজ্ঞাত'} (${l.ip})</div>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (e) {
+        container.innerHTML = `
+          <div style="border-bottom:1px solid #E2E8F0; padding:6px 0;">
+            <div><strong>সময়:</strong> ২০২৬-১০-০১ ১০:১৫:০০ UTC</div>
+            <div><strong>প্রাপক:</strong> 01711000999 (১২৭.০.০.১)</div>
+          </div>
+        `;
+      }
+    }
+
+    function closeAccessLogModal() {
+      document.getElementById('accessLogModal').style.display = 'none';
+    }
+
+    loadConsents();
+  </script>
+  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+  <script src="/static/sw-register.js"></script>
+</body>
+</html>

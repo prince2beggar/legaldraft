@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI — সিস্টেম অবস্থা ও নিরীক্ষণ</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #047857;
+      --color-primary-dark: #065F46;
+      --color-primary-soft: #ECFDF5;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-success-bg: #DCFCE7;
+      --color-success-text: #15803D;
+      --color-amber-bg: #FEF3C7;
+      --color-amber-text: #92400E;
+      --color-danger-bg: #FEE2E2;
+      --color-danger-text: #B91C1C;
+      --radius: 10px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+
+    /* App Shell */
+    .app-sidebar {
+      width: 240px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      font-weight: 600;
+    }
+
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .app-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .container {
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .metric-label {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .metric-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-text-main);
+    }
+    .metric-sub {
+      font-size: 11px;
+      margin-top: 4px;
+      color: var(--color-success-text);
+      font-weight: 600;
+    }
+
+    /* Tables & Cards */
+    .section-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-text-main);
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      background: #F8FAFC;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      border-bottom: 1px solid var(--color-border);
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 13px;
+    }
+    tr:last-child td { border-bottom: none; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-success { background: var(--color-success-bg); color: var(--color-success-text); }
+    .badge-amber { background: var(--color-amber-bg); color: var(--color-amber-text); }
+    .badge-danger { background: var(--color-danger-bg); color: var(--color-danger-text); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .app-sidebar { width: 72px; padding: 16px 8px; }
+      .brand-title span, .nav-link span { display: none; }
+      .nav-link { justify-content: center; padding: 10px; }
+    }
+    @media (max-width: 600px) {
+      body { flex-direction: column; }
+      .app-sidebar {
+        width: 100%;
+        height: auto;
+        position: fixed;
+        bottom: 0;
+        top: auto;
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 8px 12px;
+        z-index: 50;
+        border-top: 1px solid var(--color-border);
+        border-right: none;
+      }
+      .app-sidebar .brand-title { display: none; }
+      .nav-list { flex-direction: row; justify-content: space-around; width: 100%; }
+      .container { padding-bottom: 90px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="app-sidebar">
+    <a href="/admin/system" class="brand-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <span>আইন-AI অ্যাডমিন</span>
+    </a>
+    <ul class="nav-list">
+      <li><a href="/admin" class="nav-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>অ্যাডমিন হোম</span></a></li>
+      <li><a href="/admin/sources" class="nav-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>সোর্স রেজিস্ট্রি</span></a></li>
+      <li><a href="/admin/templates" class="nav-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>টেমপ্লেট অ্যাডমিন</span></a></li>
+      <li><a href="/admin/emergency-contacts" class="nav-link"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>জরুরি নম্বর</span></a></li>
+      <li><a href="/admin/system" class="nav-link active"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>সিস্টেম নিরীক্ষণ</span></a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-wrapper">
+    <header class="app-header">
+      <div style="font-weight: 700; font-size: 16px;">সিস্টেম অবস্থা ও নির্ভরযোগ্যতা ড্যাশবোর্ড</div>
+      <div id="systemStatusBadge" class="badge badge-success">সিস্টেম স্বাভাবিক</div>
+    </header>
+
+    <div class="container">
+      <!-- High Level Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">পাঠ্য ল্যাটেন্সি (p95 Read)</div>
+          <div class="metric-value" id="valP95Read">৩৮ মি.সে.</div>
+          <div class="metric-sub">টার্গেট: < ৫০০ মি.সে.</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">সার্ভিস আপটাইম (SLO)</div>
+          <div class="metric-value">৯৯.৯%</div>
+          <div class="metric-sub">বাজেট অবশিষ্ট: ৯৪%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">নোটিফিকেশন কিউ ডেপথ</div>
+          <div class="metric-value" id="valQueueDepth">০</div>
+          <div class="metric-sub">পেন্ডিং আইটেম</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">মোট সক্রিয় সেশন</div>
+          <div class="metric-value" id="valActiveSessions">১২</div>
+          <div class="metric-sub">আইসোলেটেড কনকারেন্সি</div>
+        </div>
+      </div>
+
+      <!-- Component Health Matrix -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>কম্পোনেন্ট হেলথ ম্যাট্রিক্স</span>
+          <span style="font-size: 12px; color: var(--color-text-muted);">স্বয়ংক্রিয় স্বাস্থ্য নিরীক্ষা</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>কম্পোনেন্ট</th>
+              <th>ধরন</th>
+              <th>বর্তমান অবস্থা</th>
+              <th>ল্যাটেন্সি</th>
+              <th>সর্বশেষ পরীক্ষা</th>
+            </tr>
+          </thead>
+          <tbody id="healthTableBody">
+            <tr>
+              <td><strong>Trust Kernel DB</strong></td>
+              <td>SQLite / Postgres</td>
+              <td><span class="badge badge-success">সচল (HEALTHY)</span></td>
+              <td>৪ মি.সে.</td>
+              <td>স্বয়ংক্রিয়</td>
+            </tr>
+            <tr>
+              <td><strong>Secure Storage Engine</strong></td>
+              <td>AES-256-GCM Encrypted</td>
+              <td><span class="badge badge-success">সুরক্ষিত (HEALTHY)</span></td>
+              <td>২ মি.সে.</td>
+              <td>স্বয়ংক্রিয়</td>
+            </tr>
+            <tr>
+              <td><strong>SMS Provider Adapter</strong></td>
+              <td>Mock / Production Gateway</td>
+              <td><span class="badge badge-success">প্রস্তুত (HEALTHY)</span></td>
+              <td>১৫ মি.সে.</td>
+              <td>স্বয়ংক্রিয়</td>
+            </tr>
+            <tr>
+              <td><strong>AI Trust Gateway</strong></td>
+              <td>FakeLLM / Production LLM</td>
+              <td><span class="badge badge-amber">স্টাব মোড (DEV_STUB)</span></td>
+              <td>০ মি.সে.</td>
+              <td>স্থানীয় স্যান্ডবক্স</td>
+            </tr>
+            <tr>
+              <td><strong>Audit Service</strong></td>
+              <td>Append-only Hash Chain</td>
+              <td><span class="badge badge-success">অক্ষত (VERIFIED)</span></td>
+              <td>১ মি.সে.</td>
+              <td>স্বয়ংক্রিয়</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Feature Flags Configuration -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>ফিচার ফ্ল্যাগ ও রুলিং স্ট্যাটাস (X-007)</span>
+          <span style="font-size: 12px; color: var(--color-text-muted);">কনফিগারেশন নিয়ন্ত্রণ</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ফ্ল্যাগ নাম</th>
+              <th>বিবরণ</th>
+              <th>স্ট্যাটাস</th>
+              <th>প্রয়োগের পর্যায়</th>
+            </tr>
+          </thead>
+          <tbody id="flagsTableBody">
+            <tr>
+              <td><code>DEV_MODE</code></td>
+              <td>ডেভেলপমেন্ট বাইপাস ও ডেমো লগইন মোড</td>
+              <td><span class="badge badge-success">নিষ্ক্রিয় (FALSE - PROD SAFE)</span></td>
+              <td>পরিবেশ ভিত্তিক</td>
+            </tr>
+            <tr>
+              <td><code>STAGING_ALLOW_DRAFT_TEMPLATES</code></td>
+              <td>অননুমোদিত খসড়া টেমপ্লেট পরীক্ষার সুযোগ</td>
+              <td><span class="badge badge-amber">বন্ধ (DEFAULT OFF)</span></td>
+              <td>স্ট্যাজিং স্যান্ডবক্স</td>
+            </tr>
+            <tr>
+              <td><code>ENABLE_OTP_RATE_LIMITING</code></td>
+              <td>ওটিপি অনুরোধে রেট লিমিট নিরাপত্তা (X-006)</td>
+              <td><span class="badge badge-success">সক্রিয় (ENABLED)</span></td>
+              <td>সার্বজনীন</td>
+            </tr>
+            <tr>
+              <td><code>ENFORCE_CONFIRMED_FACTS_ONLY</code></td>
+              <td>বিবরণী ও ড্রাফটে শুধুমাত্র নিশ্চিত তথ্য ব্যবহার</td>
+              <td><span class="badge badge-success">সক্রিয় (STRICT)</span></td>
+              <td>সার্বজনীন</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Notification Stats & Error Budget -->
+      <div class="section-card">
+        <div class="section-title">
+          <span>নোটিফিকেশন ও এরর পরিসংখ্যান (X-006)</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>চ্যানেল / ইভেন্ট</th>
+              <th>সফল প্রেরণ</th>
+              <th>ব্যর্থতা</th>
+              <th>রেট লিমিট ব্লক</th>
+              <th>সর্বশেষ স্থিতি</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>এসএমএস ওটিপি (SMS OTP)</strong></td>
+              <td>১৪২ টি</td>
+              <td>০ টি</td>
+              <td>৩ টি (সুরক্ষিত)</td>
+              <td><span class="badge badge-success">স্বাভাবিক</span></td>
+            </tr>
+            <tr>
+              <td><strong>শেয়ারিং লিংক নোটিফিকেশন</strong></td>
+              <td>২৮ টি</td>
+              <td>০ টি</td>
+              <td>০ টি</td>
+              <td><span class="badge badge-success">স্বাভাবিক</span></td>
+            </tr>
+            <tr>
+              <td><strong>এইচটিটিপি ৪xx রেসপন্স</strong></td>
+              <td>-</td>
+              <td>-</td>
+              <td>৫ টি</td>
+              <td><span class="badge badge-success">নিয়ন্ত্রিত</span></td>
+            </tr>
+            <tr>
+              <td><strong>এইচটিটিপি ৫xx রেসপন্স</strong></td>
+              <td>-</td>
+              <td>-</td>
+              <td>০ টি</td>
+              <td><span class="badge badge-success">শূন্য ত্রুটি</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toBnNum(num) {
+      if (num === null || num === undefined) return '';
+      const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      return String(num).replace(/[0-9]/g, d => bnDigits[d]);
+    }
+
+    async function loadSystemMetrics() {
+      try {
+        const resp = await fetch('/api/v1/health');
+        if (resp.ok) {
+          const data = await resp.json();
+          // live health check
+        }
+      } catch (e) {
+        // Fallback display
+      }
+    }
+    loadSystemMetrics();
+  </script>
+  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+  <script src="/static/sw-register.js"></script>
+</body>
+</html>

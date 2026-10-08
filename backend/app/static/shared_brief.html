@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI — সংক্ষিপ্ত আইনি বিবরণী (Brief)</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #047857;
+      --color-primary-dark: #065F46;
+      --color-primary-soft: #ECFDF5;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-amber-bg: #FEF3C7;
+      --color-amber-text: #92400E;
+      --color-danger-bg: #FEE2E2;
+      --color-danger-text: #B91C1C;
+      --radius: 10px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      max-width: 100vw;
+      position: relative;
+    }
+
+    /* Watermark background container */
+    .watermark-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      opacity: 0.12;
+      overflow: hidden;
+    }
+    .watermark-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0F172A;
+      transform: rotate(-30deg);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    /* Header - Recipient view only, NO citizen navigation */
+    .recipient-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+    .secure-badge {
+      font-size: 12px;
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .main-container {
+      max-width: 800px;
+      margin: 24px auto 60px;
+      padding: 0 16px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    /* OTP Challenge Card */
+    .otp-card {
+      max-width: 440px;
+      margin: 40px auto;
+      text-align: center;
+    }
+    .otp-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .otp-desc {
+      color: var(--color-text-muted);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      text-align: left;
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(4,120,87,0.15);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      text-decoration: none;
+      width: 100%;
+    }
+    .btn-primary {
+      background: var(--color-primary);
+      color: #FFFFFF;
+    }
+    .btn-primary:hover {
+      background: var(--color-primary-dark);
+    }
+    .btn-outline {
+      background: transparent;
+      border-color: var(--color-border);
+      color: var(--color-text-main);
+    }
+    .btn-outline:hover {
+      background: #F1F5F9;
+    }
+
+    /* Badges & Alerts */
+    .ai-badge {
+      background: var(--color-amber-bg);
+      color: var(--color-amber-text);
+      border: 1px solid #FCD34D;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .error-card {
+      background: var(--color-danger-bg);
+      color: var(--color-danger-text);
+      padding: 24px;
+      border-radius: var(--radius);
+      text-align: center;
+      font-weight: 600;
+      margin: 40px auto;
+      max-width: 500px;
+    }
+
+    /* Brief Sections */
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-primary-dark);
+      border-bottom: 2px solid var(--color-primary-soft);
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .meta-item {
+      background: #F8FAFC;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+    }
+    .meta-label {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-bottom: 4px;
+    }
+    .meta-val {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .fact-item, .event-item, .doc-item {
+      padding: 10px 12px;
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .event-date {
+      font-weight: 600;
+      color: var(--color-primary-dark);
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+    .doc-link-btn {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .download-warning {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-top: 4px;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Watermark Container -->
+  <div id="watermarkLayer" class="watermark-container hidden">
+    <div class="watermark-text" id="wmLine1">আইন-AI গোপনীয় বিবরণী</div>
+    <div class="watermark-text" id="wmLine2">আইন-AI গোপনীয় বিবরণী</div>
+    <div class="watermark-text" id="wmLine3">আইন-AI গোপনীয় বিবরণী</div>
+    <div class="watermark-text" id="wmLine4">আইন-AI গোপনীয় বিবরণী</div>
+  </div>
+
+  <header class="recipient-header">
+    <span class="brand-title">আইন-AI</span>
+    <span class="secure-badge">নিরাপদ সংক্ষিপ্ত বিবরণী (Brief)</span>
+  </header>
+
+  <main class="main-container">
+    <!-- State: 404 / Invalid / Expired / Revoked -->
+    <div id="notFoundBox" class="error-card hidden">
+      <h3 style="margin-bottom: 8px;">লিংকটি পাওয়া যায়নি অথবা এর মেয়াদ শেষ হয়েছে।</h3>
+      <p style="font-size: 13px; font-weight: normal;">অনুগ্রহ করে যিনি লিংকটি পাঠিয়েছেন তার সাথে যোগাযোগ করে নতুন লিংক নিন।</p>
+    </div>
+
+    <!-- State: OTP Verification Challenge -->
+    <div id="otpChallengeBox" class="card otp-card hidden">
+      <h2 class="otp-title">নিরাপত্তা যাচাইকরণ</h2>
+      <p class="otp-desc">সংক্ষিপ্ত বিবরণী দেখার জন্য আপনার নিবন্ধিত নম্বর বা ইমেইলে যাচাইকরণ ওটিপি কোড পাঠানো হবে।</p>
+      
+      <div id="stepRequestOtp">
+        <div class="form-group">
+          <label class="form-label" for="recipientInput">আপনার মোবাইল নম্বর বা ইমেইল</label>
+          <input type="text" id="recipientInput" class="form-input" placeholder="01XXXXXXXXX বা email@example.com">
+        </div>
+        <button type="button" class="btn btn-primary" id="btnSendOtp">যাচাইকরণ কোড পাঠান</button>
+      </div>
+
+      <div id="stepVerifyOtp" class="hidden">
+        <div class="form-group">
+          <label class="form-label" for="otpCodeInput">৬ ডিজিটের ওটিপি কোড</label>
+          <input type="text" id="otpCodeInput" class="form-input" placeholder="123456" maxlength="6">
+        </div>
+        <button type="button" class="btn btn-primary" id="btnConfirmOtp">যাচাই করুন ও প্রবেশ করুন</button>
+        <button type="button" class="btn btn-outline" id="btnBackToRequest" style="margin-top: 8px;">পুনরায় পাঠান</button>
+      </div>
+
+      <div id="otpErrorAlert" style="margin-top: 14px; color: var(--color-danger-text); font-size: 13px; font-weight: 600;" class="hidden"></div>
+    </div>
+
+    <!-- State: Verified Brief Content -->
+    <div id="briefContentBox" class="hidden">
+      <!-- AI Disclaimer Badge -->
+      <div class="ai-badge">
+        <span>⚠</span>
+        <span>AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়। এটি কোনো আনুষ্ঠানিক আইনি মতামত বা পরামর্শ নয়।</span>
+      </div>
+
+      <div class="card">
+        <h1 id="briefCaseTitle" style="font-size: 20px; font-weight: 700; margin-bottom: 12px;">মামলার সংক্ষিপ্ত বিবরণী</h1>
+        
+        <div class="meta-grid">
+          <div class="meta-item">
+            <div class="meta-label">মামলার ধরন</div>
+            <div class="meta-val" id="metaCaseType">-</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">ক্লায়েন্টের নাম</div>
+            <div class="meta-val" id="metaClientName">-</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">তৈরির তারিখ</div>
+            <div class="meta-val" id="metaCreatedDate">-</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-label">লিংকের মেয়াদ</div>
+            <div class="meta-val" id="metaExpiryDate">-</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <h2 class="section-title">প্রেক্ষাপট</h2>
+          <p id="briefBackground" style="margin-bottom: 12px; color: var(--color-text-main);">-</p>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <h2 class="section-title">ব্যবহারকারীর উদ্দেশ্য</h2>
+          <p id="briefObjective" style="color: var(--color-text-main);">-</p>
+        </div>
+      </div>
+
+      <!-- Chronology & Events -->
+      <div class="card" id="timelineSection">
+        <h2 class="section-title">ঘটনাক্রম</h2>
+        <div id="eventsListContainer"></div>
+      </div>
+
+      <!-- Confirmed Facts -->
+      <div class="card" id="factsSection">
+        <h2 class="section-title">গুরুত্বপূর্ণ তথ্য</h2>
+        <div id="factsListContainer"></div>
+      </div>
+
+      <!-- Key Documents -->
+      <div class="card" id="docsSection">
+        <h2 class="section-title">মূল নথিপত্র</h2>
+        <div id="docsListContainer"></div>
+      </div>
+
+      <!-- Research Suggestions -->
+      <div class="card" id="researchSection">
+        <h2 class="section-title">আইনি প্রশ্ন ও গবেষণা প্রস্তাবনা</h2>
+        <div id="researchListContainer"></div>
+      </div>
+
+      <!-- Missing Information -->
+      <div class="card" id="missingSection">
+        <h2 class="section-title">অনুপস্থিত তথ্য</h2>
+        <div id="missingListContainer"></div>
+      </div>
+
+      <!-- Questions for Lawyer -->
+      <div class="card" id="questionsSection">
+        <h2 class="section-title">আইনজীবীর জন্য প্রশ্নাবলী</h2>
+        <div id="questionsListContainer"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const token = window.location.pathname.split('/').pop();
+    let currentSharedData = null;
+
+    function toBnNum(num) {
+      if (num === null || num === undefined) return '';
+      const bnDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      return String(num).replace(/[0-9]/g, d => bnDigits[d]);
+    }
+
+    function formatDateBn(isoStr) {
+      if (!isoStr) return '-';
+      try {
+        const d = new Date(isoStr);
+        const y = toBnNum(d.getFullYear());
+        const m = toBnNum(String(d.getMonth() + 1).padStart(2, '0'));
+        const day = toBnNum(String(d.getDate()).padStart(2, '0'));
+        return `${y}-${m}-${day}`;
+      } catch (e) {
+        return isoStr;
+      }
+    }
+
+    function showSection(id) {
+      ['notFoundBox', 'otpChallengeBox', 'briefContentBox'].forEach(s => {
+        document.getElementById(s).classList.add('hidden');
+      });
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function setupWatermark(recipient, expiry) {
+      const wmText = `প্রাপক: ${recipient} | মেয়াদ: ${formatDateBn(expiry)} | আইন-AI গোপনীয়`;
+      document.getElementById('wmLine1').innerText = wmText;
+      document.getElementById('wmLine2').innerText = wmText;
+      document.getElementById('wmLine3').innerText = wmText;
+      document.getElementById('wmLine4').innerText = wmText;
+      document.getElementById('watermarkLayer').classList.remove('hidden');
+    }
+
+    async function loadSharedContent(otp = null) {
+      let url = `/api/v1/s/${token}`;
+      if (otp) {
+        url += `?otp=${encodeURIComponent(otp)}`;
+      }
+      try {
+        const resp = await fetch(url);
+        if (resp.status === 404) {
+          showSection('notFoundBox');
+          return;
+        }
+        if (resp.status === 401 || resp.status === 403) {
+          // Requires recipient OTP
+          const data = await resp.json().catch(() => ({}));
+          if (data.detail && data.detail.includes('OTP')) {
+            showSection('otpChallengeBox');
+            return;
+          }
+          showSection('notFoundBox');
+          return;
+        }
+        if (!resp.ok) {
+          showSection('notFoundBox');
+          return;
+        }
+
+        const data = await resp.json();
+        renderBrief(data);
+      } catch (err) {
+        showSection('notFoundBox');
+      }
+    }
+
+    function renderBrief(data) {
+      currentSharedData = data;
+      showSection('briefContentBox');
+
+      const meta = data.consent || {};
+      const brief = data.brief || {};
+      const payload = brief.brief_payload || {};
+
+      setupWatermark(meta.shared_with || 'প্রাপক', meta.expires_at || '');
+
+      document.getElementById('briefCaseTitle').innerText = payload.case_title || 'মামলার বিবরণী';
+      document.getElementById('metaCaseType').innerText = payload.case_type_bn || payload.case_type || 'অনির্দিষ্ট';
+      document.getElementById('metaClientName').innerText = payload.client_name || 'গোপনীয়';
+      document.getElementById('metaCreatedDate').innerText = formatDateBn(brief.created_at);
+      document.getElementById('metaExpiryDate').innerText = formatDateBn(meta.expires_at);
+
+      document.getElementById('briefBackground').innerText = payload.background || 'কোনো পটভূমি উল্লেখ নেই।';
+      document.getElementById('briefObjective').innerText = payload.user_objective || 'উল্লেখ নেই।';
+
+      // Events
+      const evCont = document.getElementById('eventsListContainer');
+      evCont.innerHTML = '';
+      if (payload.timeline && payload.timeline.length > 0) {
+        payload.timeline.forEach(ev => {
+          const div = document.createElement('div');
+          div.className = 'event-item';
+          div.innerHTML = `<div class="event-date">${formatDateBn(ev.event_date || ev.date)}</div><div>${escapeHtml(ev.description || ev.title)}</div>`;
+          evCont.appendChild(div);
+        });
+      } else {
+        evCont.innerHTML = '<p style="color:var(--color-text-muted);">কোনো ঘটনাবলী সংযুক্ত নেই।</p>';
+      }
+
+      // Facts
+      const factsCont = document.getElementById('factsListContainer');
+      factsCont.innerHTML = '';
+      if (payload.important_facts && payload.important_facts.length > 0) {
+        payload.important_facts.forEach(f => {
+          const div = document.createElement('div');
+          div.className = 'fact-item';
+          div.innerText = f.fact_text || f.text || f;
+          factsCont.appendChild(div);
+        });
+      } else {
+        factsCont.innerHTML = '<p style="color:var(--color-text-muted);">কোনো তথ্যাবলী সংযুক্ত নেই।</p>';
+      }
+
+      // Documents
+      const docCont = document.getElementById('docsListContainer');
+      docCont.innerHTML = '';
+      const canDownload = (meta.permissions && meta.permissions.download === true);
+      if (payload.key_documents && payload.key_documents.length > 0) {
+        payload.key_documents.forEach(doc => {
+          const div = document.createElement('div');
+          div.className = 'doc-item';
+          let dlHtml = '';
+          if (canDownload && doc.document_id) {
+            dlHtml = `<div><a href="/api/v1/consents/signed-doc/${doc.document_id}?token=${token}" target="_blank" class="doc-link-btn">নথি ডাউনলোড করুন (স্বাক্ষরিত লিঙ্ক)</a><div class="download-warning">লিংকটি ৬০ সেকেন্ডের জন্য কার্যকর থাকবে।</div></div>`;
+          }
+          div.innerHTML = `<div><strong>${escapeHtml(doc.title || doc.name || 'নথি')}</strong> (${doc.doc_type || 'সাধারণ'})</div>${dlHtml}`;
+          docCont.appendChild(div);
+        });
+      } else {
+        docCont.innerHTML = '<p style="color:var(--color-text-muted);">কোনো নথি সংযুক্ত নেই।</p>';
+      }
+
+      // Research Suggestions
+      renderList('researchListContainer', payload.possible_legal_issues);
+      // Missing info
+      renderList('missingListContainer', payload.missing_information);
+      // Questions
+      renderList('questionsListContainer', payload.questions_for_lawyer);
+    }
+
+    function renderList(containerId, items) {
+      const cont = document.getElementById(containerId);
+      cont.innerHTML = '';
+      if (items && items.length > 0) {
+        items.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'fact-item';
+          div.innerText = typeof item === 'string' ? item : (item.text || item.title || JSON.stringify(item));
+          cont.appendChild(div);
+        });
+      } else {
+        cont.innerHTML = '<p style="color:var(--color-text-muted);">কোনো তথ্য নেই।</p>';
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const d = document.createElement('div');
+      d.innerText = text;
+      return d.innerHTML;
+    }
+
+    // OTP Handlers
+    document.getElementById('btnSendOtp').addEventListener('click', async () => {
+      const recipient = document.getElementById('recipientInput').value.trim();
+      const errBox = document.getElementById('otpErrorAlert');
+      errBox.classList.add('hidden');
+      if (!recipient) {
+        errBox.innerText = 'মোবাইল নম্বর বা ইমেইল প্রদান করুন।';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      try {
+        const resp = await fetch(`/api/v1/s/${token}/request-otp`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ recipient: recipient })
+        });
+        const res = await resp.json();
+        if (!resp.ok) {
+          errBox.innerText = res.detail || 'ওটিপি পাঠাতে সমস্যা হয়েছে।';
+          errBox.classList.remove('hidden');
+          return;
+        }
+        document.getElementById('stepRequestOtp').classList.add('hidden');
+        document.getElementById('stepVerifyOtp').classList.remove('hidden');
+      } catch (e) {
+        errBox.innerText = 'সার্ভার যোগাযোগে সমস্যা হয়েছে।';
+        errBox.classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btnBackToRequest').addEventListener('click', () => {
+      document.getElementById('stepVerifyOtp').classList.add('hidden');
+      document.getElementById('stepRequestOtp').classList.remove('hidden');
+    });
+
+    document.getElementById('btnConfirmOtp').addEventListener('click', async () => {
+      const otp = document.getElementById('otpCodeInput').value.trim();
+      const recipient = document.getElementById('recipientInput').value.trim();
+      const errBox = document.getElementById('otpErrorAlert');
+      errBox.classList.add('hidden');
+      if (!otp) {
+        errBox.innerText = 'ওটিপি কোড প্রদান করুন।';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      try {
+        const resp = await fetch(`/api/v1/s/${token}/verify-otp`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ recipient: recipient, otp: otp })
+        });
+        const res = await resp.json();
+        if (!resp.ok) {
+          errBox.innerText = res.detail || 'ভুল বা মেয়াদোত্তীর্ণ ওটিপি।';
+          errBox.classList.remove('hidden');
+          return;
+        }
+        // Load content with verified OTP
+        loadSharedContent(otp);
+      } catch (e) {
+        errBox.innerText = 'ওটিপি যাচাইয়ে সমস্যা হয়েছে।';
+        errBox.classList.remove('hidden');
+      }
+    });
+
+    // Initial load
+    loadSharedContent();
+  </script>
+  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+  <script src="/static/sw-register.js"></script>
+</body>
+</html>
