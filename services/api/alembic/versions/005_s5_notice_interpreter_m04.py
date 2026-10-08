@@ -26,7 +26,9 @@ def upgrade() -> None:
     bind = op.get_bind()
     insp = sa.inspect(bind)
     tables = insp.get_table_names()
-    deadline_cols = [c["name"] for c in insp.get_columns("deadlines")] if "deadlines" in tables else []
+    deadline_cols = (
+        [c["name"] for c in insp.get_columns("deadlines")] if "deadlines" in tables else []
+    )
     task_cols = [c["name"] for c in insp.get_columns("tasks")] if "tasks" in tables else []
 
     # 1. Enhance deadlines table
@@ -39,7 +41,9 @@ def upgrade() -> None:
             if "calculation_basis" not in deadline_cols:
                 batch_op.add_column(sa.Column("calculation_basis", sa.Text(), nullable=True))
             if "is_user_set" not in deadline_cols:
-                batch_op.add_column(sa.Column("is_user_set", sa.Boolean(), server_default="0", nullable=False))
+                batch_op.add_column(
+                    sa.Column("is_user_set", sa.Boolean(), server_default="0", nullable=False)
+                )
 
     # 2. Enhance tasks table
     if "tasks" in tables:
@@ -52,7 +56,12 @@ def upgrade() -> None:
         op.create_table(
             "reminder_schedules",
             sa.Column("id", sa.String(64), primary_key=True),
-            sa.Column("deadline_id", sa.String(64), sa.ForeignKey("deadlines.id", ondelete="CASCADE"), nullable=False),
+            sa.Column(
+                "deadline_id",
+                sa.String(64),
+                sa.ForeignKey("deadlines.id", ondelete="CASCADE"),
+                nullable=False,
+            ),
             sa.Column("user_id", sa.String(64), nullable=False),
             sa.Column("offset_days", sa.Integer(), nullable=False),
             sa.Column("scheduled_at", sa.String(64), nullable=False),
@@ -66,7 +75,13 @@ def upgrade() -> None:
         op.create_table(
             "notice_analyses",
             sa.Column("id", sa.String(64), primary_key=True),
-            sa.Column("document_id", sa.String(64), sa.ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, unique=True),
+            sa.Column(
+                "document_id",
+                sa.String(64),
+                sa.ForeignKey("documents.id", ondelete="CASCADE"),
+                nullable=False,
+                unique=True,
+            ),
             sa.Column("user_id", sa.String(64), nullable=False),
             sa.Column("analysis_json", sa.Text(), nullable=False),
             sa.Column("simpler_json", sa.Text(), nullable=True),

@@ -77,7 +77,11 @@ def test_rule_b06_eval_critical_error_gate_fails_despite_high_score():
                 target_component="rules",
                 input_payload={
                     "rule_id": "relative_period.calendar_days.v1",
-                    "inputs": {"start_date": "2026-10-01", "days": i + 1, "include_trigger_day": False},
+                    "inputs": {
+                        "start_date": "2026-10-01",
+                        "days": i + 1,
+                        "include_trigger_day": False,
+                    },
                 },
                 expected={"result_date": expected_date, "status": "SUCCESS"},
                 is_critical=True,

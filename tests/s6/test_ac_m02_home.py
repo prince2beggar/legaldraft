@@ -84,6 +84,7 @@ def user_b(isolated_db_manager):
 # Exact SRS AC Mapping (M02)
 # ---------------------------------------------------------------------------
 
+
 def test_ac_m02_1_unconfirmed_deadline_over_missing_doc_priority(home_eng, case_eng, user_a):
     """
     AC-M02-1: unconfirmed deadline in 2 days + missing document => Next Action is deadline-confirm (priority 3 before 6).
@@ -119,7 +120,9 @@ def test_ac_m02_1_unconfirmed_deadline_over_missing_doc_priority(home_eng, case_
     assert action["reason_refs"][0]["object_type"] == "deadline"
 
 
-def test_ac_m02_2_every_next_action_has_resolvable_reason_refs(home_eng, case_eng, user_a, isolated_db_manager):
+def test_ac_m02_2_every_next_action_has_resolvable_reason_refs(
+    home_eng, case_eng, user_a, isolated_db_manager
+):
     """
     AC-M02-2: every Next Action has non-empty reason_refs that resolve to existing objects.
     """
@@ -191,8 +194,10 @@ def test_ac_m02_3_no_cases_problem_input_quick_actions_next_none(home_eng, user_
 def test_ac_m02_4_home_first_useful_content_simulated_slow_3g():
     """
     AC-M02-4: Home first useful content <= 4 s on simulated slow 3G (Playwright CDP throttling).
-    Emulates real slow 3G network conditions (~400 kbps down, 400 ms RTT) via Chrome DevTools Protocol.
-    Asserts first useful content (#problemInputField) is visible <= 4.0s.
+    Includes an unthrottled control, records load times, request counts, and asserts:
+    - throttled_time > unthrottled_time
+    - throttled_time <= 4.0s budget
+    Both runs execute with service worker / browser cache cleared (first visit).
     """
     import http.server
     import threading
@@ -206,32 +211,88 @@ def test_ac_m02_4_home_first_useful_content_simulated_slow_3g():
         def log_message(self, format, *args):
             pass
 
-    server = http.server.HTTPServer(("127.0.0.1", 0), lambda *args: QuietHandler(*args, directory=str(static_dir)))
+    server = http.server.HTTPServer(
+        ("127.0.0.1", 0), lambda *args: QuietHandler(*args, directory=str(static_dir))
+    )
     port = server.server_address[1]
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
+    url = f"http://127.0.0.1:{port}/home.html?variant=standard"
+
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context()
-            page = context.new_page()
-            cdp = context.new_cdp_session(page)
-            # Slow 3G: ~400 kbps (50,000 bytes/sec), 400 ms latency
-            cdp.send("Network.emulateNetworkConditions", {
-                "offline": False,
-                "latency": 400,
-                "downloadThroughput": 50000,
-                "uploadThroughput": 50000,
-            })
-            start_time = time.perf_counter()
-            page.goto(f"http://127.0.0.1:{port}/home.html?variant=standard")
-            page.wait_for_selector("#problemInputField", state="visible")
-            elapsed = time.perf_counter() - start_time
+            browser = p.chromium.launch(
+                headless=True,
+                args=[f"--explicitly-allowed-ports={port}"],
+            )
+
+            # Warm up browser process to prevent process launch jitter
+            warm_ctx = browser.new_context()
+            warm_p = warm_ctx.new_page()
+            warm_p.goto(url, wait_until="commit")
+            warm_ctx.close()
+
+            # -----------------------------------------------------------------
+            # 1. Unthrottled Control (First visit, cleared cache)
+            # -----------------------------------------------------------------
+            context_ctrl = browser.new_context()
+            page_ctrl = context_ctrl.new_page()
+
+            unthrottled_requests = []
+            page_ctrl.on("request", lambda req: unthrottled_requests.append(req.url))
+
+            cdp_ctrl = context_ctrl.new_cdp_session(page_ctrl)
+            cdp_ctrl.send("Network.enable")
+            cdp_ctrl.send("Network.clearBrowserCache")
+            cdp_ctrl.send("Network.setCacheDisabled", {"cacheDisabled": True})
+
+            t0 = time.perf_counter()
+            page_ctrl.goto(url, wait_until="commit")
+            page_ctrl.wait_for_selector("#problemInputField", state="visible")
+            unthrottled_time = time.perf_counter() - t0
+            context_ctrl.close()
+
+            # -----------------------------------------------------------------
+            # 2. Throttled Slow 3G (First visit, cleared cache, 400 kbps, 400 ms RTT)
+            # -----------------------------------------------------------------
+            context_slow = browser.new_context()
+            page_slow = context_slow.new_page()
+
+            throttled_requests = []
+            page_slow.on("request", lambda req: throttled_requests.append(req.url))
+
+            cdp_slow = context_slow.new_cdp_session(page_slow)
+            cdp_slow.send("Network.enable")
+            cdp_slow.send("Network.clearBrowserCache")
+            cdp_slow.send("Network.setCacheDisabled", {"cacheDisabled": True})
+            cdp_slow.send(
+                "Network.emulateNetworkConditions",
+                {
+                    "offline": False,
+                    "latency": 400,
+                    "downloadThroughput": 50000,  # ~400 kbps
+                    "uploadThroughput": 50000,  # ~400 kbps
+                },
+            )
+
+            t1 = time.perf_counter()
+            page_slow.goto(url, wait_until="commit")
+            page_slow.wait_for_selector("#problemInputField", state="visible")
+            throttled_time = time.perf_counter() - t1
+            context_slow.close()
+
             browser.close()
 
-            # Record measured time and assert <= 4.0s budget
-            assert elapsed <= 4.0, f"Slow 3G first useful content took {elapsed:.2f}s, exceeding 4.0s budget"
+            # Assertions
+            assert throttled_time > unthrottled_time, (
+                f"Expected throttled ({throttled_time:.3f}s) > unthrottled ({unthrottled_time:.3f}s)"
+            )
+            assert throttled_time <= 4.0, (
+                f"Slow 3G first useful content took {throttled_time:.2f}s, exceeding 4.0s budget"
+            )
+            assert len(unthrottled_requests) > 0
+            assert len(throttled_requests) > 0
     finally:
         server.shutdown()
 
@@ -239,6 +300,7 @@ def test_ac_m02_4_home_first_useful_content_simulated_slow_3g():
 # ---------------------------------------------------------------------------
 # 10 Priorities (1 test per priority)
 # ---------------------------------------------------------------------------
+
 
 def test_priority_1_urgent_triage_no_help(home_eng, case_eng, user_a):
     """Priority 1: Urgent triage no help step (reads nullable case.is_urgent_triage / triage_urgency == 'urgent_no_help')."""
@@ -405,7 +467,11 @@ def test_priority_6_draft_not_reviewed_placeholder(home_eng, case_eng, user_a):
         title="খসড়া চেকলিস্ট কেস",
         metadata={
             "required_documents": [
-                {"doc_type": "survey_map", "title": "নকশা বা সার্ভে ম্যাপ", "status": "DRAFT_NOT_REVIEWED"}
+                {
+                    "doc_type": "survey_map",
+                    "title": "নকশা বা সার্ভে ম্যাপ",
+                    "status": "DRAFT_NOT_REVIEWED",
+                }
             ]
         },
     )
@@ -557,6 +623,7 @@ def test_priority_ordering_all_10_tiers(home_eng, case_eng, user_a):
 # ---------------------------------------------------------------------------
 # Extra tests kept under non-AC names
 # ---------------------------------------------------------------------------
+
 
 def test_time_aware_bangla_greeting(home_eng, user_a):
     """Time-aware greeting test kept under non-AC name."""

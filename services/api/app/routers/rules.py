@@ -34,7 +34,9 @@ def require_reviewer_or_admin(user: dict[str, Any] = Depends(get_current_user)) 
 
 
 class ComputeRuleRequest(BaseModel):
-    rule_id: str = Field(..., description="ID of the registered rule, e.g. relative_period.calendar_days.v1")
+    rule_id: str = Field(
+        ..., description="ID of the registered rule, e.g. relative_period.calendar_days.v1"
+    )
     inputs: dict[str, Any] = Field(..., description="Input parameters matching rule schema")
 
 
@@ -50,10 +52,7 @@ def list_rules() -> dict[str, Any]:
     data = []
     for r in rules:
         versions = db_manager.list_rule_versions(r["id"])
-        data.append({
-            **r,
-            "versions": versions
-        })
+        data.append({**r, "versions": versions})
     return {"rules": data, "count": len(data)}
 
 
@@ -64,10 +63,7 @@ def compute_rule(req: ComputeRuleRequest) -> dict[str, Any]:
         result = rules_engine.compute(req.rule_id, req.inputs)
         return {"status": "success", "result": result}
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        ) from e
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
 
 @router.post("/api/v1/rules/test")
@@ -81,7 +77,7 @@ def run_rule_tests(req: RunRuleTestsRequest) -> dict[str, Any]:
         "total_tests": len(results),
         "passed_tests": passed_count,
         "failed_tests": len(results) - passed_count,
-        "results": results
+        "results": results,
     }
 
 

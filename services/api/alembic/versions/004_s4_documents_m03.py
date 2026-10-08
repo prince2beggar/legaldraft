@@ -26,16 +26,24 @@ def upgrade() -> None:
     insp = sa.inspect(bind)
     tables = insp.get_table_names()
     doc_cols = [c["name"] for c in insp.get_columns("documents")] if "documents" in tables else []
-    field_cols = [c["name"] for c in insp.get_columns("document_fields")] if "document_fields" in tables else []
+    field_cols = (
+        [c["name"] for c in insp.get_columns("document_fields")]
+        if "document_fields" in tables
+        else []
+    )
 
     # 1. Add S4 columns to existing documents table
     with op.batch_alter_table("documents") as batch_op:
         if "retry_count" not in doc_cols:
-            batch_op.add_column(sa.Column("retry_count", sa.Integer(), server_default="0", nullable=True))
+            batch_op.add_column(
+                sa.Column("retry_count", sa.Integer(), server_default="0", nullable=True)
+            )
         if "error_message" not in doc_cols:
             batch_op.add_column(sa.Column("error_message", sa.Text(), nullable=True))
         if "page_count" not in doc_cols:
-            batch_op.add_column(sa.Column("page_count", sa.Integer(), server_default="1", nullable=True))
+            batch_op.add_column(
+                sa.Column("page_count", sa.Integer(), server_default="1", nullable=True)
+            )
 
     # 2. Add S4 confidence_word column to document_fields table
     with op.batch_alter_table("document_fields") as batch_op:

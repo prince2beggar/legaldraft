@@ -29,7 +29,13 @@ from pathlib import Path
 import pytest
 from playwright.sync_api import sync_playwright
 
-STATIC_HTML_PATH = Path(__file__).resolve().parent.parent.parent / "backend" / "app" / "static" / "document_notice.html"
+STATIC_HTML_PATH = (
+    Path(__file__).resolve().parent.parent.parent
+    / "backend"
+    / "app"
+    / "static"
+    / "document_notice.html"
+)
 STATIC_DIR = STATIC_HTML_PATH.parent
 
 OUTCOMES = [
@@ -146,7 +152,9 @@ def test_ui_playwright_deadline_card_renders_bangla_digits_and_days_left(browser
     assert date_display.is_visible()
     date_text = date_display.inner_text()
     bangla_digits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"]
-    assert any(d in date_text for d in bangla_digits), f"No Bangla digits found in date: {date_text}"
+    assert any(d in date_text for d in bangla_digits), (
+        f"No Bangla digits found in date: {date_text}"
+    )
 
     # Days left badge contains 'দিন বাকি'
     days_badge = page.locator("#daysLeftBadge")
@@ -180,7 +188,9 @@ def test_script_purity_no_devanagari_characters_in_static_html():
         content = html_file.read_text(encoding="utf-8")
 
         # 1. No legacy word 'পরিষ্কার'
-        assert "পরিষ্কার" not in content, f"Found forbidden word 'পরিষ্কার' in {html_file.name}. Use 'স্পষ্ট' instead."
+        assert "পরিষ্কার" not in content, (
+            f"Found forbidden word 'পরিষ্কার' in {html_file.name}. Use 'স্পষ্ট' instead."
+        )
 
         # 2. No Devanagari script letters
         matches = devanagari_letter_pattern.findall(content)

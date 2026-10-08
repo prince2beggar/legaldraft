@@ -80,6 +80,7 @@ def user_b(isolated_db_manager):
 # Exact SRS AC Mapping (M06)
 # ---------------------------------------------------------------------------
 
+
 def test_ac_m06_1_case_from_intake_carries_only_confirmed_facts_events(case_eng, user_a):
     """
     AC-M06-1: case from intake carries only confirmed facts/events.
@@ -94,12 +95,22 @@ def test_ac_m06_1_case_from_intake_carries_only_confirmed_facts_events(case_eng,
         "facts": [
             {"fact_text": "১৯৮৫ সালে মূল দলিল সম্পাদিত হয়", "is_confirmed": True},
             {"fact_text": "২০১০ সালে নামজারি সম্পন্ন হয়", "is_confirmed": True},
-            {"fact_text": "সম্ভাব্য অসঙ্গতি: মৌখিক দাবির পক্ষে প্রমাণ নেই", "is_confirmed": False},  # Unconfirmed!
-            {"fact_text": "অযাচাইকৃত তথ্য: প্রতিপক্ষ তৃতীয় পক্ষকে ভাড়া দিয়েছে", "is_confirmed": False},  # Unconfirmed!
+            {
+                "fact_text": "সম্ভাব্য অসঙ্গতি: মৌখিক দাবির পক্ষে প্রমাণ নেই",
+                "is_confirmed": False,
+            },  # Unconfirmed!
+            {
+                "fact_text": "অযাচাইকৃত তথ্য: প্রতিপক্ষ তৃতীয় পক্ষকে ভাড়া দিয়েছে",
+                "is_confirmed": False,
+            },  # Unconfirmed!
         ],
         "events": [
             {"title": "রেজিস্ট্রি দলিল সম্পাদন", "event_date": "1985-04-12", "is_confirmed": True},
-            {"title": "অনিশ্চিত ঘটনার তারিখ", "event_date": "2024-01-01", "is_confirmed": False},  # Unconfirmed!
+            {
+                "title": "অনিশ্চিত ঘটনার তারিখ",
+                "event_date": "2024-01-01",
+                "is_confirmed": False,
+            },  # Unconfirmed!
         ],
         "parties": [
             {"name": "মাহবুবুল হক", "role": "petitioner"},
@@ -133,7 +144,9 @@ def test_ac_m06_1_case_from_intake_carries_only_confirmed_facts_events(case_eng,
     assert len(parties) == 2
 
 
-def test_ac_m06_2_ai_proposed_items_excluded_from_next_action_until_accepted(case_eng, home_eng, user_a):
+def test_ac_m06_2_ai_proposed_items_excluded_from_next_action_until_accepted(
+    case_eng, home_eng, user_a
+):
     """
     AC-M06-2: AI-proposed items excluded from Next Action until accepted (except rules-marked missing doc).
     """
@@ -223,8 +236,15 @@ def test_ac_m06_4_case_review_no_outcome_predictions_redteam_32_prompts(case_eng
     (Bangla and English: win probability, 'you will win', percentages, 'court will rule for you', guarantees).
     The post-processing filter in CaseEngine MUST block or replace every single one of them.
     """
+
     class HostileAIGateway:
-        def execute_prompt(self, prompt_id: str, variables: dict[str, Any], prompt_version: str = "1.0.0", user_id: str = "") -> dict[str, Any]:
+        def execute_prompt(
+            self,
+            prompt_id: str,
+            variables: dict[str, Any],
+            prompt_version: str = "1.0.0",
+            user_id: str = "",
+        ) -> dict[str, Any]:
             # Deliberately hostile payload packed with forbidden outcome predictions
             return {
                 "output_id": "out-hostile-test",
@@ -248,7 +268,7 @@ def test_ac_m06_4_case_review_no_outcome_predictions_redteam_32_prompts(case_eng
                         "You will win with 80% chance.",
                         "গ্যারান্টি সহকারে আপনি জয়লাভ করবেন।",
                     ],
-                }
+                },
             }
 
     hostile_eng = CaseEngine(db=case_eng.db, gateway=HostileAIGateway())
@@ -399,13 +419,16 @@ def test_ac_m06_5_notes_excluded_from_brief_unless_ticked(case_eng, user_a):
     last_output = case_eng.db.get_last_ai_output()
     if last_output:
         raw_prompt = last_output.get("raw_input", "")
-        assert SECRET_NOTE not in raw_prompt, "SECURITY FAULT: Note with include_in_analysis=False was leaked into AI prompt!"
+        assert SECRET_NOTE not in raw_prompt, (
+            "SECURITY FAULT: Note with include_in_analysis=False was leaked into AI prompt!"
+        )
         assert BRIEF_NOTE in raw_prompt, "Expected include_in_analysis=True note in AI prompt."
 
 
 # ---------------------------------------------------------------------------
 # Extra tests under non-AC names
 # ---------------------------------------------------------------------------
+
 
 def test_case_crud_and_status_transitions(case_eng, user_a):
     """Basic Case CRUD operations and status transitions."""
@@ -447,13 +470,23 @@ def test_eight_tabs_data_integrity_and_timeline_precision(case_eng, user_a):
     )
     case_id = case["id"]
 
-    p1 = case_eng.add_party(case_id, user_a["id"], name="কাজী রফিকুল", role="petitioner", contact_info="01711000000")
+    p1 = case_eng.add_party(
+        case_id, user_a["id"], name="কাজী রফিকুল", role="petitioner", contact_info="01711000000"
+    )
     assert p1["id"] is not None
 
-    e1 = case_eng.add_event(case_id, user_a["id"], title="চুক্তি সম্পাদন", event_date="2025-03-15", date_precision="day")
-    e2 = case_eng.add_event(case_id, user_a["id"], title="দখল হস্তান্তর", event_date="2025-06", date_precision="month")
-    e3 = case_eng.add_event(case_id, user_a["id"], title="নামজারি", event_date="2020", date_precision="year")
-    e4 = case_eng.add_event(case_id, user_a["id"], title="মৌখিক সমঝোতা", event_date="2024", date_precision="approximate")
+    e1 = case_eng.add_event(
+        case_id, user_a["id"], title="চুক্তি সম্পাদন", event_date="2025-03-15", date_precision="day"
+    )
+    e2 = case_eng.add_event(
+        case_id, user_a["id"], title="দখল হস্তান্তর", event_date="2025-06", date_precision="month"
+    )
+    e3 = case_eng.add_event(
+        case_id, user_a["id"], title="নামজারি", event_date="2020", date_precision="year"
+    )
+    e4 = case_eng.add_event(
+        case_id, user_a["id"], title="মৌখিক সমঝোতা", event_date="2024", date_precision="approximate"
+    )
     assert e1["date_precision"] == "day"
     assert e2["date_precision"] == "month"
     assert e3["date_precision"] == "year"
@@ -467,32 +500,36 @@ def test_eight_tabs_data_integrity_and_timeline_precision(case_eng, user_a):
 def test_case_deletion_three_document_actions(case_eng, user_a):
     """Case deletion handling with keep, unlink, and delete options."""
     c1 = case_eng.create_case(user_id=user_a["id"], title="মামলা ১: নথি সংরক্ষণ")
-    d1 = case_eng.db.save_document({
-        "id": f"doc-keep-{time.time_ns()}",
-        "owner_id": user_a["id"],
-        "filename": "kept_doc.pdf",
-        "mime": "application/pdf",
-        "size_bytes": 1000,
-        "sha256": "sha-keep",
-        "storage_key": "storage/test/kept.pdf",
-        "processing_status": "completed",
-    })
+    d1 = case_eng.db.save_document(
+        {
+            "id": f"doc-keep-{time.time_ns()}",
+            "owner_id": user_a["id"],
+            "filename": "kept_doc.pdf",
+            "mime": "application/pdf",
+            "size_bytes": 1000,
+            "sha256": "sha-keep",
+            "storage_key": "storage/test/kept.pdf",
+            "processing_status": "completed",
+        }
+    )
     case_eng.attach_document(c1["id"], user_a["id"], d1)
     del_keep = case_eng.delete_case(c1["id"], user_a["id"], document_action="keep")
     assert del_keep is True
     assert case_eng.db.get_document(d1) is not None
 
     c2 = case_eng.create_case(user_id=user_a["id"], title="মামলা ২: নথি মুছে ফেলা")
-    d2 = case_eng.db.save_document({
-        "id": f"doc-del-{time.time_ns()}",
-        "owner_id": user_a["id"],
-        "filename": "deleted_doc.pdf",
-        "mime": "application/pdf",
-        "size_bytes": 1000,
-        "sha256": "sha-delete",
-        "storage_key": "storage/test/del.pdf",
-        "processing_status": "completed",
-    })
+    d2 = case_eng.db.save_document(
+        {
+            "id": f"doc-del-{time.time_ns()}",
+            "owner_id": user_a["id"],
+            "filename": "deleted_doc.pdf",
+            "mime": "application/pdf",
+            "size_bytes": 1000,
+            "sha256": "sha-delete",
+            "storage_key": "storage/test/del.pdf",
+            "processing_status": "completed",
+        }
+    )
     case_eng.attach_document(c2["id"], user_a["id"], d2)
     del_perm = case_eng.delete_case(c2["id"], user_a["id"], document_action="delete")
     assert del_perm is True
@@ -502,23 +539,29 @@ def test_case_deletion_three_document_actions(case_eng, user_a):
 def test_notice_to_case_saving(case_eng, user_a):
     """Saving notice to case generates hydrated case."""
     doc_id = f"doc-notice-{time.time_ns()}"
-    case_eng.db.save_document({
-        "id": doc_id,
-        "owner_id": user_a["id"],
-        "filename": "legal_notice.pdf",
-        "mime": "application/pdf",
-        "size_bytes": 2000,
-        "sha256": "sha-notice",
-        "storage_key": "storage/test/notice.pdf",
-        "processing_status": "completed",
-    })
+    case_eng.db.save_document(
+        {
+            "id": doc_id,
+            "owner_id": user_a["id"],
+            "filename": "legal_notice.pdf",
+            "mime": "application/pdf",
+            "size_bytes": 2000,
+            "sha256": "sha-notice",
+            "storage_key": "storage/test/notice.pdf",
+            "processing_status": "completed",
+        }
+    )
     case_eng.db.save_notice_analysis(
         document_id=doc_id,
         user_id=user_a["id"],
         analysis={
             "sender": "আইনজীবী মোজাম্মেল হক",
             "summary_one_line": "চেক ডিজঅনার সংক্রান্ত চূড়ান্ত আইনি নোটিশ",
-            "primary_deadline_card": {"has_deadline": True, "due_date": "2026-11-20", "note": "৩০ দিন সময়সীমা"},
+            "primary_deadline_card": {
+                "has_deadline": True,
+                "due_date": "2026-11-20",
+                "note": "৩০ দিন সময়সীমা",
+            },
             "action_required": ["নোটিশের জবাব প্রদান"],
             "what_it_says": ["অভিযোগকারী দাবি করেছেন ৫ লক্ষ টাকার চেক বাউন্স করেছে"],
         },

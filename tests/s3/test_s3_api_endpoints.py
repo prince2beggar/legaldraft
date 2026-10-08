@@ -31,7 +31,7 @@ def test_api_list_rules():
 def test_api_compute_rule():
     payload = {
         "rule_id": "relative_period.calendar_days.v1",
-        "inputs": {"start_date": "2026-10-01", "days": 30, "include_trigger_day": False}
+        "inputs": {"start_date": "2026-10-01", "days": 30, "include_trigger_day": False},
     }
     response = client.post("/api/v1/rules/compute", json=payload)
     assert response.status_code == 200
@@ -42,10 +42,7 @@ def test_api_compute_rule():
 
 
 def test_api_run_rule_tests():
-    payload = {
-        "rule_id": "relative_period.calendar_days.v1",
-        "version": "1.0.0"
-    }
+    payload = {"rule_id": "relative_period.calendar_days.v1", "version": "1.0.0"}
     response = client.post("/api/v1/rules/test", json=payload)
     assert response.status_code == 200
     data = response.json()
@@ -60,8 +57,16 @@ def test_admin_rules_html_served():
     assert "relative_period.calendar_days.v1" in response.text
 
 
+from packages.trust_kernel.auth import create_access_token
+
+
+def _get_admin_headers():
+    token = create_access_token(data={"sub": "01700000000", "phone": "01700000000", "role": "admin"})
+    return {"Authorization": f"Bearer {token}"}
+
+
 def test_api_list_golden_sets():
-    response = client.get("/api/v1/evals/golden-sets")
+    response = client.get("/api/v1/evals/golden-sets", headers=_get_admin_headers())
     assert response.status_code == 200
     data = response.json()
     assert "golden_sets" in data
@@ -71,11 +76,8 @@ def test_api_list_golden_sets():
 
 
 def test_api_trigger_eval_run():
-    payload = {
-        "suite_name": "limitation_deadline_calculation_golden.v1",
-        "gate_threshold": 0.80
-    }
-    response = client.post("/api/v1/evals/run", json=payload)
+    payload = {"suite_name": "limitation_deadline_calculation_golden.v1", "gate_threshold": 0.80}
+    response = client.post("/api/v1/evals/run", json=payload, headers=_get_admin_headers())
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"
@@ -84,7 +86,7 @@ def test_api_trigger_eval_run():
 
 
 def test_api_list_eval_runs():
-    response = client.get("/api/v1/evals/runs")
+    response = client.get("/api/v1/evals/runs", headers=_get_admin_headers())
     assert response.status_code == 200
     data = response.json()
     assert "runs" in data

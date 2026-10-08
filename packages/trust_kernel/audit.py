@@ -92,10 +92,16 @@ class InMemoryAuditService(AuditInterface):
             meta=meta,
         )
 
-    def get_entries(self, actor_id: str | None = None) -> list[dict[str, Any]]:
+    def get_entries(
+        self, actor_id: str | None = None, limit: int | None = None
+    ) -> list[dict[str, Any]]:
         if actor_id:
-            return [e for e in self._entries if e["actor_id"] == actor_id]
-        return list(self._entries)
+            entries = [e for e in self._entries if e["actor_id"] == actor_id]
+        else:
+            entries = list(self._entries)
+        if limit is not None and limit > 0:
+            return entries[-limit:]
+        return entries
 
     def verify_integrity(self) -> bool:
         prev = GENESIS_HASH
@@ -115,6 +121,8 @@ class InMemoryAuditService(AuditInterface):
                 return False
             prev = entry["hash"]
         return True
+
+    verify_chain = verify_integrity
 
     def get_user_audit_extract(self, user_id: str) -> list[dict[str, Any]]:
         """Extract all audit log events involving the user (actor or target object) for GDPR/PDPO export."""

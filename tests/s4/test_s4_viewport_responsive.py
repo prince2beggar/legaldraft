@@ -27,7 +27,9 @@ from playwright.sync_api import sync_playwright
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = REPO_ROOT / "backend" / "app" / "static"
 SCREENSHOTS_DIR = REPO_ROOT / "storage" / "screenshots"
-ARTIFACT_DIR = Path("C:/Users/Lenovo/.gemini/antigravity/brain/f5b387fc-eb28-4e1b-9940-b3291f442234")
+ARTIFACT_DIR = Path(
+    "C:/Users/Lenovo/.gemini/antigravity/brain/f5b387fc-eb28-4e1b-9940-b3291f442234"
+)
 
 VIEWPORTS = [
     {"name": "mobile_360", "width": 360, "height": 640, "is_mobile": True},

@@ -20,6 +20,8 @@ if "PHONE_BLOCKLIST_SALT" not in os.environ:
     os.environ["PHONE_BLOCKLIST_SALT"] = "ain-ai-test-environment-salt-2026-isolated"
 if "JWT_SECRET" not in os.environ:
     os.environ["JWT_SECRET"] = "ain-ai-development-signing-key-bangladesh-legal-os-s1"
+if "DEV_MODE" not in os.environ:
+    os.environ["DEV_MODE"] = "true"
 
 # ---------------------------------------------------------------------------
 # Test Isolation Setup: Use temporary database & temporary storage folder
@@ -50,6 +52,7 @@ test_engine = create_engine(
 db_manager.url = f"sqlite:///{_TEST_DB_PATH.resolve()}"
 db_manager.engine = test_engine
 db_manager.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+db_manager.init_schema()
 
 from packages.trust_kernel.document_engine import document_service  # noqa: E402
 
@@ -107,4 +110,85 @@ def test_citizen_user(isolated_db_manager):
     }
     isolated_db_manager.save_user(user_data)
     return user_data
+
+
+@pytest.fixture(scope="session", autouse=True)
+def guard_legal_saas_db():
+    """
+    Guard (N3 Safety): Fails the test run if legal_saas.db mtime or SHA-256 changed during the run.
+    """
+    import hashlib
+
+    target = Path("legal_saas.db").resolve()
+    if not target.exists():
+        yield
+        return
+
+    initial_mtime = target.stat().st_mtime_ns
+    initial_hash = hashlib.sha256(target.read_bytes()).hexdigest()
+
+    yield
+
+    final_mtime = target.stat().st_mtime_ns
+    final_hash = hashlib.sha256(target.read_bytes()).hexdigest()
+
+    assert final_mtime == initial_mtime, (
+        f"CRITICAL SAFETY VIOLATION: legal_saas.db modification time changed during test run! "
+        f"Initial: {initial_mtime}, Final: {final_mtime}"
+    )
+    assert final_hash == initial_hash, (
+        f"CRITICAL SAFETY VIOLATION: legal_saas.db SHA-256 hash changed during test run! "
+        f"Initial: {initial_hash}, Final: {final_hash}"
+    )
+
+
+@pytest.fixture(scope="session")
+def live_server():
+    """
+    Session-scoped isolated test server running on a free ephemeral port (N3).
+    Points to the temporary SQLite DB and temporary storage directory.
+    Tears down cleanly upon session completion.
+    """
+    import socket
+    import threading
+    import time
+    import urllib.request
+
+    import uvicorn
+
+    from services.api.app.main import app
+
+    # Find free port
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+
+    config = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning")
+    server = uvicorn.Server(config)
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+
+    base_url = f"http://127.0.0.1:{port}"
+    os.environ["LIVE_SERVER_URL"] = base_url
+    os.environ["TEST_SERVER_URL"] = base_url
+
+    max_wait = 10.0
+    start = time.time()
+    started = False
+    while time.time() - start < max_wait:
+        try:
+            with urllib.request.urlopen(f"{base_url}/health") as resp:
+                if resp.status == 200:
+                    started = True
+                    break
+        except Exception:
+            time.sleep(0.1)
+
+    if not started:
+        pytest.fail(f"Ephemeral test server failed to start on {base_url} within {max_wait}s")
+
+    yield base_url
+
+    server.should_exit = True
+    thread.join(timeout=3.0)
 

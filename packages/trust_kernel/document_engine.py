@@ -33,7 +33,9 @@ from packages.trust_kernel.db import DatabaseManager, db_manager
 
 class ObjectStore(ABC):
     @abstractmethod
-    def put_object(self, key: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+    def put_object(
+        self, key: str, data: bytes, content_type: str = "application/octet-stream"
+    ) -> str:
         """Stores object bytes at key. Returns storage key/path."""
         pass
 
@@ -72,7 +74,9 @@ class LocalFilesystemObjectStore(ObjectStore):
         clean_key = key.replace("\\", "/").lstrip("/")
         return self.base_dir / clean_key
 
-    def put_object(self, key: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+    def put_object(
+        self, key: str, data: bytes, content_type: str = "application/octet-stream"
+    ) -> str:
         target = self._resolve(key)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
@@ -100,13 +104,16 @@ class MinioObjectStoreAdapterSlot(ObjectStore):
     MinIO / S3 Object Store Adapter Slot (SRS 5.3).
     Status: UNVERIFIED (No active MinIO server running in host environment; falls back to local storage).
     """
+
     def __init__(self, endpoint: str = "localhost:9000", bucket: str = "ain-ai-documents"):
         self.endpoint = endpoint
         self.bucket = bucket
         self.status = "UNVERIFIED"
         self._fallback = LocalFilesystemObjectStore()
 
-    def put_object(self, key: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+    def put_object(
+        self, key: str, data: bytes, content_type: str = "application/octet-stream"
+    ) -> str:
         # Falls back cleanly to local filesystem while MinIO is UNVERIFIED
         return self._fallback.put_object(key, data, content_type)
 
@@ -137,10 +144,25 @@ class BasicMagicBytesScanner(VirusScanner):
     Real safety scanner inspecting magic bytes, file extensions, and size limits.
     Rejects executables, scripts, shell binaries, and macro files.
     """
+
     MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
     DANGEROUS_EXTENSIONS = {
-        ".exe", ".bat", ".cmd", ".sh", ".ps1", ".vbs", ".dll", ".scr",
-        ".msi", ".com", ".pif", ".hta", ".cpl", ".jar", ".vbe", ".wsf",
+        ".exe",
+        ".bat",
+        ".cmd",
+        ".sh",
+        ".ps1",
+        ".vbs",
+        ".dll",
+        ".scr",
+        ".msi",
+        ".com",
+        ".pif",
+        ".hta",
+        ".cpl",
+        ".jar",
+        ".vbe",
+        ".wsf",
     }
     DANGEROUS_MAGIC = [
         (b"MZ", "Windows Executable PE format"),
@@ -150,7 +172,7 @@ class BasicMagicBytesScanner(VirusScanner):
 
     def scan(self, data: bytes, filename: str) -> tuple[bool, str]:
         if len(data) > self.MAX_FILE_SIZE:
-            return False, f"File size exceeds limit of {self.MAX_FILE_SIZE // (1024*1024)}MB."
+            return False, f"File size exceeds limit of {self.MAX_FILE_SIZE // (1024 * 1024)}MB."
 
         ext = Path(filename).suffix.lower()
         if ext in self.DANGEROUS_EXTENSIONS:
@@ -180,6 +202,7 @@ class ClamAvAdapterSlot(VirusScanner):
     ClamAV Antivirus Daemon Adapter Slot (SRS 5.3).
     Status: UNVERIFIED (ClamAV daemon not connected on local host; falls back to BasicMagicBytesScanner).
     """
+
     def __init__(self, host: str = "localhost", port: int = 3310):
         self.host = host
         self.port = port
@@ -207,6 +230,7 @@ class FakeOcrEngine(OcrEngine):
     Real, deterministic OCR engine for test fixtures, offline operation,
     and synthetic scans. Accurately reads synthetic benchmarks and text images.
     """
+
     def ocr_page(self, image_bytes: bytes, lang: str = "ben+eng") -> tuple[str, float]:
         if not image_bytes:
             return "[নমুনা] খালি বা অচিহ্নিত পৃষ্ঠা (FAKE_TEST_DATA)", 0.50
@@ -215,7 +239,11 @@ class FakeOcrEngine(OcrEngine):
         if image_bytes.startswith(b"%PDF-"):
             try:
                 reader = pypdf.PdfReader(io.BytesIO(image_bytes))
-                if reader.pages and hasattr(reader.pages[0], "images") and len(reader.pages[0].images) > 0:
+                if (
+                    reader.pages
+                    and hasattr(reader.pages[0], "images")
+                    and len(reader.pages[0].images) > 0
+                ):
                     return self.ocr_page(reader.pages[0].images[0].data, lang)
                 txt = "".join(p.extract_text() or "" for p in reader.pages)
                 if txt.strip():
@@ -317,6 +345,7 @@ class TesseractOcrAdapter(OcrEngine):
     Host check report: Tesseract CLI is NOT installed on host Windows machine.
     Automatically logs UNVERIFIED status and falls back to FakeOcrEngine.
     """
+
     def __init__(self):
         self.status = "UNVERIFIED"
         self._fallback = FakeOcrEngine()
@@ -424,11 +453,29 @@ class DocumentClassifier:
         notice | deed | court_order | petition | receipt | id_card | other
         """
         t = text.lower()
-        if any(k in t for k in ["আইনি নোটিশ", "লিগ্যাল নোটিশ", "legal notice", "প্রেরক:", "প্রাপক:", "বকেয়া ভাড়া"]):
+        if any(
+            k in t
+            for k in ["আইনি নোটিশ", "লিগ্যাল নোটিশ", "legal notice", "প্রেরক:", "প্রাপক:", "বকেয়া ভাড়া"]
+        ):
             return "notice"
-        if any(k in t for k in ["চুক্তিপত্র", "দলিল", "deed of agreement", "সাফ-কবলা", "হেবা", "১ম পক্ষ", "২য় পক্ষ", "তফসিল"]):
+        if any(
+            k in t
+            for k in [
+                "চুক্তিপত্র",
+                "দলিল",
+                "deed of agreement",
+                "সাফ-কবলা",
+                "হেবা",
+                "১ম পক্ষ",
+                "২য় পক্ষ",
+                "তফসিল",
+            ]
+        ):
             return "deed"
-        if any(k in t for k in ["আদালত", "মোকদ্দমা", "আদেশ", "রায়", "ডিক্রি", "বিজ্ঞ সিনিয়র সহকারী জজ", "মামলার নথি"]):
+        if any(
+            k in t
+            for k in ["আদালত", "মোকদ্দমা", "আদেশ", "রায়", "ডিক্রি", "বিজ্ঞ সিনিয়র সহকারী জজ", "মামলার নথি"]
+        ):
             return "court_order"
         if any(k in t for k in ["আরজি", "দরখাস্ত", "আবেদন", "বাদী বনাম বিবাদী"]):
             return "petition"
@@ -444,10 +491,10 @@ class FieldExtractor:
     def confidence_to_word(score: float) -> str:
         """Maps numeric confidence score to human readable word (SRS 5.3)."""
         if score >= 0.85:
-            return "clear"      # স্পষ্ট
+            return "clear"  # স্পষ্ট
         if score >= 0.50:
-            return "check"      # যাচাই করুন
-        return "not sure"       # অনিশ্চিত
+            return "check"  # যাচাই করুন
+        return "not sure"  # অনিশ্চিত
 
     @classmethod
     def extract_fields(cls, text: str, page_no: int = 1) -> list[dict[str, Any]]:
@@ -463,51 +510,59 @@ class FieldExtractor:
         # 1. Parties Extraction
         sender_match = re.search(r"প্রেরক:\s*([^\n\r]+)", text)
         if sender_match:
-            fields.append({
-                "key": "parties.sender",
-                "value": sender_match.group(1).strip(),
-                "confidence": 0.95,
-                "confidence_word": cls.confidence_to_word(0.95),
-                "page_no": page_no,
-                "bbox": [150, 50, 195, 750],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "parties.sender",
+                    "value": sender_match.group(1).strip(),
+                    "confidence": 0.95,
+                    "confidence_word": cls.confidence_to_word(0.95),
+                    "page_no": page_no,
+                    "bbox": [150, 50, 195, 750],
+                    "state": "extracted",
+                }
+            )
 
         recipient_match = re.search(r"প্রাপক:\s*([^\n\r]+)", text)
         if recipient_match:
-            fields.append({
-                "key": "parties.recipient",
-                "value": recipient_match.group(1).strip(),
-                "confidence": 0.92,
-                "confidence_word": cls.confidence_to_word(0.92),
-                "page_no": page_no,
-                "bbox": [195, 50, 240, 750],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "parties.recipient",
+                    "value": recipient_match.group(1).strip(),
+                    "confidence": 0.92,
+                    "confidence_word": cls.confidence_to_word(0.92),
+                    "page_no": page_no,
+                    "bbox": [195, 50, 240, 750],
+                    "state": "extracted",
+                }
+            )
 
         first_party = re.search(r"১ম পক্ষ[^\:]*:\s*([^\n\r]+)", text)
         if first_party:
-            fields.append({
-                "key": "parties.first_party",
-                "value": first_party.group(1).strip(),
-                "confidence": 0.94,
-                "confidence_word": cls.confidence_to_word(0.94),
-                "page_no": page_no,
-                "bbox": [150, 50, 195, 750],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "parties.first_party",
+                    "value": first_party.group(1).strip(),
+                    "confidence": 0.94,
+                    "confidence_word": cls.confidence_to_word(0.94),
+                    "page_no": page_no,
+                    "bbox": [150, 50, 195, 750],
+                    "state": "extracted",
+                }
+            )
 
         second_party = re.search(r"২য় পক্ষ[^\:]*:\s*([^\n\r]+)", text)
         if second_party:
-            fields.append({
-                "key": "parties.second_party",
-                "value": second_party.group(1).strip(),
-                "confidence": 0.91,
-                "confidence_word": cls.confidence_to_word(0.91),
-                "page_no": page_no,
-                "bbox": [220, 50, 265, 750],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "parties.second_party",
+                    "value": second_party.group(1).strip(),
+                    "confidence": 0.91,
+                    "confidence_word": cls.confidence_to_word(0.91),
+                    "page_no": page_no,
+                    "bbox": [220, 50, 265, 750],
+                    "state": "extracted",
+                }
+            )
 
         # 2. Dates Extraction (STRICT: Stated dates only)
         # Look for explicit stated dates e.g. "১৫ জানুয়ারি ২০২৬", "১০ ফেব্রুয়ারি ২০২৬", "12 March 2026"
@@ -522,115 +577,133 @@ class FieldExtractor:
                 dt = m.group(1).strip()
                 if dt not in found_dates:
                     found_dates.append(dt)
-                    fields.append({
-                        "key": f"date.stated_{len(found_dates)}",
-                        "value": dt,
-                        "confidence": 0.90,
-                        "confidence_word": cls.confidence_to_word(0.90),
-                        "page_no": page_no,
-                        "bbox": [400, 50, 440, 400],
-                        "state": "extracted",
-                    })
+                    fields.append(
+                        {
+                            "key": f"date.stated_{len(found_dates)}",
+                            "value": dt,
+                            "confidence": 0.90,
+                            "confidence_word": cls.confidence_to_word(0.90),
+                            "page_no": page_no,
+                            "bbox": [400, 50, 440, 400],
+                            "state": "extracted",
+                        }
+                    )
 
         # 3. Monetary Amounts
         amount_match = re.search(r"(?:৫০,০০০\s*টাকা|২৫,০০০\s*টাকা|BDT\s*[0-9,]+/-?)", text)
         if amount_match:
-            fields.append({
-                "key": "amount.disputed",
-                "value": amount_match.group(0).strip(),
-                "confidence": 0.88,
-                "confidence_word": cls.confidence_to_word(0.88),
-                "page_no": page_no,
-                "bbox": [300, 50, 340, 500],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "amount.disputed",
+                    "value": amount_match.group(0).strip(),
+                    "confidence": 0.88,
+                    "confidence_word": cls.confidence_to_word(0.88),
+                    "page_no": page_no,
+                    "bbox": [300, 50, 340, 500],
+                    "state": "extracted",
+                }
+            )
 
         # 4. Property Schedule / Location
         property_match = re.search(r"(?:মিরপুর\s*সেকশন\s*১০[^\.\n]+|মৌজা:[^\.\n]+)", text)
         if property_match:
-            fields.append({
-                "key": "property.schedule",
-                "value": property_match.group(0).strip(),
-                "confidence": 0.84,
-                "confidence_word": cls.confidence_to_word(0.84),  # "check"
-                "page_no": page_no,
-                "bbox": [340, 50, 380, 750],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "property.schedule",
+                    "value": property_match.group(0).strip(),
+                    "confidence": 0.84,
+                    "confidence_word": cls.confidence_to_word(0.84),  # "check"
+                    "page_no": page_no,
+                    "bbox": [340, 50, 380, 750],
+                    "state": "extracted",
+                }
+            )
 
         # 5. Subject / Purpose
         subject_match = re.search(r"বিষয়:\s*([^\n\r]+)", text)
         if subject_match:
-            fields.append({
-                "key": "matter.subject",
-                "value": subject_match.group(1).strip(),
-                "confidence": 0.93,
-                "confidence_word": cls.confidence_to_word(0.93),
-                "page_no": page_no,
-                "bbox": [240, 50, 280, 750],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "matter.subject",
+                    "value": subject_match.group(1).strip(),
+                    "confidence": 0.93,
+                    "confidence_word": cls.confidence_to_word(0.93),
+                    "page_no": page_no,
+                    "bbox": [240, 50, 280, 750],
+                    "state": "extracted",
+                }
+            )
 
         # 6. Court Pleadings & Exhibits (Plaintiff, Defendant, Case Number, Court Name)
         badi_match = re.search(r"বাদী:\s*([^\n\r]+?)(?:\s*বনাম|$)", text)
         if badi_match:
-            fields.append({
-                "key": "parties.plaintiff",
-                "value": badi_match.group(1).strip(),
-                "confidence": 0.94,
-                "confidence_word": cls.confidence_to_word(0.94),
-                "page_no": page_no,
-                "bbox": [250, 50, 290, 400],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "parties.plaintiff",
+                    "value": badi_match.group(1).strip(),
+                    "confidence": 0.94,
+                    "confidence_word": cls.confidence_to_word(0.94),
+                    "page_no": page_no,
+                    "bbox": [250, 50, 290, 400],
+                    "state": "extracted",
+                }
+            )
 
         bibadi_match = re.search(r"বিবাদী:\s*([^\n\r।]+)", text)
         if bibadi_match:
-            fields.append({
-                "key": "parties.defendant",
-                "value": bibadi_match.group(1).strip(),
-                "confidence": 0.92,
-                "confidence_word": cls.confidence_to_word(0.92),
-                "page_no": page_no,
-                "bbox": [250, 400, 290, 750],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "parties.defendant",
+                    "value": bibadi_match.group(1).strip(),
+                    "confidence": 0.92,
+                    "confidence_word": cls.confidence_to_word(0.92),
+                    "page_no": page_no,
+                    "bbox": [250, 400, 290, 750],
+                    "state": "extracted",
+                }
+            )
 
         court_match = re.search(r"(বিজ্ঞ\s*সিনিয়র\s*সহকারী\s*জজ\s*আদালত[^\n\r।,।]+)", text)
         if court_match:
-            fields.append({
-                "key": "court.name",
-                "value": court_match.group(1).strip(),
-                "confidence": 0.96,
-                "confidence_word": cls.confidence_to_word(0.96),
-                "page_no": page_no,
-                "bbox": [200, 50, 245, 750],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "court.name",
+                    "value": court_match.group(1).strip(),
+                    "confidence": 0.96,
+                    "confidence_word": cls.confidence_to_word(0.96),
+                    "page_no": page_no,
+                    "bbox": [200, 50, 245, 750],
+                    "state": "extracted",
+                }
+            )
 
         case_match = re.search(r"মোকদ্দমা নং\s*([^\n\r।]+)", text)
         if case_match:
-            fields.append({
-                "key": "case.number",
-                "value": case_match.group(1).strip(),
-                "confidence": 0.95,
-                "confidence_word": cls.confidence_to_word(0.95),
-                "page_no": page_no,
-                "bbox": [200, 500, 245, 750],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "case.number",
+                    "value": case_match.group(1).strip(),
+                    "confidence": 0.95,
+                    "confidence_word": cls.confidence_to_word(0.95),
+                    "page_no": page_no,
+                    "bbox": [200, 500, 245, 750],
+                    "state": "extracted",
+                }
+            )
 
         claim_match = re.search(r"দাবির পরিমাণ:\s*([০-৯0-9,]+\s*টাকা)", text)
         if claim_match:
-            fields.append({
-                "key": "amount.claimed",
-                "value": claim_match.group(1).strip(),
-                "confidence": 0.91,
-                "confidence_word": cls.confidence_to_word(0.91),
-                "page_no": page_no,
-                "bbox": [290, 50, 330, 400],
-                "state": "extracted",
-            })
+            fields.append(
+                {
+                    "key": "amount.claimed",
+                    "value": claim_match.group(1).strip(),
+                    "confidence": 0.91,
+                    "confidence_word": cls.confidence_to_word(0.91),
+                    "page_no": page_no,
+                    "bbox": [290, 50, 330, 400],
+                    "state": "extracted",
+                }
+            )
 
         return fields
 
@@ -640,7 +713,15 @@ class FieldExtractor:
 # ---------------------------------------------------------------------------
 
 
+class UploadRateLimitExceededError(ValueError):
+    """Raised when user exceeds daily document upload limit (X-006)."""
+
+    pass
+
+
 class DocumentService:
+    MAX_UPLOADS_PER_USER_DAY = 50
+
     def __init__(
         self,
         db: DatabaseManager | None = None,
@@ -652,6 +733,20 @@ class DocumentService:
         self.store = store or LocalFilesystemObjectStore()
         self.scanner = scanner or BasicMagicBytesScanner()
         self.ocr = ocr or FakeOcrEngine()
+        self._upload_timestamps: dict[str, list[datetime]] = {}
+
+    def check_and_record_upload_rate_limit(self, owner_id: str) -> None:
+        """Enforces daily upload rate limit per user (SRS X-006)."""
+        now = datetime.now(timezone.utc)
+        history = self._upload_timestamps.get(owner_id, [])
+        cutoff = now.timestamp() - 86400  # 24 hours
+        active = [ts for ts in history if ts.timestamp() > cutoff]
+        if len(active) >= self.MAX_UPLOADS_PER_USER_DAY:
+            raise UploadRateLimitExceededError(
+                f"আপলোড সীমা অতিক্রান্ত হয়েছে: প্রতি ব্যবহারকারী দৈনিক সর্বোচ্চ {self.MAX_UPLOADS_PER_USER_DAY}টি নথি আপলোড করতে পারবেন।"
+            )
+        active.append(now)
+        self._upload_timestamps[owner_id] = active
 
     def upload_document(
         self,
@@ -663,6 +758,7 @@ class DocumentService:
     ) -> dict[str, Any]:
         """
         Executes end-to-end document upload pipeline:
+        0. Rate limit enforcement (X-006).
         1. Safety scan (VirusScanner).
         2. Deduplication check (SHA-256).
         3. Save file in ObjectStore.
@@ -671,6 +767,9 @@ class DocumentService:
         6. Classification & Field extraction.
         7. Live status progression.
         """
+        # 0. Rate limit check
+        self.check_and_record_upload_rate_limit(owner_id)
+
         # 1. Safety Scan
         is_safe, scan_reason = self.scanner.scan(file_bytes, filename)
         if not is_safe:
@@ -750,7 +849,11 @@ class DocumentService:
                     else:
                         if p_bytes.startswith(b"%PDF-"):
                             reader = pypdf.PdfReader(io.BytesIO(p_bytes))
-                            if reader.pages and hasattr(reader.pages[0], "images") and len(reader.pages[0].images) > 0:
+                            if (
+                                reader.pages
+                                and hasattr(reader.pages[0], "images")
+                                and len(reader.pages[0].images) > 0
+                            ):
                                 raw_img = reader.pages[0].images[0].data
                                 enh_bytes, _ = ImageEnhancer.enhance_image(raw_img)
 
@@ -760,16 +863,18 @@ class DocumentService:
                     ocr_text, conf = self.ocr.ocr_page(enh_bytes)
                     all_text_segments.append(ocr_text)
 
-                    self.db.save_document_page({
-                        "id": f"{doc_id}-p{idx}",
-                        "document_id": doc_id,
-                        "page_no": idx,
-                        "image_key": page_key,
-                        "ocr_text": ocr_text,
-                        "ocr_confidence": conf,
-                        "engine": "FakeOcr",
-                        "engine_version": "1.0",
-                    })
+                    self.db.save_document_page(
+                        {
+                            "id": f"{doc_id}-p{idx}",
+                            "document_id": doc_id,
+                            "page_no": idx,
+                            "image_key": page_key,
+                            "ocr_text": ocr_text,
+                            "ocr_confidence": conf,
+                            "engine": "FakeOcr",
+                            "engine_version": "1.0",
+                        }
+                    )
 
                 full_text = "\n".join(all_text_segments)
 
@@ -833,17 +938,19 @@ class DocumentService:
     ) -> dict[str, Any]:
         upload_id = f"upl-{uuid.uuid4().hex[:12]}"
         temp_path = f"temp_uploads/{upload_id}_{filename}"
-        self.db.save_resumable_upload({
-            "upload_id": upload_id,
-            "owner_id": owner_id,
-            "filename": filename,
-            "total_size": total_size,
-            "total_chunks": total_chunks,
-            "uploaded_chunks": [],
-            "sha256_hash": sha256_hash,
-            "temp_file_path": temp_path,
-            "expires_at": datetime.now(timezone.utc).isoformat(),
-        })
+        self.db.save_resumable_upload(
+            {
+                "upload_id": upload_id,
+                "owner_id": owner_id,
+                "filename": filename,
+                "total_size": total_size,
+                "total_chunks": total_chunks,
+                "uploaded_chunks": [],
+                "sha256_hash": sha256_hash,
+                "temp_file_path": temp_path,
+                "expires_at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
         return {
             "upload_id": upload_id,
             "chunk_size": total_size // total_chunks if total_chunks > 0 else total_size,
@@ -889,7 +996,9 @@ class DocumentService:
         }
 
     # Ownership Isolation & Field State Transitions
-    def get_document_secure(self, doc_id: str, actor_id: str, actor_role: str = "citizen") -> dict[str, Any]:
+    def get_document_secure(
+        self, doc_id: str, actor_id: str, actor_role: str = "citizen"
+    ) -> dict[str, Any]:
         """
         Enforces AC-M03-5: Unauthorised requests return 404/403 and are written to trust_audit_logs.
         """
@@ -907,7 +1016,9 @@ class DocumentService:
                 object_id=doc_id,
                 meta={"violator_id": actor_id, "actual_owner": doc["owner_id"]},
             )
-            raise PermissionError("Access forbidden: Unauthorised access to document owned by another user.")
+            raise PermissionError(
+                "Access forbidden: Unauthorised access to document owned by another user."
+            )
 
         fields = self.db.list_document_fields(doc_id)
         # AC-M03-4: Screening items without a span_ref / bbox NEVER appear in the UI
@@ -920,7 +1031,9 @@ class DocumentService:
             "fields": visible_fields,
         }
 
-    def edit_field_value(self, field_id: str, new_value: str, user_id: str, confirm: bool = False) -> dict[str, Any]:
+    def edit_field_value(
+        self, field_id: str, new_value: str, user_id: str, confirm: bool = False
+    ) -> dict[str, Any]:
         """
         Enforces AC-M03-2: Editing a value changes state to 'reviewed' ONLY after an explicit confirm.
         """
@@ -929,7 +1042,9 @@ class DocumentService:
             raise ValueError("Field not found.")
 
         if not confirm:
-            raise ValueError("Explicit confirmation required before applying edit to extracted field (AC-M03-2).")
+            raise ValueError(
+                "Explicit confirmation required before applying edit to extracted field (AC-M03-2)."
+            )
 
         updated = self.db.update_document_field(field_id, new_value, user_id)
         assert updated is not None

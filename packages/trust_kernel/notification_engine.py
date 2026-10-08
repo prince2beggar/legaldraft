@@ -145,7 +145,11 @@ class NotificationEngine:
 
                         # STRICT REQUIREMENT: SMS message must be generic, zero case details
                         # Always ensure generic text
-                        sms_text = GENERIC_SMS_TEXT_BN if prefs.get("language") == "bn" else GENERIC_SMS_TEXT_EN
+                        sms_text = (
+                            GENERIC_SMS_TEXT_BN
+                            if prefs.get("language") == "bn"
+                            else GENERIC_SMS_TEXT_EN
+                        )
 
                         # Mock / Real SMS dispatch
                         ok = self.sms.send_sms(phone=phone, message=sms_text)
@@ -236,6 +240,7 @@ class NotificationEngine:
                 offset_bn = "আগামীকাল"
             else:
                 from packages.trust_kernel.notice_engine import to_bangla_digits
+
                 offset_bn = f"{to_bangla_digits(offset)} দিন পর"
 
             notif = self.db.create_notification(
@@ -252,7 +257,9 @@ class NotificationEngine:
             created_notifs.append(notif)
 
             if prefs.get("enable_sms") and offset <= 1:
-                sms_text = GENERIC_SMS_TEXT_BN if prefs.get("language") == "bn" else GENERIC_SMS_TEXT_EN
+                sms_text = (
+                    GENERIC_SMS_TEXT_BN if prefs.get("language") == "bn" else GENERIC_SMS_TEXT_EN
+                )
                 sms_notif = self.db.create_notification(
                     user_id=user_id,
                     title="সময়সীমা সতর্কতা",
@@ -274,6 +281,7 @@ class NotificationEngine:
         """
         with self.db.get_session() as session:
             from packages.trust_kernel.db import NotificationDB
+
             cnt = (
                 session.query(NotificationDB)
                 .filter(
@@ -349,7 +357,9 @@ class NotificationEngine:
                     continue
 
                 prefs = self.db.get_notification_preferences(notif.user_id)
-                sms_text = GENERIC_SMS_TEXT_BN if prefs.get("language") == "bn" else GENERIC_SMS_TEXT_EN
+                sms_text = (
+                    GENERIC_SMS_TEXT_BN if prefs.get("language") == "bn" else GENERIC_SMS_TEXT_EN
+                )
                 sms_notif = self.db.create_notification(
                     user_id=notif.user_id,
                     title="সময়সীমা সতর্কতা",
@@ -447,6 +457,7 @@ class NotificationEngine:
             return None
 
         from packages.trust_kernel.notice_engine import to_bangla_digits
+
         cnt_bn = to_bangla_digits(upcoming_count)
         title = "দৈনিক আইনি আপডেট (Daily Digest)"
         msg = f"আজকের পর্যালোচনা: আগামী ৭ দিনের মধ্যে আপনার {cnt_bn}টি গুরুত্বপূর্ণ সময়সীমা রয়েছে। সময়মত পদক্ষেপ নিন।"
@@ -468,6 +479,7 @@ class NotificationEngine:
         """Admin failure view: lists notifications that failed after retries."""
         with self.db.get_session() as session:
             from packages.trust_kernel.db import NotificationDB
+
             rows = (
                 session.query(NotificationDB)
                 .filter(NotificationDB.status == "failed")

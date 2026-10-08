@@ -24,7 +24,7 @@ def test_relative_period_calendar_days_standard(engine):
     """30 calendar days limitation after event (trigger day excluded)."""
     res = engine.compute(
         "relative_period.calendar_days.v1",
-        {"start_date": "2026-10-01", "days": 30, "include_trigger_day": False}
+        {"start_date": "2026-10-01", "days": 30, "include_trigger_day": False},
     )
     assert res["status"] == "SUCCESS"
     assert res["result_date"] == "2026-10-31"
@@ -40,7 +40,7 @@ def test_relative_period_include_trigger_day(engine):
     # 10 days starting Oct 1 counting Oct 1 as Day 1 ends on Oct 10 (Oct 1..Oct 10 = 10 days)
     res = engine.compute(
         "relative_period.calendar_days.v1",
-        {"start_date": "2026-10-01", "days": 10, "include_trigger_day": True}
+        {"start_date": "2026-10-01", "days": 10, "include_trigger_day": True},
     )
     assert res["status"] == "SUCCESS"
     assert res["result_date"] == "2026-10-10"
@@ -51,7 +51,7 @@ def test_relative_period_negative_days(engine):
     """Negative day offset calculates pre-notice deadline before target date."""
     res = engine.compute(
         "relative_period.calendar_days.v1",
-        {"start_date": "2026-10-20", "days": -15, "include_trigger_day": False}
+        {"start_date": "2026-10-20", "days": -15, "include_trigger_day": False},
     )
     assert res["status"] == "SUCCESS"
     assert res["result_date"] == "2026-10-05"
@@ -61,7 +61,7 @@ def test_relative_period_zero_days(engine):
     """Zero day offset returns the same date."""
     res = engine.compute(
         "relative_period.calendar_days.v1",
-        {"start_date": "2026-10-15", "days": 0, "include_trigger_day": False}
+        {"start_date": "2026-10-15", "days": 0, "include_trigger_day": False},
     )
     assert res["status"] == "SUCCESS"
     assert res["result_date"] == "2026-10-15"
@@ -71,8 +71,7 @@ def test_holiday_calendar_is_empty_and_fake_test_data(engine):
     """Verifies holiday calendar data model is currently empty and documented."""
     assert engine.holiday_calendar == []
     res = engine.compute(
-        "relative_period.calendar_days.v1",
-        {"start_date": "2026-10-01", "days": 5}
+        "relative_period.calendar_days.v1", {"start_date": "2026-10-01", "days": 5}
     )
     assert "EMPTY_FAKE_TEST_DATA" in res["holiday_calendar_used"]
 
@@ -84,8 +83,7 @@ def test_negative_hr_d6_llm_deadline_invention_rejected(engine):
     """
     # 1. Allowed: Valid computation from Rules Engine
     rule_res = engine.compute(
-        "relative_period.calendar_days.v1",
-        {"start_date": "2026-10-01", "days": 30}
+        "relative_period.calendar_days.v1", {"start_date": "2026-10-01", "days": 30}
     )
     assert engine.validate_deadline_provenance("2026-10-31", rule_result=rule_res) is True
 
@@ -98,9 +96,11 @@ def test_negative_hr_d6_llm_deadline_invention_rejected(engine):
         engine.validate_deadline_provenance(
             claimed_date_str="2026-11-25",
             source_text="বাড়িভাড়া আইন ধারা ৭ অনুযায়ী যুক্তিসঙ্গত সময়ের মধ্যে প্রদান করিতে হইবে।",
-            rule_result=None
+            rule_result=None,
         )
-    assert ("Decision D6 Violation" in str(exc_info.value) or "HR-D6 Violation" in str(exc_info.value))
+    assert "Decision D6 Violation" in str(exc_info.value) or "HR-D6 Violation" in str(
+        exc_info.value
+    )
     assert "AI-invented deadlines are strictly forbidden" in str(exc_info.value)
 
 

@@ -62,7 +62,7 @@ def test_model_router_with_fallback():
 
     result = gateway.execute_prompt(
         prompt_id="legal_advisory.v1",
-        variables={"query": "বাড়িভাড়া জামানত সংক্রান্ত", "sources": "বাড়িভাড়া আইন ১৯৯১"}
+        variables={"query": "বাড়িভাড়া জামানত সংক্রান্ত", "sources": "বাড়িভাড়া আইন ১৯৯১"},
     )
     assert result["status"] == "success"
     assert result["model"] == "working-fallback"
@@ -73,7 +73,7 @@ def test_json_schema_validation_success():
     gateway = AIGateway()
     result = gateway.execute_prompt(
         prompt_id="legal_advisory.v1",
-        variables={"query": "জমি ক্রয় সংক্রান্ত বিরোধ", "sources": "ভূমি আইন"}
+        variables={"query": "জমি ক্রয় সংক্রান্ত বিরোধ", "sources": "ভূমি আইন"},
     )
     assert result["status"] == "success"
     data = result["data"]
@@ -98,7 +98,7 @@ def test_json_schema_validation_failure_handling():
     with pytest.raises(SchemaValidationError) as exc:
         gateway.execute_prompt(
             prompt_id="legal_advisory.v1",
-            variables={"query": "test query", "sources": "test sources"}
+            variables={"query": "test query", "sources": "test sources"},
         )
     assert "failed schema validation" in str(exc.value)
 
@@ -108,8 +108,7 @@ def test_cost_guard_quota_enforcement():
     gateway = AIGateway(max_token_limit=10)  # Very low token limit to trigger guard
     with pytest.raises(CostLimitExceededError) as exc:
         gateway.execute_prompt(
-            prompt_id="legal_advisory.v1",
-            variables={"query": "A" * 200, "sources": "B" * 200}
+            prompt_id="legal_advisory.v1", variables={"query": "A" * 200, "sources": "B" * 200}
         )
     assert "exceeds maximum limit" in str(exc.value)
 
@@ -128,7 +127,7 @@ def test_ai_output_persistence():
     gateway = AIGateway()
     res = gateway.execute_prompt(
         prompt_id="legal_advisory.v1",
-        variables={"query": "ট্রেড লাইসেন্স নবায়ন নিয়ম", "sources": "পৌরসভা আইন"}
+        variables={"query": "ট্রেড লাইসেন্স নবায়ন নিয়ম", "sources": "পৌরসভা আইন"},
     )
     out_id = res["output_id"]
     record = db_manager.get_ai_output(out_id)
@@ -152,7 +151,7 @@ def test_rule_b15_prompt_injection_flagged_and_defended():
     )
     result = gateway.execute_prompt(
         prompt_id="legal_advisory.v1",
-        variables={"query": injection_doc, "sources": "বাড়িভাড়া আইন ১৯৯১"}
+        variables={"query": injection_doc, "sources": "বাড়িভাড়া আইন ১৯৯১"},
     )
     # 1. Output schema must remain intact and valid
     assert result["status"] == "success"
@@ -180,7 +179,7 @@ def test_rule_b03_claim_links_require_verified_passage_link():
     gateway = AIGateway()
     res = gateway.execute_prompt(
         prompt_id="legal_advisory.v1",
-        variables={"query": "জমির সিলিং সংক্রান্ত", "sources": "ভূমি সংস্কার অধ্যাদেশ ১৯৮৪"}
+        variables={"query": "জমির সিলিং সংক্রান্ত", "sources": "ভূমি সংস্কার অধ্যাদেশ ১৯৮৪"},
     )
     out_id = res["output_id"]
 
@@ -197,23 +196,27 @@ def test_rule_b03_claim_links_require_verified_passage_link():
             "claim_text": "বিনা নোটিশে উচ্ছেদ করা সম্পূর্ণ বৈধ।",
             "source_id": None,
             "source_version_id": None,
-        }
+        },
     ]
 
     # Pre-seed source and version so citation verifier can validate valid claim
-    db_manager.save_source({
-        "id": "statute-land-1984",
-        "title": "ভূমি সংস্কার অধ্যাদেশ ১৯৮৪",
-        "jurisdiction": "BD",
-        "category": "statute",
-    })
-    db_manager.save_source_version({
-        "id": "v-land-1984-approved",
-        "source_id": "statute-land-1984",
-        "version_number": "1.0",
-        "status": "approved",
-        "effective_from": "1984-01-01",
-    })
+    db_manager.save_source(
+        {
+            "id": "statute-land-1984",
+            "title": "ভূমি সংস্কার অধ্যাদেশ ১৯৮৪",
+            "jurisdiction": "BD",
+            "category": "statute",
+        }
+    )
+    db_manager.save_source_version(
+        {
+            "id": "v-land-1984-approved",
+            "source_id": "statute-land-1984",
+            "version_number": "1.0",
+            "status": "approved",
+            "effective_from": "1984-01-01",
+        }
+    )
 
     stored = gateway.store_claim_links(out_id, claims_to_link)
     assert len(stored) == 2
@@ -244,17 +247,14 @@ def test_rule_b15_prompt_versioning_and_unregistered_refused():
 
     # 1. Unregistered prompt is refused
     with pytest.raises(ValueError) as exc:
-        gateway.execute_prompt(
-            prompt_id="unregistered_prompt_123",
-            variables={"test": "val"}
-        )
+        gateway.execute_prompt(prompt_id="unregistered_prompt_123", variables={"test": "val"})
     assert "Unregistered prompt 'unregistered_prompt_123' refused." in str(exc.value)
 
     # 2. Registered prompt records prompt id and version in output & DB
     res = gateway.execute_prompt(
         prompt_id="legal_advisory.v1",
         variables={"query": "সাধারণ আইনি তথ্য", "sources": "আইন কোষ"},
-        prompt_version="1.0.0"
+        prompt_version="1.0.0",
     )
     assert res["status"] == "success"
     assert res["prompt_id"] == "legal_advisory.v1"

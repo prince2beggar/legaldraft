@@ -28,8 +28,14 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     bind = op.get_bind()
     insp = sa.inspect(bind)
-    rules_cols = [c["name"] for c in insp.get_columns("rules")] if "rules" in insp.get_table_names() else []
-    rule_ver_cols = [c["name"] for c in insp.get_columns("rule_versions")] if "rule_versions" in insp.get_table_names() else []
+    rules_cols = (
+        [c["name"] for c in insp.get_columns("rules")] if "rules" in insp.get_table_names() else []
+    )
+    rule_ver_cols = (
+        [c["name"] for c in insp.get_columns("rule_versions")]
+        if "rule_versions" in insp.get_table_names()
+        else []
+    )
     tables = insp.get_table_names()
 
     # 0. Add S3 columns to existing rules and rule_versions tables
@@ -47,7 +53,9 @@ def upgrade() -> None:
         if "parameters_schema_json" not in rule_ver_cols:
             batch_op.add_column(sa.Column("parameters_schema_json", sa.Text(), nullable=True))
         if "is_active" not in rule_ver_cols:
-            batch_op.add_column(sa.Column("is_active", sa.Boolean(), server_default="1", nullable=True))
+            batch_op.add_column(
+                sa.Column("is_active", sa.Boolean(), server_default="1", nullable=True)
+            )
         if "created_at" not in rule_ver_cols:
             batch_op.add_column(sa.Column("created_at", sa.String(64), nullable=True))
 
@@ -73,9 +81,9 @@ def upgrade() -> None:
             sa.Column("version", sa.String(32), nullable=False),
             sa.Column("system_prompt", sa.Text(), nullable=False),
             sa.Column("user_template", sa.Text(), nullable=False),
-        sa.Column("schema_json", sa.Text(), nullable=False),
-        sa.Column("created_at", sa.String(64), nullable=False),
-    )
+            sa.Column("schema_json", sa.Text(), nullable=False),
+            sa.Column("created_at", sa.String(64), nullable=False),
+        )
 
     # 3. AI Outputs Table
     if "ai_outputs" not in tables:
@@ -105,7 +113,9 @@ def upgrade() -> None:
             sa.Column("source_id", sa.String(64), nullable=False),
             sa.Column("source_version_id", sa.String(64), nullable=False),
             sa.Column("section_ref", sa.String(64), nullable=True),
-            sa.Column("verification_status", sa.String(32), server_default="UNVERIFIED", nullable=False),
+            sa.Column(
+                "verification_status", sa.String(32), server_default="UNVERIFIED", nullable=False
+            ),
             sa.Column("verification_score", sa.Float(), server_default="0.0", nullable=False),
             sa.Column("details_json", sa.Text(), server_default="{}", nullable=False),
             sa.Column("created_at", sa.String(64), nullable=False),

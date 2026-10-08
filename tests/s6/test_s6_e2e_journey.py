@@ -51,16 +51,18 @@ def auth_citizen(api_client, isolated_db_manager):
     decoded = jwt.decode(token, options={"verify_signature": False})
     real_uid = decoded["sub"]
 
-    isolated_db_manager.save_user({
-        "id": real_uid,
-        "phone": phone,
-        "name": "মাহমুদুর রহমান",
-        "role": "citizen",
-        "roles": ["citizen"],
-        "status": "active",
-        "is_onboarded": True,
-        "preferred_lang": "bn",
-    })
+    isolated_db_manager.save_user(
+        {
+            "id": real_uid,
+            "phone": phone,
+            "name": "মাহমুদুর রহমান",
+            "role": "citizen",
+            "roles": ["citizen"],
+            "status": "active",
+            "is_onboarded": True,
+            "preferred_lang": "bn",
+        }
+    )
 
     u = auth_service.get_user(real_uid)
     if u:
@@ -86,18 +88,20 @@ def test_s6_e2e_api_and_business_logic_journey(api_client, auth_citizen, isolate
 
     # 2. Simulate Notice Document & Analysis created for this user
     doc_id = f"doc-notice-{time.time_ns()}"
-    isolated_db_manager.save_document({
-        "id": doc_id,
-        "owner_id": uid,
-        "filename": "legal_notice_demand.pdf",
-        "mime": "application/pdf",
-        "size_bytes": 102400,
-        "sha256": "fakehash" + str(time.time_ns()),
-        "storage_key": f"documents/{doc_id}.pdf",
-        "doc_type": "legal_notice",
-        "processing_status": "ready",
-        "intent": "understand",
-    })
+    isolated_db_manager.save_document(
+        {
+            "id": doc_id,
+            "owner_id": uid,
+            "filename": "legal_notice_demand.pdf",
+            "mime": "application/pdf",
+            "size_bytes": 102400,
+            "sha256": "fakehash" + str(time.time_ns()),
+            "storage_key": f"documents/{doc_id}.pdf",
+            "doc_type": "legal_notice",
+            "processing_status": "ready",
+            "intent": "understand",
+        }
+    )
 
     # Save notice analysis with deadline and required action
     analysis_data = {
@@ -167,7 +171,11 @@ def test_s6_e2e_api_and_business_logic_journey(api_client, auth_citizen, isolate
     # Tab 6: Notes (with AC-M06-5 privacy)
     res_note = api_client.post(
         f"/api/v1/cases/{case_id}/notes",
-        json={"note_text": "আইনজীবীর সাথে আগামী রবিবার চেম্বারে দেখা করব", "is_private": True, "include_in_analysis": False},
+        json={
+            "note_text": "আইনজীবীর সাথে আগামী রবিবার চেম্বারে দেখা করব",
+            "is_private": True,
+            "include_in_analysis": False,
+        },
         headers=headers,
     )
     assert res_note.status_code == 201
@@ -177,7 +185,14 @@ def test_s6_e2e_api_and_business_logic_journey(api_client, auth_citizen, isolate
     assert res_review.status_code == 200
     review_resp = res_review.json()
     review_data = review_resp["review"]
-    for sec in ["possible_issues", "missing_information", "required_documents", "possible_processes", "questions_for_lawyer", "options_to_discuss"]:
+    for sec in [
+        "possible_issues",
+        "missing_information",
+        "required_documents",
+        "possible_processes",
+        "questions_for_lawyer",
+        "options_to_discuss",
+    ]:
         assert sec in review_data
     assert review_data["ai_label"] == "AI বিশ্লেষণ, আইনি পরামর্শ নয়"
     assert review_data["provider"] == "fake"
@@ -252,12 +267,23 @@ def test_s6_e2e_playwright_browser_flow():
         page.locator(".btn-secondary").click()
 
         # 3. Visit /cases/:id
-        case_url = (STATIC_DIR / "case_detail.html").as_uri() + "?id=case-s6-mock-123&variant=overview"
+        case_url = (
+            STATIC_DIR / "case_detail.html"
+        ).as_uri() + "?id=case-s6-mock-123&variant=overview"
         page.goto(case_url)
         page.wait_for_selector("#tab-overview")
 
         # Verify 8 tabs switching
-        tabs = ["timeline", "documents", "tasks", "deadlines", "notes", "review", "lawyer", "overview"]
+        tabs = [
+            "timeline",
+            "documents",
+            "tasks",
+            "deadlines",
+            "notes",
+            "review",
+            "lawyer",
+            "overview",
+        ]
         for t in tabs:
             btn = page.locator(f'[data-tab="{t}"]')
             btn.click()

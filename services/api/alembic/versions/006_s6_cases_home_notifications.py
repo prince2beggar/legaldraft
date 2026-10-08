@@ -41,14 +41,24 @@ def upgrade() -> None:
         if "triage_urgency" not in case_cols:
             op.add_column("cases", sa.Column("triage_urgency", sa.String(32), nullable=True))
         if "is_urgent_triage" not in case_cols:
-            op.add_column("cases", sa.Column("is_urgent_triage", sa.Boolean(), server_default=sa.text("0"), nullable=True))
+            op.add_column(
+                "cases",
+                sa.Column(
+                    "is_urgent_triage", sa.Boolean(), server_default=sa.text("0"), nullable=True
+                ),
+            )
 
     # 2. case_parties table
     if "case_parties" not in tables:
         op.create_table(
             "case_parties",
             sa.Column("id", sa.String(64), primary_key=True),
-            sa.Column("case_id", sa.String(64), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
+            sa.Column(
+                "case_id",
+                sa.String(64),
+                sa.ForeignKey("cases.id", ondelete="CASCADE"),
+                nullable=False,
+            ),
             sa.Column("name", sa.String(255), nullable=False),
             sa.Column("role", sa.String(64), nullable=False),
             sa.Column("contact_info", sa.String(255), nullable=True),
@@ -63,7 +73,12 @@ def upgrade() -> None:
         op.create_table(
             "case_events",
             sa.Column("id", sa.String(64), primary_key=True),
-            sa.Column("case_id", sa.String(64), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
+            sa.Column(
+                "case_id",
+                sa.String(64),
+                sa.ForeignKey("cases.id", ondelete="CASCADE"),
+                nullable=False,
+            ),
             sa.Column("title", sa.String(255), nullable=False),
             sa.Column("event_date", sa.String(32), nullable=False),
             sa.Column("date_precision", sa.String(16), server_default="day", nullable=False),
@@ -74,16 +89,27 @@ def upgrade() -> None:
     else:
         event_cols = [c["name"] for c in insp.get_columns("case_events")]
         if "date_precision" not in event_cols:
-            op.add_column("case_events", sa.Column("date_precision", sa.String(16), server_default="day", nullable=False))
+            op.add_column(
+                "case_events",
+                sa.Column("date_precision", sa.String(16), server_default="day", nullable=False),
+            )
         if "event_type" not in event_cols:
-            op.add_column("case_events", sa.Column("event_type", sa.String(64), server_default="other", nullable=False))
+            op.add_column(
+                "case_events",
+                sa.Column("event_type", sa.String(64), server_default="other", nullable=False),
+            )
 
     # 4. case_facts table
     if "case_facts" not in tables:
         op.create_table(
             "case_facts",
             sa.Column("id", sa.String(64), primary_key=True),
-            sa.Column("case_id", sa.String(64), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
+            sa.Column(
+                "case_id",
+                sa.String(64),
+                sa.ForeignKey("cases.id", ondelete="CASCADE"),
+                nullable=False,
+            ),
             sa.Column("fact_text", sa.Text(), nullable=False),
             sa.Column("source_doc_id", sa.String(64), nullable=True),
             sa.Column("status", sa.String(32), server_default="active", nullable=False),
@@ -97,35 +123,65 @@ def upgrade() -> None:
         if "source_doc_id" not in fact_cols:
             op.add_column("case_facts", sa.Column("source_doc_id", sa.String(64), nullable=True))
         if "status" not in fact_cols:
-            op.add_column("case_facts", sa.Column("status", sa.String(32), server_default="active", nullable=False))
+            op.add_column(
+                "case_facts",
+                sa.Column("status", sa.String(32), server_default="active", nullable=False),
+            )
         if "is_proposed" not in fact_cols:
-            op.add_column("case_facts", sa.Column("is_proposed", sa.Boolean(), server_default=sa.text("0"), nullable=False))
+            op.add_column(
+                "case_facts",
+                sa.Column("is_proposed", sa.Boolean(), server_default=sa.text("0"), nullable=False),
+            )
 
     # 5. case_notes table
     if "case_notes" not in tables:
         op.create_table(
             "case_notes",
             sa.Column("id", sa.String(64), primary_key=True),
-            sa.Column("case_id", sa.String(64), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
+            sa.Column(
+                "case_id",
+                sa.String(64),
+                sa.ForeignKey("cases.id", ondelete="CASCADE"),
+                nullable=False,
+            ),
             sa.Column("user_id", sa.String(64), nullable=False),
             sa.Column("note_text", sa.Text(), nullable=False),
             sa.Column("is_private", sa.Boolean(), server_default=sa.text("1"), nullable=False),
-            sa.Column("include_in_analysis", sa.Boolean(), server_default=sa.text("0"), nullable=False),
-            sa.Column("include_in_brief", sa.Boolean(), server_default=sa.text("0"), nullable=False),
+            sa.Column(
+                "include_in_analysis", sa.Boolean(), server_default=sa.text("0"), nullable=False
+            ),
+            sa.Column(
+                "include_in_brief", sa.Boolean(), server_default=sa.text("0"), nullable=False
+            ),
             sa.Column("created_at", sa.String(64), nullable=False),
             sa.Column("updated_at", sa.String(64), nullable=False),
         )
     else:
         note_cols = [c["name"] for c in insp.get_columns("case_notes")]
         if "include_in_brief" not in note_cols:
-            op.add_column("case_notes", sa.Column("include_in_brief", sa.Boolean(), server_default=sa.text("0"), nullable=False))
+            op.add_column(
+                "case_notes",
+                sa.Column(
+                    "include_in_brief", sa.Boolean(), server_default=sa.text("0"), nullable=False
+                ),
+            )
 
     # 6. case_documents table
     if "case_documents" not in tables:
         op.create_table(
             "case_documents",
-            sa.Column("case_id", sa.String(64), sa.ForeignKey("cases.id", ondelete="CASCADE"), nullable=False),
-            sa.Column("document_id", sa.String(64), sa.ForeignKey("documents.id", ondelete="CASCADE"), nullable=False),
+            sa.Column(
+                "case_id",
+                sa.String(64),
+                sa.ForeignKey("cases.id", ondelete="CASCADE"),
+                nullable=False,
+            ),
+            sa.Column(
+                "document_id",
+                sa.String(64),
+                sa.ForeignKey("documents.id", ondelete="CASCADE"),
+                nullable=False,
+            ),
             sa.Column("attached_at", sa.String(64), nullable=False),
             sa.PrimaryKeyConstraint("case_id", "document_id"),
         )
@@ -156,9 +212,15 @@ def upgrade() -> None:
         if "message" not in notif_cols:
             op.add_column("notifications", sa.Column("message", sa.Text(), nullable=True))
         if "channel" not in notif_cols:
-            op.add_column("notifications", sa.Column("channel", sa.String(32), server_default="in_app", nullable=False))
+            op.add_column(
+                "notifications",
+                sa.Column("channel", sa.String(32), server_default="in_app", nullable=False),
+            )
         if "category" not in notif_cols:
-            op.add_column("notifications", sa.Column("category", sa.String(64), server_default="general", nullable=False))
+            op.add_column(
+                "notifications",
+                sa.Column("category", sa.String(64), server_default="general", nullable=False),
+            )
         if "deadline_id" not in notif_cols:
             op.add_column("notifications", sa.Column("deadline_id", sa.String(64), nullable=True))
         if "case_id" not in notif_cols:
@@ -168,9 +230,15 @@ def upgrade() -> None:
         if "sent_at" not in notif_cols:
             op.add_column("notifications", sa.Column("sent_at", sa.String(64), nullable=True))
         if "status" not in notif_cols:
-            op.add_column("notifications", sa.Column("status", sa.String(32), server_default="pending", nullable=False))
+            op.add_column(
+                "notifications",
+                sa.Column("status", sa.String(32), server_default="pending", nullable=False),
+            )
         if "retry_count" not in notif_cols:
-            op.add_column("notifications", sa.Column("retry_count", sa.Integer(), server_default=sa.text("0"), nullable=False))
+            op.add_column(
+                "notifications",
+                sa.Column("retry_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
+            )
         if "error_message" not in notif_cols:
             op.add_column("notifications", sa.Column("error_message", sa.Text(), nullable=True))
 
@@ -181,7 +249,9 @@ def upgrade() -> None:
             sa.Column("user_id", sa.String(64), primary_key=True),
             sa.Column("enable_in_app", sa.Boolean(), server_default=sa.text("1"), nullable=False),
             sa.Column("enable_sms", sa.Boolean(), server_default=sa.text("0"), nullable=False),
-            sa.Column("quiet_hours_enabled", sa.Boolean(), server_default=sa.text("1"), nullable=False),
+            sa.Column(
+                "quiet_hours_enabled", sa.Boolean(), server_default=sa.text("1"), nullable=False
+            ),
             sa.Column("quiet_hours_start", sa.String(8), server_default="22:00", nullable=False),
             sa.Column("quiet_hours_end", sa.String(8), server_default="07:00", nullable=False),
             sa.Column("language", sa.String(8), server_default="bn", nullable=False),

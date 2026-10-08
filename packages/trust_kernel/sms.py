@@ -27,6 +27,10 @@ class SmsProvider(ABC):
         pass
 
 
+def is_dev_mode() -> bool:
+    return os.getenv("DEV_MODE", "false").lower() in ("true", "1", "yes")
+
+
 class MockSmsProvider(SmsProvider):
     """
     Deterministic In-Memory SMS Provider.
@@ -37,6 +41,10 @@ class MockSmsProvider(SmsProvider):
         self._sent_messages: list[dict[str, Any]] = []
 
     def send_otp(self, phone: str, code: str, lang: str = "bn") -> bool:
+        if not is_dev_mode():
+            raise RuntimeError(
+                "CRITICAL SECURITY: MockSmsProvider is refused in production (DEV_MODE=false). Real SMS provider required."
+            )
         msg = (
             f"আপনার আইন-AI ভেরিফিকেশন কোড: {code} (মেয়াদ ৫ মিনিট)"
             if lang == "bn"
@@ -50,10 +58,14 @@ class MockSmsProvider(SmsProvider):
             "lang": lang,
         }
         self._sent_messages.append(record)
-        logger.info(f"[MockSMS] OTP sent to {phone[:4]}***{phone[-2:]}: {code}")
+        logger.info(f"[MockSMS] OTP sent to {phone[:4]}***{phone[-2:]}: ******")
         return True
 
     def send_sms(self, phone: str, message: str) -> bool:
+        if not is_dev_mode():
+            raise RuntimeError(
+                "CRITICAL SECURITY: MockSmsProvider is refused in production (DEV_MODE=false). Real SMS provider required."
+            )
         record = {
             "type": "transactional",
             "phone": phone,
@@ -87,16 +99,27 @@ class RealSmsAdapterSlot(SmsProvider):
         sender_id: str | None = None,
         api_url: str | None = None,
     ):
-        self.api_key = (
-            api_key or os.getenv("SMS_GATEWAY_API_KEY") or os.getenv("SSL_WIRELESS_API_KEY")
+        self._api_key = (
+            api_key or os.getenv("SMS_GATEWAY_API_KEY") or os.getenv("SSL_WIRELESS_API_KEY") or os.getenv("REAL_SMS_API_KEY")
         )
-        self.sender_id = (
-            sender_id or os.getenv("SMS_GATEWAY_SENDER_ID") or os.getenv("SSL_WIRELESS_SID")
+        self._sender_id = (
+            sender_id or os.getenv("SMS_GATEWAY_SENDER_ID") or os.getenv("SSL_WIRELESS_SID") or os.getenv("REAL_SMS_SENDER_ID")
         )
         self.api_url = api_url or os.getenv(
             "SMS_GATEWAY_URL", "https://api.sms-gateway.local/v1/send"
         )
-        self.is_configured = bool(self.api_key and self.sender_id)
+
+    @property
+    def api_key(self) -> str | None:
+        return self._api_key or os.getenv("SMS_GATEWAY_API_KEY") or os.getenv("SSL_WIRELESS_API_KEY") or os.getenv("REAL_SMS_API_KEY")
+
+    @property
+    def sender_id(self) -> str | None:
+        return self._sender_id or os.getenv("SMS_GATEWAY_SENDER_ID") or os.getenv("SSL_WIRELESS_SID") or os.getenv("REAL_SMS_SENDER_ID")
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.api_key and self.sender_id)
 
     def send_otp(self, phone: str, code: str, lang: str = "bn") -> bool:
         if not self.is_configured:
@@ -127,11 +150,17 @@ _real_slot_instance = RealSmsAdapterSlot()
 
 
 def get_sms_provider() -> SmsProvider:
-    """Factory selecting provider based on SMS_PROVIDER env variable. Default is MockSmsProvider (Q3 open)."""
-    provider_type = os.getenv("SMS_PROVIDER", "mock").lower()
+    """Factory selecting provider based on SMS_PROVIDER env variable. Fails closed in production (DEV_MODE=false)."""
+    provider_type = os.getenv("SMS_PROVIDER", "").lower()
     if (
         provider_type in ("real", "adapter", "production", "sslwireless")
-        and _real_slot_instance.is_configured
+        or (not is_dev_mode() and _real_slot_instance.is_configured and provider_type != "mock")
     ):
-        return _real_slot_instance
+        if _real_slot_instance.is_configured:
+            return _real_slot_instance
+    if not is_dev_mode():
+        raise RuntimeError(
+            "CRITICAL SECURITY: In production (DEV_MODE=false), a valid real SMS provider must be configured. MockSmsProvider is refused."
+        )
     return _mock_instance
+

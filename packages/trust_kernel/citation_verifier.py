@@ -162,7 +162,9 @@ class CitationVerifier:
                 status="UNVERIFIED",
                 match_score=0.0,
                 verified_span=None,
-                discrepancies=[f"Source version status is '{version_record.get('status')}', not approved."],
+                discrepancies=[
+                    f"Source version status is '{version_record.get('status')}', not approved."
+                ],
                 is_verbatim=False,
                 as_of_valid=False,
             )
@@ -193,7 +195,9 @@ class CitationVerifier:
                     status="SUPERSEDED",
                     match_score=0.0,
                     verified_span=None,
-                    discrepancies=[f"Version superseded on {eff_to}; as-of date {as_of_date} is later."],
+                    discrepancies=[
+                        f"Version superseded on {eff_to}; as-of date {as_of_date} is later."
+                    ],
                     is_verbatim=False,
                     as_of_valid=False,
                 )
@@ -215,7 +219,9 @@ class CitationVerifier:
                         status="UNVERIFIED",
                         match_score=0.0,
                         verified_span=None,
-                        discrepancies=[f"Passage for section '{section_ref}' does not exist in version '{source_version_id}'."],
+                        discrepancies=[
+                            f"Passage for section '{section_ref}' does not exist in version '{source_version_id}'."
+                        ],
                         is_verbatim=False,
                         as_of_valid=True,
                     )
@@ -263,7 +269,7 @@ class CitationVerifier:
         def tokenize_words(text: str) -> set[str]:
             tokens = set()
             for w in text.split():
-                clean = w.strip("।,.:;!?\'\"()[]{}–-— \t\r\n")
+                clean = w.strip("।,.:;!?'\"()[]{}–-— \t\r\n")
                 if clean:
                     tokens.add(clean)
             return tokens
@@ -309,7 +315,9 @@ class CitationVerifier:
                     status="CONTRADICTED",
                     match_score=0.0,
                     verified_span=None,
-                    discrepancies=[f"Semantic contradiction: claim contains '{w1}' whereas statutory passage contains '{w2}'."],
+                    discrepancies=[
+                        f"Semantic contradiction: claim contains '{w1}' whereas statutory passage contains '{w2}'."
+                    ],
                     is_verbatim=False,
                     as_of_valid=True,
                 )
@@ -334,7 +342,9 @@ class CitationVerifier:
                     status="CONTRADICTED",
                     match_score=0.0,
                     verified_span=None,
-                    discrepancies=["Negation mismatch: claim dropped the negation present in the statutory context."],
+                    discrepancies=[
+                        "Negation mismatch: claim dropped the negation present in the statutory context."
+                    ],
                     is_verbatim=False,
                     as_of_valid=True,
                 )
@@ -362,7 +372,9 @@ class CitationVerifier:
                     status="CONTRADICTED",
                     match_score=0.0,
                     verified_span=None,
-                    discrepancies=["Negation mismatch: claim dropped the negation present in the statutory context."],
+                    discrepancies=[
+                        "Negation mismatch: claim dropped the negation present in the statutory context."
+                    ],
                     is_verbatim=False,
                     as_of_valid=True,
                 )
@@ -403,7 +415,9 @@ class CitationVerifier:
                 status="CONTRADICTED",
                 match_score=0.0,
                 verified_span=matched_span,
-                discrepancies=["Negation mismatch: negation was added or removed between claim and statutory passage."],
+                discrepancies=[
+                    "Negation mismatch: negation was added or removed between claim and statutory passage."
+                ],
                 is_verbatim=False,
                 as_of_valid=True,
             )
@@ -419,7 +433,9 @@ class CitationVerifier:
             )
         elif score >= 0.35:
             status = "CONTRADICTED"
-            discrepancies.append(f"Significant difference: only {int(score * 100)}% span overlap with cited text.")
+            discrepancies.append(
+                f"Significant difference: only {int(score * 100)}% span overlap with cited text."
+            )
         else:
             status = "UNVERIFIED"
             discrepancies.append("Claim text was not found in the referenced statutory passage.")

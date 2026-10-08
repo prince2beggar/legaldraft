@@ -12,6 +12,7 @@ from app.models.audit import AuditLog
 from app.services.training_service import training_service
 from services.api.app.routers.auth import get_current_user
 
+
 def require_admin_or_reviewer(current_user: dict = Depends(get_current_user)) -> dict:
     role = current_user.get("role", "citizen")
     if role not in ("admin", "reviewer"):
@@ -21,11 +22,14 @@ def require_admin_or_reviewer(current_user: dict = Depends(get_current_user)) ->
         )
     return current_user
 
+
 router = APIRouter(dependencies=[Depends(require_admin_or_reviewer)])
+
 
 class NasrinIngestRequest(BaseModel):
     chapter_num: Optional[int] = None
     ingest_all: bool = False
+
 
 @router.get("/stats")
 def get_admin_dashboard_stats(db: Session = Depends(get_db)):
@@ -43,23 +47,41 @@ def get_admin_dashboard_stats(db: Session = Depends(get_db)):
         "ingested_documents_count": db.query(IngestedDocument).count(),
         "ingested_lessons_count": db.query(IngestedLesson).count(),
         "active_templates": [
-            {"code": "BD_COMMERCIAL_LEASE", "name": "Commercial Lease Agreement (বাণিজ্যিক দোকান/স্পেস চুক্তি)"},
-            {"code": "BD_EMPLOYMENT_AGREEMENT", "name": "Employment Agreement (বাংলাদেশ শ্রম আইন অনুযায়ী চুক্তি)"},
-            {"code": "BD_LEGAL_NOTICE_NI_ACT", "name": "Section 138 NI Act Demand Notice (চেক ডিজঅনার নোটিশ)"}
-        ]
+            {
+                "code": "BD_COMMERCIAL_LEASE",
+                "name": "Commercial Lease Agreement (বাণিজ্যিক দোকান/স্পেস চুক্তি)",
+            },
+            {
+                "code": "BD_EMPLOYMENT_AGREEMENT",
+                "name": "Employment Agreement (বাংলাদেশ শ্রম আইন অনুযায়ী চুক্তি)",
+            },
+            {
+                "code": "BD_LEGAL_NOTICE_NI_ACT",
+                "name": "Section 138 NI Act Demand Notice (চেক ডিজঅনার নোটিশ)",
+            },
+        ],
     }
 
-@router.get("/learning")
+
+def require_dev_mode():
+    from packages.trust_kernel.auth import is_dev_mode
+
+    if not is_dev_mode():
+        raise HTTPException(status_code=404, detail="Not Found")
+
+
+@router.get("/learning", dependencies=[Depends(require_dev_mode)])
 def get_learning_status(db: Session = Depends(get_db)):
     """Returns the state of user-provided learning materials, chapters, and ingested books."""
     return training_service.get_learning_repository_status(db)
 
-@router.post("/ingest-nasrin-book")
+
+@router.post("/ingest-nasrin-book", dependencies=[Depends(require_dev_mode)])
 def ingest_nasrin_book(
     req: Optional[NasrinIngestRequest] = None,
     chapter_num: Optional[int] = None,
     ingest_all: bool = False,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Triggers ingestion and knowledge extraction from Dr. Syeda Nasrin's 889-page book.
@@ -67,18 +89,17 @@ def ingest_nasrin_book(
     If ingest_all is True or no chapter is specified, ingests all 21 chapters across the entire book.
     """
     target_all = (req.ingest_all if req else False) or ingest_all
-    target_ch = (req.chapter_num if req and req.chapter_num is not None else chapter_num)
+    target_ch = req.chapter_num if req and req.chapter_num is not None else chapter_num
 
     if target_ch is not None and not target_all:
         return training_service.ingest_nasrin_chapter(db, target_ch)
     else:
         return training_service.ingest_full_nasrin_book(db)
 
-@router.post("/ingest-file")
+
+@router.post("/ingest-file", dependencies=[Depends(require_dev_mode)])
 async def ingest_custom_file(
-    file: UploadFile = File(...),
-    title: Optional[str] = Form(None),
-    db: Session = Depends(get_db)
+    file: UploadFile = File(...), title: Optional[str] = Form(None), db: Session = Depends(get_db)
 ):
     """
     Accepts arbitrary user-uploaded legal files (PDF, DOCX, TXT),
@@ -92,27 +113,29 @@ async def ingest_custom_file(
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
     return training_service.ingest_uploaded_file(db, content, file.filename, title)
 
-@router.get("/ingested-documents")
+
+@router.get("/ingested-documents", dependencies=[Depends(require_dev_mode)])
 def list_ingested_documents(db: Session = Depends(get_db)):
     """Lists all ingested documents in the database with their lesson count."""
     return training_service.get_all_ingested_documents(db)
 
-@router.get("/ingested-documents/{doc_id}/lessons")
+
+@router.get("/ingested-documents/{doc_id}/lessons", dependencies=[Depends(require_dev_mode)])
 def get_document_lessons(
-    doc_id: str,
-    chapter_num: Optional[int] = Query(None),
-    db: Session = Depends(get_db)
+    doc_id: str, chapter_num: Optional[int] = Query(None), db: Session = Depends(get_db)
 ):
     """Returns lessons, extracted principles, and model clauses for an ingested document."""
     return training_service.get_document_lessons(db, doc_id, chapter_num)
 
-@router.delete("/ingested-documents/{doc_id}")
+
+@router.delete("/ingested-documents/{doc_id}", dependencies=[Depends(require_dev_mode)])
 def delete_ingested_document(doc_id: str, db: Session = Depends(get_db)):
     """Deletes an ingested document and its lessons."""
     res = training_service.delete_ingested_document(db, doc_id)
     if "error" in res:
         raise HTTPException(status_code=404, detail=res["error"])
     return res
+
 
 @router.get("/feedback-queue")
 def list_feedback_queue(db: Session = Depends(get_db)):
@@ -125,10 +148,11 @@ def list_feedback_queue(db: Session = Depends(get_db)):
             "rating": i.rating,
             "category": i.feedback_category,
             "reviewer_reasoning": i.reviewer_reasoning,
-            "created_at": i.created_at.isoformat()
+            "created_at": i.created_at.isoformat(),
         }
         for i in items
     ]
+
 
 @router.get("/audit-logs")
 def list_audit_logs(db: Session = Depends(get_db)):
@@ -140,8 +164,7 @@ def list_audit_logs(db: Session = Depends(get_db)):
             "action": l.action,
             "resource_type": l.resource_type,
             "resource_id": l.resource_id,
-            "timestamp": l.timestamp.isoformat()
+            "timestamp": l.timestamp.isoformat(),
         }
         for l in logs
     ]
-

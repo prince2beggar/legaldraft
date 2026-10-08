@@ -8,7 +8,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 
-from packages.trust_kernel.auth import AuthException, auth_service
+from packages.trust_kernel.auth import AuthException, auth_service, is_dev_mode
 
 router = APIRouter(tags=["Authentication & Account (M01)"])
 
@@ -49,6 +49,10 @@ class UpdateProfilePayload(BaseModel):
     name: str | None = None
     preferred_lang: str | None = None
     numeral_style: str | None = None
+
+
+class DemoLoginPayload(BaseModel):
+    role: str = "citizen"
 
 
 # --- Auth Dependency ---
@@ -106,7 +110,7 @@ def get_current_user_optional(
 
 
 @router.post("/auth/otp/request", status_code=status.HTTP_200_OK)
-def request_otp(payload: OtpRequestPayload, request: Request):
+def request_otp(payload: OtpRequestPayload, request: Request, response: Response):
     ip = request.client.host if request.client else "127.0.0.1"
     try:
         result = auth_service.request_otp(
@@ -116,9 +120,92 @@ def request_otp(payload: OtpRequestPayload, request: Request):
             device_label=payload.device_label,
             lang=payload.lang,
         )
+        if is_dev_mode():
+            response.headers["X-Dev-Mode-Warning"] = (
+                "Development mode active: OTP code exposed in response"
+            )
         return result
     except AuthException as e:
         raise HTTPException(status_code=e.status_code, detail=e.message) from e
+
+
+@router.post("/auth/demo-login", status_code=status.HTTP_200_OK)
+def demo_login(payload: DemoLoginPayload, request: Request, response: Response):
+    """
+    Development-only 1-click login endpoint (Sprint S7 E5).
+    Strictly returns 404 when DEV_MODE is false or unset.
+    """
+    if not is_dev_mode():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Demo login endpoint disabled in production.",
+        )
+
+    import uuid
+    from datetime import datetime, timedelta, timezone
+
+    from packages.trust_kernel.auth import TokenService
+    from packages.trust_kernel.db import db_manager
+
+    phone = "01700000001" if payload.role == "admin" else "01711223344"
+    name = "সিস্টেম অ্যাডমিন" if payload.role == "admin" else "এডভোকেট ডেমো ইউজার"
+    role = "admin" if payload.role == "admin" else "citizen"
+
+    now = datetime.now(timezone.utc)
+    user_id = auth_service._users_by_phone.get(phone)
+    if not user_id:
+        user_id = f"demo-{payload.role}-{uuid.uuid4().hex[:6]}"
+        user = {
+            "id": user_id,
+            "phone": phone,
+            "name": name,
+            "role": role,
+            "roles": [role],
+            "preferred_lang": "bn",
+            "numeral_style": "bn",
+            "status": "active",
+            "is_onboarded": True,
+            "created_at": now.isoformat(),
+            "deleted_at": None,
+        }
+        auth_service._users[user_id] = user
+        auth_service._users_by_phone[phone] = user_id
+        db_manager.save_user(user)
+    else:
+        user = auth_service._users[user_id]
+        user["role"] = role
+        user["roles"] = [role]
+        user["is_onboarded"] = True
+        db_manager.save_user(user)
+
+    dev_id = f"dev-demo-{uuid.uuid4().hex[:6]}"
+    access_payload = {
+        "sub": user_id,
+        "phone": phone,
+        "device_id": dev_id,
+        "role": role,
+        "roles": [role],
+        "type": "access",
+        "exp": int((now + timedelta(hours=8)).timestamp()),
+    }
+    access_token = TokenService.encode_token(access_payload)
+
+    response.set_cookie(
+        key="ain_ai_token",
+        value=access_token,
+        httponly=False,
+        samesite="lax",
+        path="/",
+        max_age=86400,
+    )
+    response.headers["X-Dev-Mode-Warning"] = "Development mode active: demo-login session issued"
+    return {
+        "status": "success",
+        "access_token": access_token,
+        "token_type": "bearer",
+        "role": payload.role,
+        "user_id": user_id,
+    }
 
 
 @router.post("/auth/otp/verify", status_code=status.HTTP_200_OK)

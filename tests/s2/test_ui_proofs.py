@@ -73,9 +73,9 @@ def test_ui_proof_minimum_computed_font_size_16px_on_citizen_screens():
         content = page_path.read_text(encoding="utf-8")
 
         # Must explicitly declare 16px body font size or 1rem root
-        assert "font-size: 16px" in content or "font-size: 1rem" in content or "text-base" in content, (
-            f"{page_name} must specify font-size: 16px on body for citizen accessibility."
-        )
+        assert (
+            "font-size: 16px" in content or "font-size: 1rem" in content or "text-base" in content
+        ), f"{page_name} must specify font-size: 16px on body for citizen accessibility."
 
 
 def test_ui_proof_no_developer_words_on_citizen_visible_pages():
@@ -109,8 +109,12 @@ def test_ui_proof_bundled_noto_sans_bengali_font_present_and_declared():
     bold_font = fonts_dir / "NotoSansBengali-Bold.ttf"
     fonts_css = STATIC_DIR / "fonts.css"
 
-    assert regular_font.exists() and regular_font.stat().st_size > 50000, "NotoSansBengali-Regular.ttf must be bundled locally"
-    assert bold_font.exists() and bold_font.stat().st_size > 50000, "NotoSansBengali-Bold.ttf must be bundled locally"
+    assert regular_font.exists() and regular_font.stat().st_size > 50000, (
+        "NotoSansBengali-Regular.ttf must be bundled locally"
+    )
+    assert bold_font.exists() and bold_font.stat().st_size > 50000, (
+        "NotoSansBengali-Bold.ttf must be bundled locally"
+    )
     assert fonts_css.exists(), "fonts.css must exist"
 
     css_content = fonts_css.read_text(encoding="utf-8")

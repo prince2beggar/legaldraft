@@ -19,25 +19,27 @@ from packages.trust_kernel.source_registry import SourceRegistryService
 def mock_registry():
     registry = SourceRegistryService()
     # Ensure test source exists
-    source_id = registry.create_source({
-        "title": "বাড়িভাড়া নিয়ন্ত্রণ আইন ১৯৯১",
-        "title_bn": "বাড়িভাড়া নিয়ন্ত্রণ আইন ১৯৯১",
-        "source_type": "statute",
-        "authority": "সংসদ",
-        "source_label": "FAKE_TEST_DATA",
-    })
+    source_id = registry.create_source(
+        {
+            "title": "বাড়িভাড়া নিয়ন্ত্রণ আইন ১৯৯১",
+            "title_bn": "বাড়িভাড়া নিয়ন্ত্রণ আইন ১৯৯১",
+            "source_type": "statute",
+            "authority": "সংসদ",
+            "source_label": "FAKE_TEST_DATA",
+        }
+    )
     v1_id = registry.add_version(
         source_id=source_id,
         file_content="ধারা ৭: কোনো ব্যক্তি বাড়িভাড়া বাবদ এক মাসের ভাড়ার অধিক জামানত দাবি করতে পারবেন না।",
         effective_from="1991-01-01",
         effective_to="2020-12-31",
         version_label="1.0",
-        uploader_id="usr-uploader-1"
+        uploader_id="usr-uploader-1",
     )
     registry.approve(
         version_id=v1_id,
         reviewer_id="usr-reviewer-2",
-        approval_notes="Approved for test verification."
+        approval_notes="Approved for test verification.",
     )
 
     # v2 superseding v1 from 2021-01-01 onwards
@@ -47,12 +49,10 @@ def mock_registry():
         effective_from="2021-01-01",
         effective_to=None,
         version_label="2.0",
-        uploader_id="usr-uploader-1"
+        uploader_id="usr-uploader-1",
     )
     registry.approve(
-        version_id=v2_id,
-        reviewer_id="usr-reviewer-2",
-        approval_notes="Approved amendment."
+        version_id=v2_id, reviewer_id="usr-reviewer-2", approval_notes="Approved amendment."
     )
 
     # Draft unapproved version
@@ -61,7 +61,7 @@ def mock_registry():
         file_content="ধারা ৭: খসড়া প্রস্তাবনা",
         effective_from="2027-01-01",
         version_label="3.0-draft",
-        uploader_id="usr-uploader-1"
+        uploader_id="usr-uploader-1",
     )
 
     return {
@@ -69,7 +69,7 @@ def mock_registry():
         "source_id": source_id,
         "v1_id": v1_id,
         "v2_id": v2_id,
-        "v_draft_id": v_draft_id
+        "v_draft_id": v_draft_id,
     }
 
 
@@ -80,7 +80,7 @@ def test_verbatim_citation_match(mock_registry):
         claim_text="কোনো ব্যক্তি বাড়িভাড়া বাবদ দুই মাসের ভাড়ার অধিক জামানত দাবি করতে পারবেন না।",
         source_id=mock_registry["source_id"],
         source_version_id=mock_registry["v2_id"],
-        as_of_date="2026-10-02"
+        as_of_date="2026-10-02",
     )
     assert report.status == "VERIFIED"
     assert report.match_score == 1.0
@@ -95,7 +95,7 @@ def test_normalized_citation_match(mock_registry):
         claim_text="  কোনো  ব্যক্তি  বাড়িভাড়া   বাবদ দুই মাসের ভাড়ার অধিক জামানত দাবি করতে পারবেন না।  ",
         source_id=mock_registry["source_id"],
         source_version_id=mock_registry["v2_id"],
-        as_of_date="2026-10-02"
+        as_of_date="2026-10-02",
     )
     assert report.status == "VERIFIED"
     assert report.match_score >= 0.95
@@ -108,7 +108,7 @@ def test_contradicted_citation_mismatch(mock_registry):
         claim_text="কোনো ব্যক্তি বাড়িভাড়া বাবদ পাঁচ মাসের ভাড়ার জামানত নিতে পারবেন।",
         source_id=mock_registry["source_id"],
         source_version_id=mock_registry["v2_id"],
-        as_of_date="2026-10-02"
+        as_of_date="2026-10-02",
     )
     assert report.status in ("CONTRADICTED", "UNVERIFIED")
     assert report.match_score < 0.85
@@ -120,7 +120,7 @@ def test_negative_draft_unapproved_version_citation_rejected(mock_registry):
     report = verifier.verify(
         claim_text="ধারা ৭: খসড়া প্রস্তাবনা",
         source_id=mock_registry["source_id"],
-        source_version_id=mock_registry["v_draft_id"]
+        source_version_id=mock_registry["v_draft_id"],
     )
     assert report.status == "UNVERIFIED"
     assert report.as_of_valid is False
@@ -134,7 +134,7 @@ def test_negative_superseded_version_citation_rejected_for_as_of_date(mock_regis
         claim_text="কোনো ব্যক্তি বাড়িভাড়া বাবদ এক মাসের ভাড়ার অধিক জামানত দাবি করতে পারবেন না।",
         source_id=mock_registry["source_id"],
         source_version_id=mock_registry["v1_id"],
-        as_of_date="2026-10-02"  # v1 expired on 2020-12-31
+        as_of_date="2026-10-02",  # v1 expired on 2020-12-31
     )
     assert report.status == "SUPERSEDED"
     assert report.as_of_valid is False
@@ -288,5 +288,6 @@ def test_rule_b03_citation_dropped_word_fuzzy_score_not_verified(mock_registry):
     assert rep_dropped.status != "VERIFIED"
     assert rep_dropped.status == "NEEDS_REVIEW"
     assert rep_dropped.match_score >= 0.60
-    assert any("fuzzy" in d.lower() or "human review" in d.lower() for d in rep_dropped.discrepancies)
-
+    assert any(
+        "fuzzy" in d.lower() or "human review" in d.lower() for d in rep_dropped.discrepancies
+    )

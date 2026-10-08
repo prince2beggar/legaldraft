@@ -42,6 +42,7 @@ notification_engine = NotificationEngine()
 # Request Models
 # ---------------------------------------------------------------------------
 
+
 class CreateCaseRequest(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
     case_type: str = Field(default="general")
@@ -114,6 +115,7 @@ class NotificationPreferencesRequest(BaseModel):
 # Cases Endpoints (M06)
 # ---------------------------------------------------------------------------
 
+
 @router.get("/cases")
 def list_cases(current_user: dict[str, Any] = Depends(get_current_user)):
     """Lists cases belonging to authenticated user."""
@@ -121,7 +123,9 @@ def list_cases(current_user: dict[str, Any] = Depends(get_current_user)):
 
 
 @router.post("/cases", status_code=status.HTTP_201_CREATED)
-def create_case(payload: CreateCaseRequest, current_user: dict[str, Any] = Depends(get_current_user)):
+def create_case(
+    payload: CreateCaseRequest, current_user: dict[str, Any] = Depends(get_current_user)
+):
     """Creates a new case folder."""
     case = case_engine.create_case(
         user_id=current_user["id"],
@@ -134,7 +138,9 @@ def create_case(payload: CreateCaseRequest, current_user: dict[str, Any] = Depen
         legacy_matter_id=payload.legacy_matter_id,
         metadata=payload.metadata,
     )
-    return {"case": case}
+    res = dict(case)
+    res["case"] = case
+    return res
 
 
 @router.get("/cases/{case_id}")
@@ -174,7 +180,9 @@ def delete_case(
 ):
     """Deletes a case with explicit document handling ('keep', 'unlink', 'delete')."""
     try:
-        ok = case_engine.delete_case(case_id, current_user["id"], document_action=payload.document_action)
+        ok = case_engine.delete_case(
+            case_id, current_user["id"], document_action=payload.document_action
+        )
         return {"success": ok, "document_action": payload.document_action}
     except LookupError as ex:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(ex))
@@ -209,7 +217,9 @@ def delete_case_party(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     try:
-        ok = case_engine.delete_party(case_id=case_id, user_id=current_user["id"], party_id=party_id)
+        ok = case_engine.delete_party(
+            case_id=case_id, user_id=current_user["id"], party_id=party_id
+        )
         return {"success": ok}
     except PermissionError as ex:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(ex))
@@ -276,7 +286,9 @@ def dismiss_case_fact(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     try:
-        fact = case_engine.dismiss_fact(case_id=case_id, user_id=current_user["id"], fact_id=fact_id)
+        fact = case_engine.dismiss_fact(
+            case_id=case_id, user_id=current_user["id"], fact_id=fact_id
+        )
         return {"fact": fact}
     except PermissionError as ex:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(ex))
@@ -323,7 +335,9 @@ def attach_case_document(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     try:
-        link = case_engine.attach_document(case_id=case_id, user_id=current_user["id"], document_id=payload.document_id)
+        link = case_engine.attach_document(
+            case_id=case_id, user_id=current_user["id"], document_id=payload.document_id
+        )
         return {"document_link": link}
     except PermissionError as ex:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(ex))
@@ -336,7 +350,9 @@ def detach_case_document(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     try:
-        ok = case_engine.detach_document(case_id=case_id, user_id=current_user["id"], document_id=doc_id)
+        ok = case_engine.detach_document(
+            case_id=case_id, user_id=current_user["id"], document_id=doc_id
+        )
         return {"success": ok}
     except PermissionError as ex:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(ex))
@@ -388,6 +404,7 @@ def save_notice_to_case(
 # Home Endpoints (M02)
 # ---------------------------------------------------------------------------
 
+
 @router.get("/home")
 def get_home(current_user: dict[str, Any] = Depends(get_current_user)):
     """Returns aggregated home view data (greeting, ProblemInput, NextActionCard, QuickActions, My Cases, Upcoming)."""
@@ -403,6 +420,7 @@ def get_next_action(current_user: dict[str, Any] = Depends(get_current_user)):
 # ---------------------------------------------------------------------------
 # Notifications Endpoints (M07)
 # ---------------------------------------------------------------------------
+
 
 @router.get("/notifications")
 @router.get("/me/notifications")

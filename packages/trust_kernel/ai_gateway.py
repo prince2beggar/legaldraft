@@ -10,6 +10,7 @@ Provides secure, governed LLM access with:
 7. Persistence in ai_outputs and claim_links tables.
 """
 
+import hashlib
 import json
 import os
 import re
@@ -18,6 +19,7 @@ from typing import Any
 
 import jsonschema
 
+from packages.trust_kernel.audit import audit_service
 from packages.trust_kernel.db import DatabaseManager, db_manager
 
 BN_DIGITS = "০১২৩৪৫৬৭৮৯"
@@ -35,11 +37,13 @@ def to_ascii_digits(val: Any) -> str:
 
 class CostLimitExceededError(ValueError):
     """Raised when token quota or cost limit is exceeded."""
+
     pass
 
 
 class SchemaValidationError(ValueError):
     """Raised when model output fails JSON schema validation."""
+
     pass
 
 
@@ -97,7 +101,9 @@ class FakeLLMProvider:
     def clear_mock_responses(self):
         self.custom_responses.clear()
 
-    def generate(self, system_prompt: str, user_prompt: str, schema: dict[str, Any] | None = None) -> tuple[str, int]:
+    def generate(
+        self, system_prompt: str, user_prompt: str, schema: dict[str, Any] | None = None
+    ) -> tuple[str, int]:
         # Estimate token cost: 1 token ~ 4 chars
         cost_tokens = len(system_prompt + user_prompt) // 4 + 50
 
@@ -113,6 +119,14 @@ class FakeLLMProvider:
         # Check if this is the simpler explanation task
         if schema and "simpler_summary" in schema.get("properties", {}):
             return self._generate_simpler_explanation(user_prompt), cost_tokens
+
+        # Check if this is the intake profile task (M11)
+        if schema and "title_suggestion" in schema.get("properties", {}):
+            return self._generate_intake_profile(user_prompt), cost_tokens
+
+        # Check if this is the drafting helper task (M05)
+        if schema and "rephrased_question" in schema.get("properties", {}):
+            return self._generate_draft_helper(user_prompt), cost_tokens
 
         # Check if this is the case review task
         if schema and "possible_issues" in schema.get("properties", {}):
@@ -140,7 +154,7 @@ class FakeLLMProvider:
             "summary": "[নমুনা আইনি পরামর্শ] উপস্থাপিত তথ্যের ভিত্তিতে আইনি বিশ্লেষণ।",
             "statutory_basis": "বাড়িভাড়া নিয়ন্ত্রণ আইন ১৯৯১",
             "section": "ধারা ৭",
-            "confidence": 0.95
+            "confidence": 0.95,
         }
         return json.dumps(generic, ensure_ascii=False), cost_tokens
 
@@ -148,8 +162,18 @@ class FakeLLMProvider:
         prompt_lower = user_prompt.lower()
 
         # Check edge cases
-        is_blurry = "blurry" in prompt_lower or "অস্পষ্ট" in prompt_lower or len(user_prompt.strip()) < 30
-        is_non_notice = "non_notice" in prompt_lower or "চালান" in user_prompt or ("দলিল" in user_prompt and "নোটিশ" not in user_prompt and "notice" not in prompt_lower)
+        is_blurry = (
+            "blurry" in prompt_lower or "অস্পষ্ট" in prompt_lower or len(user_prompt.strip()) < 30
+        )
+        is_non_notice = (
+            "non_notice" in prompt_lower
+            or "চালান" in user_prompt
+            or (
+                "দলিল" in user_prompt
+                and "নোটিশ" not in user_prompt
+                and "notice" not in prompt_lower
+            )
+        )
         has_handwriting = "handwriting" in prompt_lower or "হাতের লেখা" in user_prompt
         multiple_notices = (
             "multiple_notices" in prompt_lower
@@ -161,7 +185,11 @@ class FakeLLMProvider:
             or "two notices" in prompt_lower
         )
 
-        certainty = "not_sure" if is_blurry else ("check" if has_handwriting or multiple_notices else "clear")
+        certainty = (
+            "not_sure"
+            if is_blurry
+            else ("check" if has_handwriting or multiple_notices else "clear")
+        )
 
         # Determine consequences
         has_explicit_consequence = (
@@ -191,40 +219,62 @@ class FakeLLMProvider:
             rel_val = int(to_ascii_digits(rel_raw))
             rel_bn_val = to_bangla_digits(rel_val)
             matched_span = rel_match.group(0)
-            important_dates.append({
-                "label": "নোটিশে লেখা সময়সীমা",
-                "stated_text": f"নোটিশ প্রাপ্তির {rel_bn_val} দিনের মধ্যে" if "মধ্যে" in matched_span else f"নোটিশ প্রাপ্তির {rel_bn_val} দিন",
-                "stated_date": None,
-                "relative": {
-                    "period_value": rel_val,
-                    "period_unit": "days",
-                    "from_event": "receipt",
-                    "from_text": f"নোটিশ প্রাপ্তির {rel_bn_val} দিন"
-                },
-                "claims": [{"text": matched_span, "span_ref": {"page": 1, "start": 0, "end": 60}}]
-            })
-        elif "১৫ অক্টোবর ২০২৬" in user_prompt or "2026-10-15" in user_prompt or "২০২৬-১০-১৫" in user_prompt:
-            stated_txt = "১৫ অক্টোবর ২০২৬" if ("১৫ অক্টোবর ২০২৬" in user_prompt or "2026-10-15" in user_prompt) else "২০২৬-১০-১৫"
-            important_dates.append({
-                "label": "হাজিরার তারিখ",
-                "stated_text": stated_txt,
-                "stated_date": "2026-10-15",
-                "relative": None,
-                "claims": [{"text": stated_txt, "span_ref": {"page": 1, "start": 0, "end": 40}}]
-            })
+            important_dates.append(
+                {
+                    "label": "নোটিশে লেখা সময়সীমা",
+                    "stated_text": f"নোটিশ প্রাপ্তির {rel_bn_val} দিনের মধ্যে"
+                    if "মধ্যে" in matched_span
+                    else f"নোটিশ প্রাপ্তির {rel_bn_val} দিন",
+                    "stated_date": None,
+                    "relative": {
+                        "period_value": rel_val,
+                        "period_unit": "days",
+                        "from_event": "receipt",
+                        "from_text": f"নোটিশ প্রাপ্তির {rel_bn_val} দিন",
+                    },
+                    "claims": [
+                        {"text": matched_span, "span_ref": {"page": 1, "start": 0, "end": 60}}
+                    ],
+                }
+            )
+        elif (
+            "১৫ অক্টোবর ২০২৬" in user_prompt
+            or "2026-10-15" in user_prompt
+            or "২০২৬-১০-১৫" in user_prompt
+        ):
+            stated_txt = (
+                "১৫ অক্টোবর ২০২৬"
+                if ("১৫ অক্টোবর ২০২৬" in user_prompt or "2026-10-15" in user_prompt)
+                else "২০২৬-১০-১৫"
+            )
+            important_dates.append(
+                {
+                    "label": "হাজিরার তারিখ",
+                    "stated_text": stated_txt,
+                    "stated_date": "2026-10-15",
+                    "relative": None,
+                    "claims": [
+                        {"text": stated_txt, "span_ref": {"page": 1, "start": 0, "end": 40}}
+                    ],
+                }
+            )
         else:
-            important_dates.append({
-                "label": "নোটিশে উল্লেখিত তারিখ",
-                "stated_text": "নোটিশে সুনির্দিষ্ট কোনো সময়সীমা বা তারিখ উল্লেখ নেই",
-                "stated_date": None,
-                "relative": None,
-                "claims": []
-            })
+            important_dates.append(
+                {
+                    "label": "নোটিশে উল্লেখিত তারিখ",
+                    "stated_text": "নোটিশে সুনির্দিষ্ট কোনো সময়সীমা বা তারিখ উল্লেখ নেই",
+                    "stated_date": None,
+                    "relative": None,
+                    "claims": [],
+                }
+            )
 
         if has_explicit_consequence:
             if_ignored = {
                 "text": "নোটিশ অনুযায়ী নির্ধারিত সময়ের মধ্যে পদক্ষেপ না নিলে আপনার বিরুদ্ধে আদালতে মামলা বা আইনি কার্যধারা শুরু করা হতে পারে।",
-                "claims": [{"text": "মামলা দায়ের করা হবে", "span_ref": {"page": 1, "start": 0, "end": 80}}],
+                "claims": [
+                    {"text": "মামলা দায়ের করা হবে", "span_ref": {"page": 1, "start": 0, "end": 80}}
+                ],
                 "stated_in_notice": True,
                 "not_stated": False,
             }
@@ -244,60 +294,74 @@ class FakeLLMProvider:
             "has_handwriting": has_handwriting,
             "multiple_notices_detected": multiple_notices,
             "summary_one_line": "[নমুনা] আইনি দাবি নোটিশ: নির্দিষ্ট সময়ের মধ্যে দাবিকৃত পদক্ষেপ গ্রহণ বা জবাব দাখিল করার নির্দেশ।",
-            "summary_chips": [{"label": "[আইনি নোটিশ]", "section_ref": "আইনি নোটিশ", "passage_id": None}],
+            "summary_chips": [
+                {"label": "[আইনি নোটিশ]", "section_ref": "আইনি নোটিশ", "passage_id": None}
+            ],
             "what_is_this": {
                 "text": "এটি একটি আনুষ্ঠানিক আইনি নোটিশ (Legal Notice)।",
-                "claims": [{"text": "আইনি নোটিশ", "span_ref": {"page": 1, "start": 0, "end": 30}}]
+                "claims": [{"text": "আইনি নোটিশ", "span_ref": {"page": 1, "start": 0, "end": 30}}],
             },
             "sender": {
                 "text": "নোটিশ প্রেরণকারী পক্ষ বা তাদের নিযুক্ত আইনজীবী।",
-                "claims": [{"text": "প্রেরক পক্ষ", "span_ref": {"page": 1, "start": 0, "end": 30}}]
+                "claims": [{"text": "প্রেরক পক্ষ", "span_ref": {"page": 1, "start": 0, "end": 30}}],
             },
             "why_received": {
                 "text": "প্রেরক পক্ষের সাথে কোনো চুক্তি, পাওনা বা আইনি বিরোধের পরিপ্রেক্ষিতে এই নোটিশটি পাঠানো হয়েছে।",
-                "claims": [{"text": "বিরোধের পরিপ্রেক্ষিতে", "span_ref": {"page": 1, "start": 0, "end": 40}}]
+                "claims": [
+                    {"text": "বিরোধের পরিপ্রেক্ষিতে", "span_ref": {"page": 1, "start": 0, "end": 40}}
+                ],
             },
             "what_it_says": [
                 {
                     "text": "প্রেরকের দাবিকৃত দাবি অবিলম্বে বিবেচনা ও সমাধান করার জন্য বলা হয়েছে।",
-                    "claims": [{"text": "দাবি বিবেচনা", "span_ref": {"page": 1, "start": 0, "end": 30}}]
+                    "claims": [
+                        {"text": "দাবি বিবেচনা", "span_ref": {"page": 1, "start": 0, "end": 30}}
+                    ],
                 },
                 {
                     "text": "নির্ধারিত সময়সীমার মধ্যে সন্তোষজনক জবাব প্রদান করতে বলা হয়েছে।",
-                    "claims": [{"text": "জবাব প্রদান", "span_ref": {"page": 1, "start": 0, "end": 30}}]
-                }
+                    "claims": [
+                        {"text": "জবাব প্রদান", "span_ref": {"page": 1, "start": 0, "end": 30}}
+                    ],
+                },
             ],
             "action_required": [
                 {
                     "text": "নোটিশের দাবির সত্যতা যাচাই করে একজন আইনজীবীর মাধ্যমে আনুষ্ঠানিক জবাব দিন।",
                     "claims": [{"text": "জবাব দিন", "span_ref": {"page": 1, "start": 0, "end": 30}}],
-                    "task_suggestion": {"title": "আইনজীবীর মাধ্যমে নোটিশের জবাব দাখিল করুন"}
+                    "task_suggestion": {"title": "আইনজীবীর মাধ্যমে নোটিশের জবাব দাখিল করুন"},
                 },
                 {
                     "text": "নোটিশে দাবিকৃত প্রাসঙ্গিক সকল কাগজপত্র ও প্রমাণাদি সংগ্রহ করুন।",
-                    "claims": [{"text": "কাগজপত্র সংগ্রহ", "span_ref": {"page": 1, "start": 0, "end": 30}}],
-                    "task_suggestion": {"title": "প্রাসঙ্গিক প্রমাণাদি ও রসিদ সংগ্রহ করুন"}
-                }
+                    "claims": [
+                        {"text": "কাগজপত্র সংগ্রহ", "span_ref": {"page": 1, "start": 0, "end": 30}}
+                    ],
+                    "task_suggestion": {"title": "প্রাসঙ্গিক প্রমাণাদি ও রসিদ সংগ্রহ করুন"},
+                },
             ],
             "important_dates": important_dates,
             "documents_needed": [
                 {
                     "text": "প্রেরক পক্ষের সাথে বিগত দিনের চুক্তিপত্র বা লেনদেনের রসিদ।",
-                    "claims": [{"text": "লেনদেনের রসিদ", "span_ref": {"page": 1, "start": 0, "end": 30}}]
+                    "claims": [
+                        {"text": "লেনদেনের রসিদ", "span_ref": {"page": 1, "start": 0, "end": 30}}
+                    ],
                 },
                 {
                     "text": "নোটিশ পৌঁছানোর খাম ও প্রাপ্তি স্বীকারপত্র (A/D কার্ড)।",
-                    "claims": [{"text": "প্রাপ্তি স্বীকারপত্র", "span_ref": {"page": 1, "start": 0, "end": 30}}]
-                }
+                    "claims": [
+                        {"text": "প্রাপ্তি স্বীকারপত্র", "span_ref": {"page": 1, "start": 0, "end": 30}}
+                    ],
+                },
             ],
             "if_ignored": if_ignored,
             "questions_for_lawyer": [
                 "এই নোটিশের কি নির্দিষ্ট মেয়াদের মধ্যে আনুষ্ঠানিক লিখিত জবাব দেওয়া বাধ্যতামূলক?",
                 "প্রেরকের দাবির আইনি ভিত্তি কতটুকু শক্তিশালী?",
-                "আমার কি এই পরিস্থিতিতে আগাম কোনো আইনি পদক্ষেপ বা জিডি করা উচিত?"
+                "আমার কি এই পরিস্থিতিতে আগাম কোনো আইনি পদক্ষেপ বা জিডি করা উচিত?",
             ],
             "not_found": [],
-            "cited_laws_in_notice": []
+            "cited_laws_in_notice": [],
         }
         return json.dumps(resp, ensure_ascii=False)
 
@@ -307,13 +371,13 @@ class FakeLLMProvider:
             "simpler_summary": "[সহজ ভাষায়] আপনাকে একটি আইনি নোটিশ দেওয়া হয়েছে। নির্ধারিত সময়ের মধ্যে এর জবাব দিতে হবে।",
             "simpler_what_it_says": [
                 "অন্য পক্ষ আপনার কাছে পাওনা বা কোনো দাবি করছেন।",
-                "নির্দিষ্ট সময়ের মধ্যে আপনি টাকা পরিশোধ বা লিখিত জবাব না দিলে তারা আদালতে যেতে পারেন।"
+                "নির্দিষ্ট সময়ের মধ্যে আপনি টাকা পরিশোধ বা লিখিত জবাব না দিলে তারা আদালতে যেতে পারেন।",
             ],
             "simpler_actions": [
                 "নোটিশের খাম এবং প্রাপ্তির তারিখ লিখে রাখুন।",
-                "দেরি না করে দ্রুত একজন আইনজীবীর পরামর্শ নিন এবং জবাব দিন।"
+                "দেরি না করে দ্রুত একজন আইনজীবীর পরামর্শ নিন এবং জবাব দিন।",
             ],
-            "simpler_warning": "নোটিশটি অবহেলা করবেন না। সময় পার হয়ে গেলে পরবর্তীতে আপনার অধিকার রক্ষা করা কঠিন হতে পারে।"
+            "simpler_warning": "নোটিশটি অবহেলা করবেন না। সময় পার হয়ে গেলে পরবর্তীতে আপনার অধিকার রক্ষা করা কঠিন হতে পারে।",
         }
         return json.dumps(resp, ensure_ascii=False)
 
@@ -322,37 +386,149 @@ class FakeLLMProvider:
         resp = {
             "possible_issues": [
                 "নোটিশের দাবিকৃত অর্থ ও ব্যাংক হিসাবের বিবরণের মধ্যে মিল যাচাই করা প্রয়োজন।",
-                "নোটিশ প্রাপ্তির নির্দিষ্ট তারিখ ও আইনি জবাবের সময়সীমার বাধ্যবাধকতা।"
+                "নোটিশ প্রাপ্তির নির্দিষ্ট তারিখ ও আইনি জবাবের সময়সীমার বাধ্যবাধকতা।",
             ],
             "missing_information": [
                 "ব্যাংকের চেক ডিজঅনার মেমোর মূল কপি ও তারিখ।",
-                "নোটিশ গ্রহণের আনুষ্ঠানিক পোস্টাল রসিদ বা কুরিয়ার স্লিপ।"
+                "নোটিশ গ্রহণের আনুষ্ঠানিক পোস্টাল রসিদ বা কুরিয়ার স্লিপ।",
             ],
             "required_documents": [
                 "মূল ব্যাংক চেক এবং ব্যাংক রিটার্ন মেমো।",
-                "সংশ্লিষ্ট ব্যবসায়িক চুক্তি, ইনভয়েস বা লেনদেনের রসিদ।"
+                "সংশ্লিষ্ট ব্যবসায়িক চুক্তি, ইনভয়েস বা লেনদেনের রসিদ।",
             ],
             "possible_processes": [
                 {
                     "process_name": "এনআই অ্যাক্ট ১৩৮ ধারার আনুষ্ঠানিক জবাব দাখিল",
                     "statute_ref": "নেগোশিয়েবল ইনস্ট্রুমেন্টস অ্যাক্ট ১৮৮১, ধারা ১৩৮",
-                    "status": "APPROVED"
+                    "status": "APPROVED",
                 },
                 {
                     "process_name": "আইনি বিরোধ নিষ্পত্তিকল্পে আপস-মীমাংসার উদ্যোগ",
                     "statute_ref": "সালিশ আইন ২০০১",
-                    "status": "APPROVED"
-                }
+                    "status": "APPROVED",
+                },
             ],
             "questions_for_lawyer": [
                 "নোটিশের মেয়াদ উত্তীর্ণ হওয়ার পূর্বে জবাব পাঠানো কি বাধ্যতামূলক?",
-                "চেক ডিজঅনারের বিপরীতে কি দেওয়ানি আদালতে কোনো প্রতিকার চাওয়া যায়?"
+                "চেক ডিজঅনারের বিপরীতে কি দেওয়ানি আদালতে কোনো প্রতিকার চাওয়া যায়?",
             ],
             "options_to_discuss": [
                 "অভিজ্ঞ আইনজীবীর মাধ্যমে আনুষ্ঠানিক লিখিত জবাব দাখিল করা।",
-                "ব্যাংকের নথিপত্র ও হিসাব বিবরণী সংগ্রহ করে আইনি অবস্থান প্রস্তুত করা।"
+                "ব্যাংকের নথিপত্র ও হিসাব বিবরণী সংগ্রহ করে আইনি অবস্থান প্রস্তুত করা।",
             ],
-            "ai_disclaimer": "AI বিশ্লেষণ, আইনি পরামর্শ নয়"
+            "ai_disclaimer": "AI বিশ্লেষণ, আইনি পরামর্শ নয়",
+        }
+        return json.dumps(resp, ensure_ascii=False)
+
+    def _generate_intake_profile(self, user_prompt: str) -> str:
+        prompt_lower = user_prompt.lower()
+        if "জমি" in user_prompt or "land" in prompt_lower or "দখল" in user_prompt:
+            ctype = "land_property"
+            title = "জমির মালিকানা ও স্বত্ব সংক্রান্ত বিরোধ"
+        elif "ভাড়া" in user_prompt or "rent" in prompt_lower or "বাড়িওয়ালা" in user_prompt:
+            ctype = "rent_tenancy"
+            title = "বাড়িভাড়া ও উচ্ছেদ সংক্রান্ত আইনি সহায়তা"
+        elif "চুক্তি" in user_prompt or "contract" in prompt_lower:
+            ctype = "contract"
+            title = "চুক্তিভঙ্গ ও ক্ষতিপূরণ সংক্রান্ত বিরোধ"
+        elif (
+            "মারধর" in user_prompt
+            or "হামলা" in user_prompt
+            or "হুমকি" in user_prompt
+            or "assault" in prompt_lower
+        ):
+            ctype = "criminal_complaint"
+            title = "শারীরিক আঘাত ও হুমকির প্রেক্ষিতে আইনি নালিশ"
+        else:
+            ctype = "other"
+            title = "নাগরিক আইনি সহায়তা আবেদন"
+
+        # Ground facts from user's actual intake text
+        narrative_snippet = ""
+        try:
+            if "User Intake Answers:\n" in user_prompt:
+                ans_str = user_prompt.split("User Intake Answers:\n", 1)[1].split(
+                    "\nTriage Chips:", 1
+                )[0]
+                ans_dict = json.loads(ans_str)
+                for k in ["what_happened", "narrative", "where_happened", "who_involved"]:
+                    v = ans_dict.get(k)
+                    if v and isinstance(v, str) and v.strip():
+                        narrative_snippet = v.strip()
+                        break
+        except Exception:
+            pass
+
+        if not narrative_snippet:
+            for line in user_prompt.splitlines():
+                if len(line.strip()) > 10 and not line.startswith(
+                    ("User Intake Answers", "Triage Chips", "Urgency")
+                ):
+                    narrative_snippet = line.strip()
+                    break
+
+        if narrative_snippet:
+            fact_text = narrative_snippet[:100]
+            facts_list = [{"text": fact_text, "span_in_user_text": [0, len(fact_text)]}]
+        else:
+            facts_list = []
+
+        resp = {
+            "case_type": ctype,
+            "title_suggestion": title,
+            "parties": [
+                {"name": "আবেদনকারী নাগরিক", "role": "বাদী / আবেদনকারী", "org": ""},
+                {"name": "বিপক্ষ ব্যক্তি বা প্রতিষ্ঠান", "role": "বিবাদী", "org": ""},
+            ],
+            "dates": [
+                {
+                    "date": "2026-10-01",
+                    "precision": "day",
+                    "what": "ঘটনার প্রাথমিক সূচনা",
+                    "from_user_text": True,
+                }
+            ],
+            "facts": facts_list,
+            "documents_mentioned": ["জাতীয় পরিচয়পত্র", "প্রাসঙ্গিক প্রমাণাদি"],
+            "possible_issues": [
+                {
+                    "text": "ঘটনার সত্যতা ও প্রাসঙ্গিক কাগজপত্রের আইনি বৈধতা যাচাই।",
+                    "kind": "research_suggestion",
+                }
+            ],
+            "missing_information": ["ঘটনার প্রত্যক্ষদর্শীদের বিবরণ", "আনুষ্ঠানিক লিখিত প্রমাণাদি"],
+            "user_objective": "আইনসঙ্গত উপায়ে বিরোধ নিষ্পত্তি ও প্রতিকার লাভ।",
+            "clarifying_questions": ["এই বিষয়ে কি ইতিমধ্যে থানায় কোনো জিডি বা অভিযোগ করা হয়েছে?"],
+            "urgency_signals": [],
+        }
+        return json.dumps(resp, ensure_ascii=False)
+
+    def _generate_draft_helper(self, user_prompt: str) -> str:
+        q_match = re.search(r"Question Text:\s*(.+)", user_prompt)
+        q_text = q_match.group(1).strip() if q_match else "প্রশ্নের বিবরণ"
+
+        c_match = re.search(r"Approved Optional Clause IDs:\s*(.+)", user_prompt)
+        approved_ids: list[str] = []
+        if c_match:
+            raw_ids = c_match.group(1).strip()
+            approved_ids = [i.strip(" '\"[]") for i in raw_ids.split(",") if i.strip(" '\"[]")]
+
+        t_match = re.search(r"User Query / Term:\s*(.+)", user_prompt)
+        term_text = t_match.group(1).strip() if t_match else ""
+
+        rephrased = f"সহজ বাংলায়: {q_text} (দয়া করে সঠিক তথ্য প্রদান করুন)।"
+        suggested_ids = [approved_ids[0]] if approved_ids else []
+
+        explanation: dict[str, Any] = {
+            "term": term_text or "আইনি পরিভাষা",
+            "explanation_bn": "চুক্তির শর্তাবলী স্পষ্টভাবে পালনের আইনি বাধ্যবাধকতা রয়েছে।",
+            "source_chip": "The Contract Act, 1872",
+        }
+
+        resp = {
+            "rephrased_question": rephrased,
+            "suggested_clause_ids": suggested_ids,
+            "term_explanation": explanation,
         }
         return json.dumps(resp, ensure_ascii=False)
 
@@ -367,14 +543,18 @@ class RealLlmAdapterSlot:
         self.enabled = os.environ.get("ENABLE_REAL_LLM", "false").lower() in ("true", "1", "yes")
         self.api_key = os.environ.get("REAL_LLM_API_KEY")
 
-    def generate(self, system_prompt: str, user_prompt: str, schema: dict[str, Any] | None = None) -> tuple[str, int]:
+    def generate(
+        self, system_prompt: str, user_prompt: str, schema: dict[str, Any] | None = None
+    ) -> tuple[str, int]:
         if not self.enabled or not self.api_key:
             raise RuntimeError(
                 "RealLlmAdapterSlot is disabled or missing REAL_LLM_API_KEY. "
                 "Falling back to configured secondary or test provider."
             )
         # Placeholder for upstream API call when configured
-        raise NotImplementedError("Real upstream LLM calls are disabled in test/offline environment.")
+        raise NotImplementedError(
+            "Real upstream LLM calls are disabled in test/offline environment."
+        )
 
 
 class AIGateway:
@@ -401,10 +581,10 @@ class AIGateway:
                         "summary": {"type": "string"},
                         "statutory_basis": {"type": "string"},
                         "section": {"type": "string"},
-                        "confidence": {"type": "number"}
+                        "confidence": {"type": "number"},
                     },
-                    "required": ["summary", "statutory_basis"]
-                }
+                    "required": ["summary", "statutory_basis"],
+                },
             },
             {
                 "id": "clause_summarizer.v1",
@@ -416,10 +596,10 @@ class AIGateway:
                     "type": "object",
                     "properties": {
                         "plain_explanation_bn": {"type": "string"},
-                        "key_rights": {"type": "array"}
+                        "key_rights": {"type": "array"},
                     },
-                    "required": ["plain_explanation_bn"]
-                }
+                    "required": ["plain_explanation_bn"],
+                },
             },
             {
                 "id": "notice.explain.v1",
@@ -443,9 +623,21 @@ class AIGateway:
                         "multiple_notices_detected": {"type": "boolean"},
                         "summary_one_line": {"type": "string"},
                         "summary_chips": {"type": "array"},
-                        "what_is_this": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]},
-                        "sender": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]},
-                        "why_received": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]},
+                        "what_is_this": {
+                            "type": "object",
+                            "properties": {"text": {"type": "string"}},
+                            "required": ["text"],
+                        },
+                        "sender": {
+                            "type": "object",
+                            "properties": {"text": {"type": "string"}},
+                            "required": ["text"],
+                        },
+                        "why_received": {
+                            "type": "object",
+                            "properties": {"text": {"type": "string"}},
+                            "required": ["text"],
+                        },
                         "what_it_says": {"type": "array"},
                         "action_required": {"type": "array"},
                         "important_dates": {"type": "array"},
@@ -453,7 +645,7 @@ class AIGateway:
                         "if_ignored": {"type": "object"},
                         "questions_for_lawyer": {"type": "array"},
                         "not_found": {"type": "array"},
-                        "cited_laws_in_notice": {"type": "array"}
+                        "cited_laws_in_notice": {"type": "array"},
                     },
                     "required": [
                         "language",
@@ -466,9 +658,9 @@ class AIGateway:
                         "action_required",
                         "important_dates",
                         "documents_needed",
-                        "questions_for_lawyer"
-                    ]
-                }
+                        "questions_for_lawyer",
+                    ],
+                },
             },
             {
                 "id": "notice.explain_simpler.v1",
@@ -486,10 +678,15 @@ class AIGateway:
                         "simpler_summary": {"type": "string"},
                         "simpler_what_it_says": {"type": "array"},
                         "simpler_actions": {"type": "array"},
-                        "simpler_warning": {"type": "string"}
+                        "simpler_warning": {"type": "string"},
                     },
-                    "required": ["language", "simpler_summary", "simpler_what_it_says", "simpler_actions"]
-                }
+                    "required": [
+                        "language",
+                        "simpler_summary",
+                        "simpler_what_it_says",
+                        "simpler_actions",
+                    ],
+                },
             },
             {
                 "id": "case.review.v1",
@@ -512,7 +709,7 @@ class AIGateway:
                         "possible_processes": {"type": "array"},
                         "questions_for_lawyer": {"type": "array"},
                         "options_to_discuss": {"type": "array"},
-                        "ai_disclaimer": {"type": "string"}
+                        "ai_disclaimer": {"type": "string"},
                     },
                     "required": [
                         "possible_issues",
@@ -521,10 +718,87 @@ class AIGateway:
                         "possible_processes",
                         "questions_for_lawyer",
                         "options_to_discuss",
-                        "ai_disclaimer"
-                    ]
-                }
-            }
+                        "ai_disclaimer",
+                    ],
+                },
+            },
+            {
+                "id": "intake.profile.v1",
+                "name": "Citizen Intake & Triage Case Profiler (M11)",
+                "version": "1.0.0",
+                "system_prompt": (
+                    "You are the Bangladesh Legal Intake and Case Profiling Agent (AIN-AI Module M11). "
+                    "Extract structured facts, parties, dates, and issues from the user's answers. "
+                    "Rules: do not infer facts the user did not state; possible_issues are labelled research suggestions; "
+                    "no legal conclusions; no outcome statements or predictions. Output strict JSON."
+                ),
+                "user_template": "User Intake Answers:\n{answers_json}\nTriage Chips: {triage_chips}\nUrgency: {urgency}",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "case_type": {"type": "string"},
+                        "title_suggestion": {"type": "string"},
+                        "parties": {"type": "array"},
+                        "dates": {"type": "array"},
+                        "facts": {"type": "array"},
+                        "documents_mentioned": {"type": "array"},
+                        "possible_issues": {"type": "array"},
+                        "missing_information": {"type": "array"},
+                        "user_objective": {"type": "string"},
+                        "clarifying_questions": {"type": "array"},
+                        "urgency_signals": {"type": "array"},
+                    },
+                    "required": [
+                        "case_type",
+                        "title_suggestion",
+                        "parties",
+                        "dates",
+                        "facts",
+                        "documents_mentioned",
+                        "possible_issues",
+                        "missing_information",
+                        "user_objective",
+                        "clarifying_questions",
+                    ],
+                },
+            },
+            {
+                "id": "draft.helper.v1",
+                "name": "Drafting Question & Clause Helper (M05)",
+                "version": "1.0.0",
+                "system_prompt": (
+                    "You are the Bangladesh Legal Drafting Assistant (AIN-AI Module M05). "
+                    "Your role is strictly limited to: (1) rephrasing questions into simpler Bangla, "
+                    "(2) suggesting optional clauses strictly from the template's approved clause list, "
+                    "and (3) explaining legal terms with library source citations. "
+                    "You MUST NOT generate free clauses, predict dispute outcomes, or advise whether an agreement is fair or favourable. "
+                    "Output strict JSON conforming to the allow-list schema only."
+                ),
+                "user_template": (
+                    "Template Code: {template_code}\n"
+                    "Question ID: {question_id}\n"
+                    "Question Text: {question_text}\n"
+                    "Approved Optional Clause IDs: {approved_clause_ids}\n"
+                    "User Query / Term: {user_query}"
+                ),
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "rephrased_question": {"type": "string"},
+                        "suggested_clause_ids": {"type": "array", "items": {"type": "string"}},
+                        "term_explanation": {
+                            "type": "object",
+                            "properties": {
+                                "term": {"type": "string"},
+                                "explanation_bn": {"type": "string"},
+                                "source_chip": {"type": "string"},
+                            },
+                            "required": ["term", "explanation_bn"],
+                        },
+                    },
+                    "additionalProperties": False,
+                },
+            },
         ]
         for p in default_prompts:
             self.db.save_prompt(p)
@@ -611,7 +885,9 @@ class AIGateway:
         executed = False
         if model_preference == "real":
             try:
-                raw_output, cost_tokens = self.real_slot.generate(system_prompt, redacted_user, schema)
+                raw_output, cost_tokens = self.real_slot.generate(
+                    system_prompt, redacted_user, schema
+                )
                 model_name = "real-llm-adapter"
                 executed = True
             except Exception:
@@ -619,16 +895,60 @@ class AIGateway:
 
         if not executed:
             try:
-                raw_output, cost_tokens = self.primary_provider.generate(system_prompt, redacted_user, schema)
+                raw_output, cost_tokens = self.primary_provider.generate(
+                    system_prompt, redacted_user, schema
+                )
                 model_name = self.primary_provider.name
             except Exception:
                 # Fallback to secondary provider
-                raw_output, cost_tokens = self.secondary_provider.generate(system_prompt, redacted_user, schema)
+                raw_output, cost_tokens = self.secondary_provider.generate(
+                    system_prompt, redacted_user, schema
+                )
                 model_name = self.secondary_provider.name
 
         # 5. Schema validation & anti-deadline enforcement
         try:
             parsed_json = json.loads(raw_output)
+            if prompt_id == "draft.helper.v1" and isinstance(parsed_json, dict):
+                from packages.trust_kernel.outcome_filter import filter_outcome_predictions
+
+                # 1. Drop free clauses and any keys outside allowed schema
+                allowed_keys = {"rephrased_question", "suggested_clause_ids", "term_explanation"}
+                parsed_json = {k: v for k, v in parsed_json.items() if k in allowed_keys}
+
+                # 2. Filter suggested_clause_ids strictly against approved list
+                raw_approved = variables.get("approved_clause_ids", "")
+                if isinstance(raw_approved, list):
+                    approved_set = set(raw_approved)
+                else:
+                    approved_set = {
+                        x.strip(" '\"[]") for x in str(raw_approved).split(",") if x.strip(" '\"[]")
+                    }
+
+                if "suggested_clause_ids" in parsed_json and isinstance(
+                    parsed_json["suggested_clause_ids"], list
+                ):
+                    parsed_json["suggested_clause_ids"] = [
+                        cid for cid in parsed_json["suggested_clause_ids"] if cid in approved_set
+                    ]
+
+                # 3. Filter any outcome predictions from text fields
+                if "rephrased_question" in parsed_json and isinstance(
+                    parsed_json["rephrased_question"], str
+                ):
+                    parsed_json["rephrased_question"] = filter_outcome_predictions(
+                        parsed_json["rephrased_question"]
+                    )
+
+                if "term_explanation" in parsed_json and isinstance(
+                    parsed_json["term_explanation"], dict
+                ):
+                    exp = parsed_json["term_explanation"]
+                    if "explanation_bn" in exp and isinstance(exp.get("explanation_bn"), str):
+                        exp["explanation_bn"] = filter_outcome_predictions(exp["explanation_bn"])
+
+                raw_output = json.dumps(parsed_json, ensure_ascii=False)
+
             if schema:
                 jsonschema.validate(instance=parsed_json, schema=schema)
                 # Anti-deadline defense: Ensure prompt injection did not force an unapproved deadline field
@@ -638,19 +958,21 @@ class AIGateway:
         except (json.JSONDecodeError, jsonschema.ValidationError) as e:
             # Record failed output for transparency
             out_id = f"out-{uuid.uuid4().hex[:12]}"
-            self.db.save_ai_output({
-                "id": out_id,
-                "prompt_id": prompt_id,
-                "prompt_version": registered_ver,
-                "model": model_name,
-                "raw_input": rendered_user,
-                "redacted_input": redacted_user,
-                "raw_output": raw_output,
-                "unredacted_output": raw_output,
-                "cost_tokens": cost_tokens,
-                "status": "schema_error",
-                "security_flags": security_flags,
-            })
+            self.db.save_ai_output(
+                {
+                    "id": out_id,
+                    "prompt_id": prompt_id,
+                    "prompt_version": registered_ver,
+                    "model": model_name,
+                    "raw_input": rendered_user,
+                    "redacted_input": redacted_user,
+                    "raw_output": raw_output,
+                    "unredacted_output": raw_output,
+                    "cost_tokens": cost_tokens,
+                    "status": "schema_error",
+                    "security_flags": security_flags,
+                }
+            )
             raise SchemaValidationError(f"Output failed schema validation: {e}") from e
 
         # 6. Unredaction
@@ -659,19 +981,21 @@ class AIGateway:
 
         # 7. Persistence
         output_id = f"out-{uuid.uuid4().hex[:12]}"
-        self.db.save_ai_output({
-            "id": output_id,
-            "prompt_id": prompt_id,
-            "prompt_version": registered_ver,
-            "model": model_name,
-            "raw_input": rendered_user,
-            "redacted_input": redacted_user,
-            "raw_output": raw_output,
-            "unredacted_output": unredacted_output_str,
-            "cost_tokens": cost_tokens,
-            "status": "success",
-            "security_flags": security_flags,
-        })
+        self.db.save_ai_output(
+            {
+                "id": output_id,
+                "prompt_id": prompt_id,
+                "prompt_version": registered_ver,
+                "model": model_name,
+                "raw_input": rendered_user,
+                "redacted_input": redacted_user,
+                "raw_output": raw_output,
+                "unredacted_output": unredacted_output_str,
+                "cost_tokens": cost_tokens,
+                "status": "success",
+                "security_flags": security_flags,
+            }
+        )
 
         return {
             "output_id": output_id,
@@ -769,12 +1093,73 @@ class AIGateway:
             status = link.get("verification_status")
             is_verified = status == "VERIFIED"
             is_flagged = not is_verified or link.get("details", {}).get("flagged", False)
-            results.append({
-                **link,
-                "is_verified": is_verified,
-                "is_flagged": is_flagged,
-            })
+            results.append(
+                {
+                    **link,
+                    "is_verified": is_verified,
+                    "is_flagged": is_flagged,
+                }
+            )
         return results
+
+    def execute(self, task: str, input_data: dict[str, Any]) -> dict[str, Any]:
+        """Convenience execution method for AI tasks like intake.profile.v1."""
+        return self.execute_prompt(
+            prompt_id=task,
+            variables={
+                "answers_json": json.dumps(input_data.get("answers", {}), ensure_ascii=False),
+                "triage_chips": json.dumps(input_data.get("triage_chips", []), ensure_ascii=False),
+                "urgency": input_data.get("urgency", "normal"),
+            },
+        )
+    def generate(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        schema: dict[str, Any] | None = None,
+        user_id: str = "system",
+    ) -> dict[str, Any]:
+        """Direct generation method complying with X-004 audit requirements."""
+        redacted_user, redactions = self.redactor.redact(user_prompt)
+        content, tokens = self.primary_provider.generate(system_prompt, redacted_user, schema)
+        unredacted_content = self.redactor.unredact(content, redactions)
+
+        out_id = f"out-{uuid.uuid4().hex[:12]}"
+        prompt_hash = hashlib.sha256((system_prompt + user_prompt).encode("utf-8")).hexdigest()
+
+        # Save AI output
+        self.db.save_ai_output(
+            {
+                "id": out_id,
+                "prompt_id": "direct_generate",
+                "prompt_version": "1.0.0",
+                "model": self.primary_provider.name,
+                "provider": self.primary_provider.name,
+                "user_id": user_id,
+                "prompt_hash": prompt_hash,
+                "raw_input": user_prompt,
+                "redacted_input": redacted_user,
+                "raw_output": content,
+                "unredacted_output": unredacted_content,
+                "cost_tokens": tokens,
+            }
+        )
+
+        # Log into audit service
+        audit_service.log(
+            actor_id=user_id,
+            actor_role="system",
+            action="AI_GATEWAY_GENERATE",
+            object_type="ai_output",
+            object_id=out_id,
+            meta={"prompt_hash": prompt_hash, "provider": self.primary_provider.name},
+        )
+        return {
+            "id": out_id,
+            "content": unredacted_content,
+            "tokens_used": tokens,
+            "prompt_hash": prompt_hash,
+        }
 
 
 ai_gateway = AIGateway()

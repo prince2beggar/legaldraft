@@ -35,11 +35,15 @@ def require_reviewer_or_admin(user: dict[str, Any] = Depends(get_current_user)) 
 
 class RunEvaluationRequest(BaseModel):
     suite_name: str = Field(..., description="Name of the golden evaluation suite")
-    gate_threshold: float = Field(default=0.80, description="Minimum accuracy rate required to pass the gate (0.0 to 1.0)")
+    gate_threshold: float = Field(
+        default=0.80, description="Minimum accuracy rate required to pass the gate (0.0 to 1.0)"
+    )
 
 
 @router.get("/api/v1/evals/golden-sets")
-def list_golden_sets() -> dict[str, Any]:
+def list_golden_sets(
+    user: dict[str, Any] = Depends(require_reviewer_or_admin),
+) -> dict[str, Any]:
     """Lists all registered golden evaluation test sets."""
     suites = eval_harness.list_suites()
     return {
@@ -47,7 +51,7 @@ def list_golden_sets() -> dict[str, Any]:
             {
                 "suite_name": s,
                 "label": "FAKE_TEST_DATA",
-                "case_count": len(eval_harness.golden_suites.get(s, []))
+                "case_count": len(eval_harness.golden_suites.get(s, [])),
             }
             for s in suites
         ]
@@ -55,36 +59,38 @@ def list_golden_sets() -> dict[str, Any]:
 
 
 @router.post("/api/v1/evals/run")
-def trigger_eval_run(req: RunEvaluationRequest) -> dict[str, Any]:
+def trigger_eval_run(
+    req: RunEvaluationRequest,
+    user: dict[str, Any] = Depends(require_reviewer_or_admin),
+) -> dict[str, Any]:
     """Executes a golden evaluation suite and evaluates quality gates."""
     try:
         run_result = eval_harness.run_suite(req.suite_name, req.gate_threshold)
         return {"status": "success", "run": run_result}
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        ) from e
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
 
 @router.get("/api/v1/evals/runs")
-def list_past_eval_runs() -> dict[str, Any]:
+def list_past_eval_runs(
+    user: dict[str, Any] = Depends(require_reviewer_or_admin),
+) -> dict[str, Any]:
     """Retrieves list of past evaluation runs."""
     runs = db_manager.list_eval_runs()
     return {"runs": runs, "count": len(runs)}
 
 
 @router.get("/api/v1/evals/runs/{run_id}")
-def get_eval_run_detail(run_id: str) -> dict[str, Any]:
+def get_eval_run_detail(
+    run_id: str,
+    user: dict[str, Any] = Depends(require_reviewer_or_admin),
+) -> dict[str, Any]:
     """Retrieves full details and case-level results of an evaluation run."""
     run = db_manager.get_eval_run(run_id)
     if not run:
         raise HTTPException(status_code=404, detail=f"Eval run '{run_id}' not found.")
     cases = db_manager.list_eval_results(run_id)
-    return {
-        "run": run,
-        "cases": cases
-    }
+    return {"run": run, "cases": cases}
 
 
 @router.get("/admin/evals", response_class=HTMLResponse)

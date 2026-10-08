@@ -85,7 +85,10 @@ def user_b(isolated_db_manager):
 # Exact SRS AC Mapping (M07)
 # ---------------------------------------------------------------------------
 
-def test_ac_m07_1_confirming_deadline_creates_reminders_dismissing_cancels(notif_eng, case_eng, user_a):
+
+def test_ac_m07_1_confirming_deadline_creates_reminders_dismissing_cancels(
+    notif_eng, case_eng, user_a
+):
     """
     AC-M07-1: confirming deadline creates reminders; dismissing/completing cancels.
     """
@@ -134,7 +137,9 @@ def test_ac_m07_1_confirming_deadline_creates_reminders_dismissing_cancels(notif
     notif_eng.db.reset_clock()
 
 
-def test_ac_m07_2_unread_deadline_notification_le_3d_triggers_sms_after_24h(notif_eng, case_eng, user_a, sms_provider):
+def test_ac_m07_2_unread_deadline_notification_le_3d_triggers_sms_after_24h(
+    notif_eng, case_eng, user_a, sms_provider
+):
     """
     AC-M07-2: unread deadline notification <= 3 days triggers SMS after 24h (injectable clock).
     """
@@ -189,15 +194,20 @@ def test_ac_m07_2_unread_deadline_notification_le_3d_triggers_sms_after_24h(noti
     notif_eng.db.reset_clock()
 
 
-def test_ac_m07_3_sms_text_contains_no_case_or_personal_detail(notif_eng, case_eng, user_a, sms_provider):
+def test_ac_m07_3_sms_text_contains_no_case_or_personal_detail(
+    notif_eng, case_eng, user_a, sms_provider
+):
     """
     AC-M07-3: SMS text contains no case or personal detail.
     Strictly generic text: 'You have a deadline soon. Open AIN-AI.' or Bangla equivalent.
     """
-    notif_eng.db.save_notification_preferences(user_a["id"], {
-        "enable_sms": True,
-        "language": "en",
-    })
+    notif_eng.db.save_notification_preferences(
+        user_a["id"],
+        {
+            "enable_sms": True,
+            "language": "en",
+        },
+    )
 
     case = case_eng.create_case(
         user_id=user_a["id"],
@@ -242,11 +252,14 @@ def test_ac_m07_4_quiet_hours_respected_except_overdue_critical_reminders(notif_
     - Regular notification during quiet hours (22:00 - 07:00 Dhaka) is deferred to 08:00 next morning.
     - Overdue-critical reminder (category='overdue_critical') bypasses quiet hours and sends immediately.
     """
-    notif_eng.db.save_notification_preferences(user_a["id"], {
-        "quiet_hours_enabled": True,
-        "quiet_hours_start": "22:00",
-        "quiet_hours_end": "07:00",
-    })
+    notif_eng.db.save_notification_preferences(
+        user_a["id"],
+        {
+            "quiet_hours_enabled": True,
+            "quiet_hours_start": "22:00",
+            "quiet_hours_end": "07:00",
+        },
+    )
 
     # Set clock to: 23:30 Asia/Dhaka (+06:00) -> 17:30 UTC (Quiet hours!)
     quiet_clock = datetime(2026, 10, 11, 17, 30, 0, tzinfo=timezone.utc)
@@ -279,7 +292,9 @@ def test_ac_m07_4_quiet_hours_respected_except_overdue_critical_reminders(notif_
     updated_reg = notif_eng.db.get_notification(reg_notif["id"])
     assert updated_reg["status"] == "pending"
     deferred_hour = datetime.fromisoformat(updated_reg["scheduled_at"]).astimezone(DHAKA_TZ).hour
-    assert deferred_hour == 8, f"Expected regular notification deferred to 08:00, got {deferred_hour}"
+    assert deferred_hour == 8, (
+        f"Expected regular notification deferred to 08:00, got {deferred_hour}"
+    )
 
     # 4. Verify overdue-critical reminder BYPASSED quiet hours and was SENT immediately!
     updated_crit = notif_eng.db.get_notification(crit_notif["id"])
@@ -292,6 +307,7 @@ def test_ac_m07_4_quiet_hours_respected_except_overdue_critical_reminders(notif_
 # ---------------------------------------------------------------------------
 # Supporting / Non-AC Tests
 # ---------------------------------------------------------------------------
+
 
 def test_scheduler_injectable_clock_and_no_past_reminders(notif_eng, case_eng, user_a):
     """Scheduler with injectable clock never schedules reminders in the past."""
@@ -319,6 +335,7 @@ def test_scheduler_injectable_clock_and_no_past_reminders(notif_eng, case_eng, u
 
 def test_delivery_receipts_and_admin_failure_view(notif_eng, user_a):
     """Delivery receipts and admin failure tracking after 3 failed retries."""
+
     class FailingSmsProvider(MockSmsProvider):
         def send_sms(self, phone: str, message: str) -> bool:
             raise RuntimeError("Aggregator 503 Service Unavailable")
@@ -345,13 +362,17 @@ def test_delivery_receipts_and_admin_failure_view(notif_eng, user_a):
         assert n1["status"] == "pending"
 
         # Attempt 2
-        fail_eng.db.update_notification(notif["id"], scheduled_at=(now_utc - timedelta(minutes=1)).isoformat())
+        fail_eng.db.update_notification(
+            notif["id"], scheduled_at=(now_utc - timedelta(minutes=1)).isoformat()
+        )
         fail_eng.trigger_pending_notifications()
         n2 = fail_eng.db.get_notification(notif["id"])
         assert n2["retry_count"] == 2
 
         # Attempt 3 -> fails permanently
-        fail_eng.db.update_notification(notif["id"], scheduled_at=(now_utc - timedelta(minutes=1)).isoformat())
+        fail_eng.db.update_notification(
+            notif["id"], scheduled_at=(now_utc - timedelta(minutes=1)).isoformat()
+        )
         fail_eng.trigger_pending_notifications()
         n3 = fail_eng.db.get_notification(notif["id"])
         assert n3["retry_count"] == 3
@@ -370,10 +391,13 @@ def test_notification_preferences_crud(notif_eng, user_a):
     assert prefs["enable_in_app"] is True
     assert prefs["enable_sms"] is False
 
-    saved = notif_eng.db.save_notification_preferences(user_a["id"], {
-        "enable_sms": True,
-        "language": "en",
-    })
+    saved = notif_eng.db.save_notification_preferences(
+        user_a["id"],
+        {
+            "enable_sms": True,
+            "language": "en",
+        },
+    )
     assert saved["enable_sms"] is True
     assert saved["language"] == "en"
 

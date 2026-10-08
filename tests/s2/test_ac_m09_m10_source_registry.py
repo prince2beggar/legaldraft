@@ -28,6 +28,7 @@ def clean_database():
     db_manager.clear_all_data()
     auth_service.clear()
     from packages.trust_kernel.audit import audit_service
+
     audit_service.clear()
     yield
     db_manager.clear_all_data()
@@ -514,7 +515,9 @@ def test_3a_negative_draft_unapproved_version_never_retrieved():
 
     # 2. Citizen API search returns zero results
     citizen_headers = _get_auth_headers(phone="01711000031", role="citizen")
-    res_api = client.get("/api/v1/library/search?q=Confidential&as_of=2026-10-02", headers=citizen_headers)
+    res_api = client.get(
+        "/api/v1/library/search?q=Confidential&as_of=2026-10-02", headers=citizen_headers
+    )
     assert res_api.status_code == 200
     assert len(res_api.json()["results"]) == 0
 
@@ -700,7 +703,10 @@ def test_3e_uploader_cannot_self_approve_but_different_reviewer_can():
 
     res_review = client.post(
         f"/api/v1/admin/sources/versions/{v_id}/review",
-        json={"decision": "approve", "approval_notes": "Dual custody verified by distinct reviewer."},
+        json={
+            "decision": "approve",
+            "approval_notes": "Dual custody verified by distinct reviewer.",
+        },
         headers=reviewer_headers,
     )
     assert res_review.status_code == 200
@@ -785,4 +791,3 @@ def test_3f_all_source_state_changes_audited_and_x001_covered():
     ]:
         res_unauth = client.get(route_path)
         assert res_unauth.status_code in (401, 403, 405), f"Route {route_path} was not protected!"
-

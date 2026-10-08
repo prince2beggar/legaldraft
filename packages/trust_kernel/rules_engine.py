@@ -20,6 +20,7 @@ from packages.trust_kernel.db import DatabaseManager, db_manager
 
 class UnverifiedDeadlineError(ValueError):
     """Raised when a deadline date has no provenance from the Rules Engine or verbatim source text (Decision D6)."""
+
     pass
 
 
@@ -37,25 +38,29 @@ class RulesEngine:
         rule_id = "relative_period.calendar_days.v1"
         existing = self.db.get_rule(rule_id)
         if not existing:
-            self.db.save_rule({
-                "id": rule_id,
-                "name": "ক্যালেন্ডার দিন ভিত্তিক আপেক্ষিক সময়সীমা (Calendar Days Offset)",
-                "description": "একটি নির্দিষ্ট শুরুর তারিখ থেকে প্রদত্ত ক্যালেন্ডার দিন যোগ বা বিয়োগ করে শেষ সময়সীমা বা তামাদি নির্ধারণ।",
-                "category": "limitation",
-                "created_at": "2026-10-03T00:00:00Z"
-            })
-            self.db.save_rule_version({
-                "id": f"{rule_id}.v1.0.0",
-                "rule_id": rule_id,
-                "version": "1.0.0",
-                "parameters_schema": {
-                    "start_date": {"type": "string", "format": "date", "required": True},
-                    "days": {"type": "integer", "required": True},
-                    "include_trigger_day": {"type": "boolean", "default": False}
-                },
-                "is_active": True,
-                "created_at": "2026-10-03T00:00:00Z"
-            })
+            self.db.save_rule(
+                {
+                    "id": rule_id,
+                    "name": "ক্যালেন্ডার দিন ভিত্তিক আপেক্ষিক সময়সীমা (Calendar Days Offset)",
+                    "description": "একটি নির্দিষ্ট শুরুর তারিখ থেকে প্রদত্ত ক্যালেন্ডার দিন যোগ বা বিয়োগ করে শেষ সময়সীমা বা তামাদি নির্ধারণ।",
+                    "category": "limitation",
+                    "created_at": "2026-10-03T00:00:00Z",
+                }
+            )
+            self.db.save_rule_version(
+                {
+                    "id": f"{rule_id}.v1.0.0",
+                    "rule_id": rule_id,
+                    "version": "1.0.0",
+                    "parameters_schema": {
+                        "start_date": {"type": "string", "format": "date", "required": True},
+                        "days": {"type": "integer", "required": True},
+                        "include_trigger_day": {"type": "boolean", "default": False},
+                    },
+                    "is_active": True,
+                    "created_at": "2026-10-03T00:00:00Z",
+                }
+            )
 
             # Seed standard test cases
             test_cases = [
@@ -64,25 +69,37 @@ class RulesEngine:
                     "rule_id": rule_id,
                     "version": "1.0.0",
                     "test_name": "Standard 30 days limitation after event (trigger day excluded)",
-                    "input_data": {"start_date": "2026-10-01", "days": 30, "include_trigger_day": False},
-                    "expected_output": {"result_date": "2026-10-31", "status": "SUCCESS"}
+                    "input_data": {
+                        "start_date": "2026-10-01",
+                        "days": 30,
+                        "include_trigger_day": False,
+                    },
+                    "expected_output": {"result_date": "2026-10-31", "status": "SUCCESS"},
                 },
                 {
                     "id": f"{rule_id}.test2",
                     "rule_id": rule_id,
                     "version": "1.0.0",
                     "test_name": "10 days limitation where trigger day counts as Day 1",
-                    "input_data": {"start_date": "2026-10-01", "days": 10, "include_trigger_day": True},
-                    "expected_output": {"result_date": "2026-10-10", "status": "SUCCESS"}
+                    "input_data": {
+                        "start_date": "2026-10-01",
+                        "days": 10,
+                        "include_trigger_day": True,
+                    },
+                    "expected_output": {"result_date": "2026-10-10", "status": "SUCCESS"},
                 },
                 {
                     "id": f"{rule_id}.test3",
                     "rule_id": rule_id,
                     "version": "1.0.0",
                     "test_name": "Negative 15 days offset (pre-notice deadline)",
-                    "input_data": {"start_date": "2026-10-20", "days": -15, "include_trigger_day": False},
-                    "expected_output": {"result_date": "2026-10-05", "status": "SUCCESS"}
-                }
+                    "input_data": {
+                        "start_date": "2026-10-20",
+                        "days": -15,
+                        "include_trigger_day": False,
+                    },
+                    "expected_output": {"result_date": "2026-10-05", "status": "SUCCESS"},
+                },
             ]
             for tc in test_cases:
                 self.db.save_rule_test(tc)
@@ -103,7 +120,9 @@ class RulesEngine:
         try:
             start_date = datetime.strptime(str(start_date_str)[:10], "%Y-%m-%d").date()
         except Exception as e:
-            raise ValueError(f"Invalid 'start_date' format: {start_date_str}. Expected YYYY-MM-DD.") from e
+            raise ValueError(
+                f"Invalid 'start_date' format: {start_date_str}. Expected YYYY-MM-DD."
+            ) from e
 
         days_val = inputs.get("days")
         if days_val is None:
@@ -199,21 +218,25 @@ class RulesEngine:
             try:
                 actual = self.compute(rule_id, input_data)
                 passed = actual.get("result_date") == expected.get("result_date")
-                results.append({
-                    "test_name": test_name,
-                    "passed": passed,
-                    "expected": expected,
-                    "actual": actual,
-                    "error": None
-                })
+                results.append(
+                    {
+                        "test_name": test_name,
+                        "passed": passed,
+                        "expected": expected,
+                        "actual": actual,
+                        "error": None,
+                    }
+                )
             except Exception as e:
-                results.append({
-                    "test_name": test_name,
-                    "passed": False,
-                    "expected": expected,
-                    "actual": None,
-                    "error": str(e)
-                })
+                results.append(
+                    {
+                        "test_name": test_name,
+                        "passed": False,
+                        "expected": expected,
+                        "actual": None,
+                        "error": str(e),
+                    }
+                )
         return results
 
 

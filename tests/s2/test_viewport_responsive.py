@@ -184,7 +184,9 @@ def test_advocate_dashboard_responsive(browser_instance):
         scroll_w = page.evaluate("() => document.documentElement.scrollWidth")
         client_w = page.evaluate("() => document.documentElement.clientWidth")
         # index.html has an overflow-x tabs nav; page body itself must remain contained
-        assert scroll_w <= client_w + 1, f"Horizontal overflow in advocate dashboard at {vp['name']}"
+        assert scroll_w <= client_w + 1, (
+            f"Horizontal overflow in advocate dashboard at {vp['name']}"
+        )
 
         context.close()
 

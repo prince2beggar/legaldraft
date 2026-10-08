@@ -73,7 +73,11 @@ class EvalHarness:
                     target_component="rules",
                     input_payload={
                         "rule_id": "relative_period.calendar_days.v1",
-                        "inputs": {"start_date": "2026-10-01", "days": 30, "include_trigger_day": False},
+                        "inputs": {
+                            "start_date": "2026-10-01",
+                            "days": 30,
+                            "include_trigger_day": False,
+                        },
                     },
                     expected={"result_date": "2026-10-31", "status": "SUCCESS"},
                     is_critical=True,
@@ -85,7 +89,11 @@ class EvalHarness:
                     target_component="rules",
                     input_payload={
                         "rule_id": "relative_period.calendar_days.v1",
-                        "inputs": {"start_date": "2026-10-01", "days": 10, "include_trigger_day": True},
+                        "inputs": {
+                            "start_date": "2026-10-01",
+                            "days": 10,
+                            "include_trigger_day": True,
+                        },
                     },
                     expected={"result_date": "2026-10-10", "status": "SUCCESS"},
                     is_critical=True,
@@ -97,7 +105,11 @@ class EvalHarness:
                     target_component="rules",
                     input_payload={
                         "rule_id": "relative_period.calendar_days.v1",
-                        "inputs": {"start_date": "2026-10-20", "days": -15, "include_trigger_day": False},
+                        "inputs": {
+                            "start_date": "2026-10-20",
+                            "days": -15,
+                            "include_trigger_day": False,
+                        },
                     },
                     expected={"result_date": "2026-10-05", "status": "SUCCESS"},
                     is_critical=True,
@@ -141,7 +153,10 @@ class EvalHarness:
                     target_component="gateway",
                     input_payload={
                         "prompt_id": "legal_advisory.v1",
-                        "variables": {"query": "বাড়িভাড়া বৃদ্ধি বিষয়ে আইনি নিয়ম", "sources": "বাড়িভাড়া আইন ১৯৯১"},
+                        "variables": {
+                            "query": "বাড়িভাড়া বৃদ্ধি বিষয়ে আইনি নিয়ম",
+                            "sources": "বাড়িভাড়া আইন ১৯৯১",
+                        },
                     },
                     expected={"status": "success"},
                     is_critical=True,
@@ -174,9 +189,15 @@ class EvalHarness:
 
         cfg = custom_config or self.SUITE_CONFIGS.get(
             suite_name,
-            {"min_score": 0.85, "max_critical_errors": 0, "critical_error_rule": "Zero critical errors"},
+            {
+                "min_score": 0.85,
+                "max_critical_errors": 0,
+                "critical_error_rule": "Zero critical errors",
+            },
         )
-        min_score = float(gate_threshold if gate_threshold is not None else cfg.get("min_score", 0.85))
+        min_score = float(
+            gate_threshold if gate_threshold is not None else cfg.get("min_score", 0.85)
+        )
         max_critical_errors = int(cfg.get("max_critical_errors", 0))
 
         run_id = f"eval-{uuid.uuid4().hex[:12]}"
@@ -194,7 +215,9 @@ class EvalHarness:
 
             try:
                 if case.target_component == "rules":
-                    res = self.engine.compute(case.input_payload["rule_id"], case.input_payload["inputs"])
+                    res = self.engine.compute(
+                        case.input_payload["rule_id"], case.input_payload["inputs"]
+                    )
                     actual_summary = str(res)
                     if res.get("result_date") == case.expected.get("result_date"):
                         passed = True
@@ -216,7 +239,9 @@ class EvalHarness:
                         actual_summary = "Status mismatch"
 
                 elif case.target_component == "gateway":
-                    res = self.gateway.execute_prompt(case.input_payload["prompt_id"], case.input_payload["variables"])
+                    res = self.gateway.execute_prompt(
+                        case.input_payload["prompt_id"], case.input_payload["variables"]
+                    )
                     actual_summary = str(res.get("data", {}))
                     if res.get("status") == "success":
                         passed = True

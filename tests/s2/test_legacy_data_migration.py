@@ -28,10 +28,10 @@ def test_legacy_data_integrity_and_migration():
     cur_new = conn_new.cursor()
 
     for table in ["organizations", "matters", "documents", "document_versions"]:
-        cur_old.execute(f"SELECT id FROM \"{table}\";")
+        cur_old.execute(f'SELECT id FROM "{table}";')
         old_ids = {r[0] for r in cur_old.fetchall()}
 
-        cur_new.execute(f"SELECT id FROM \"{table}\";")
+        cur_new.execute(f'SELECT id FROM "{table}";')
         new_ids = {r[0] for r in cur_new.fetchall()}
 
         # Assert every single legacy ID exists in the unified database
@@ -42,4 +42,6 @@ def test_legacy_data_integrity_and_migration():
     conn_new.close()
 
     mtime_legacy_after = os.path.getmtime(legacy_db)
-    assert mtime_legacy_after == mtime_legacy_before, "legal_saas.db modification time changed! It must remain completely untouched."
+    assert mtime_legacy_after == mtime_legacy_before, (
+        "legal_saas.db modification time changed! It must remain completely untouched."
+    )

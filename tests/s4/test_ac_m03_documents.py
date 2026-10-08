@@ -154,7 +154,9 @@ def test_ac_m03_2_field_crop_link_and_state_machine_reviewed_verified(doc_servic
     field_id = field["id"]
     assert field["state"] == "extracted"
     assert field["crop_key"] is not None
-    assert doc_service.store.exists(field["crop_key"]), "Snippet crop image must exist in object store"
+    assert doc_service.store.exists(field["crop_key"]), (
+        "Snippet crop image must exist in object store"
+    )
 
     # Negative test: editing field without confirm=True MUST fail
     with pytest.raises(ValueError, match="Explicit confirmation required"):
@@ -182,6 +184,7 @@ def test_ac_m03_3_failed_ocr_retry_three_times_and_user_error_message(tmp_path):
     After 3rd failure, document state is 'failed' with a user-friendly Bangla message
     and zero data loss (original file preserved in object store).
     """
+
     class FailingOcrEngine(FakeOcrEngine):
         def __init__(self):
             self.call_count = 0
@@ -192,7 +195,9 @@ def test_ac_m03_3_failed_ocr_retry_three_times_and_user_error_message(tmp_path):
 
     failing_ocr = FailingOcrEngine()
     store = LocalFilesystemObjectStore(base_dir=tmp_path / "retry_storage")
-    service = DocumentService(db=db_manager, store=store, scanner=BasicMagicBytesScanner(), ocr=failing_ocr)
+    service = DocumentService(
+        db=db_manager, store=store, scanner=BasicMagicBytesScanner(), ocr=failing_ocr
+    )
 
     img_path = FIXTURES_DIR / "blurred_scan.png"
     img_bytes = img_path.read_bytes()
@@ -231,16 +236,18 @@ def test_ac_m03_4_screening_items_without_bbox_never_appear(doc_service):
     )
 
     # Manually inject a ghost field without bbox into DB to test screening filter
-    doc_service.db.save_document_field({
-        "document_id": doc["id"],
-        "key": "ghost.unreferenced_field",
-        "value": "Ghost Value Without Span",
-        "confidence": 0.50,
-        "confidence_word": "check",
-        "page_no": 1,
-        "bbox": None,  # No bbox
-        "state": "extracted",
-    })
+    doc_service.db.save_document_field(
+        {
+            "document_id": doc["id"],
+            "key": "ghost.unreferenced_field",
+            "value": "Ghost Value Without Span",
+            "confidence": 0.50,
+            "confidence_word": "check",
+            "page_no": 1,
+            "bbox": None,  # No bbox
+            "state": "extracted",
+        }
+    )
 
     # Call get_document_secure
     secure_doc = doc_service.get_document_secure(doc["id"], actor_id=owner_id)
@@ -273,7 +280,8 @@ def test_ac_m03_5_unauthorised_user_document_isolated_and_audited(doc_service):
     # Verify audit entry in trust_audit_logs
     recent_logs = audit_logger.get_recent_logs(limit=10)
     breach_logs = [
-        entry for entry in recent_logs
+        entry
+        for entry in recent_logs
         if entry["action"] == "document.unauthorized_access_attempt"
         and entry["actor_id"] == user_b
         and entry["object_id"] == doc["id"]
@@ -296,8 +304,8 @@ def test_ac_m03_6_resumable_chunked_upload_and_reassembly(doc_service):
     chunk_size = (total_size + 2) // 3
     chunks = [
         img_bytes[0:chunk_size],
-        img_bytes[chunk_size:2 * chunk_size],
-        img_bytes[2 * chunk_size:],
+        img_bytes[chunk_size : 2 * chunk_size],
+        img_bytes[2 * chunk_size :],
     ]
     assert len(chunks) == 3
 
@@ -339,10 +347,14 @@ def test_ac_m03_deduplication_sha256_idempotent(doc_service):
     img_bytes = (FIXTURES_DIR / "clean_scan.png").read_bytes()
     owner_id = f"test-dedupe-{uuid.uuid4().hex[:6]}"
 
-    doc1 = doc_service.upload_document(owner_id=owner_id, filename="original.png", file_bytes=img_bytes)
+    doc1 = doc_service.upload_document(
+        owner_id=owner_id, filename="original.png", file_bytes=img_bytes
+    )
     assert doc1.get("is_deduplicated") is not True
 
-    doc2 = doc_service.upload_document(owner_id=owner_id, filename="duplicate.png", file_bytes=img_bytes)
+    doc2 = doc_service.upload_document(
+        owner_id=owner_id, filename="duplicate.png", file_bytes=img_bytes
+    )
     assert doc2["id"] == doc1["id"]
     assert doc2.get("is_deduplicated") is True
 
@@ -355,7 +367,9 @@ def test_ac_m03_purge_document_with_immutable_audit(doc_service):
     img_bytes = (FIXTURES_DIR / "clean_scan.png").read_bytes()
     owner_id = f"test-purge-{uuid.uuid4().hex[:6]}"
 
-    doc = doc_service.upload_document(owner_id=owner_id, filename="purge_me.png", file_bytes=img_bytes)
+    doc = doc_service.upload_document(
+        owner_id=owner_id, filename="purge_me.png", file_bytes=img_bytes
+    )
     doc_id = doc["id"]
     storage_key = doc["storage_key"]
     assert doc_service.store.exists(storage_key)
@@ -370,7 +384,11 @@ def test_ac_m03_purge_document_with_immutable_audit(doc_service):
 
     # Immutable audit ledger has purge entry
     recent_logs = audit_logger.get_recent_logs(limit=10)
-    purge_entries = [entry for entry in recent_logs if entry["action"] == "document.purge" and entry["object_id"] == doc_id]
+    purge_entries = [
+        entry
+        for entry in recent_logs
+        if entry["action"] == "document.purge" and entry["object_id"] == doc_id
+    ]
     assert len(purge_entries) >= 1
     # Check that audit log contains metadata but no sensitive content
     meta = purge_entries[0]["meta"]
@@ -416,18 +434,25 @@ def test_ac_m03_6_pwa_offline_queue_and_online_flush():
 
     from playwright.sync_api import sync_playwright
 
-    static_file = Path(__file__).resolve().parents[2] / "backend" / "app" / "static" / "documents_upload.html"
+    static_file = (
+        Path(__file__).resolve().parents[2] / "backend" / "app" / "static" / "documents_upload.html"
+    )
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
         context = browser.new_context()
         page = context.new_page()
 
-        page.route("**/api/v1/documents/upload", lambda route: route.fulfill(
-            status=200,
-            content_type="application/json",
-            body=json.dumps({"document": {"id": "doc-test-pwa-flushed"}, "status": "completed"})
-        ))
+        page.route(
+            "**/api/v1/documents/upload",
+            lambda route: route.fulfill(
+                status=200,
+                content_type="application/json",
+                body=json.dumps(
+                    {"document": {"id": "doc-test-pwa-flushed"}, "status": "completed"}
+                ),
+            ),
+        )
 
         page.goto(static_file.as_uri())
 
@@ -436,7 +461,9 @@ def test_ac_m03_6_pwa_offline_queue_and_online_flush():
         cam_input = page.locator("#cameraInput")
         assert cam_btn.is_visible(), "Camera button must be visible"
         assert cam_input.count() == 1, "Camera input must exist"
-        assert cam_input.get_attribute("capture") == "environment", "Camera input must have capture=environment"
+        assert cam_input.get_attribute("capture") == "environment", (
+            "Camera input must have capture=environment"
+        )
 
         # 2. Simulate Offline
         context.set_offline(True)
@@ -447,7 +474,9 @@ def test_ac_m03_6_pwa_offline_queue_and_online_flush():
         time.sleep(1)
 
         # 4. Assert offline badge visible and IndexedDB contains queued item
-        assert page.locator("#offlineQueuedBadge").is_visible(), "Offline badge must be visible when offline"
+        assert page.locator("#offlineQueuedBadge").is_visible(), (
+            "Offline badge must be visible when offline"
+        )
         queued_count = page.evaluate("async () => (await getQueuedUploads()).length")
         assert queued_count == 1, f"Expected 1 item in IndexedDB queue, got {queued_count}"
 
@@ -461,4 +490,3 @@ def test_ac_m03_6_pwa_offline_queue_and_online_flush():
         assert rem_count == 0, f"Expected 0 items in queue after online flush, got {rem_count}"
 
         browser.close()
-

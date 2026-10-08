@@ -23,7 +23,10 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Upload
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
-from packages.trust_kernel.document_engine import document_service
+from packages.trust_kernel.document_engine import (
+    UploadRateLimitExceededError,
+    document_service,
+)
 from packages.trust_kernel.notice_engine import notice_engine
 from services.api.app.routers.auth import get_current_user
 
@@ -39,18 +42,25 @@ class ResumableInitRequest(BaseModel):
 
 
 class IntentRequest(BaseModel):
-    intent: str = Field(..., description="respond_notice | verify_deed | prepare_matter | calculate_deadlines | archive")
+    intent: str = Field(
+        ...,
+        description="respond_notice | verify_deed | prepare_matter | calculate_deadlines | archive",
+    )
 
 
 class EditFieldRequest(BaseModel):
     value: str = Field(..., description="New corrected value for field")
-    confirm: bool = Field(default=False, description="Must be true to transition state to 'reviewed' (AC-M03-2)")
+    confirm: bool = Field(
+        default=False, description="Must be true to transition state to 'reviewed' (AC-M03-2)"
+    )
 
 
 class CalculateRelativeDateRequest(BaseModel):
     trigger_date: str = Field(..., description="Date document received (YYYY-MM-DD)")
     days: int = Field(default=15, description="Number of calendar days")
-    include_trigger_day: bool = Field(default=False, description="Whether trigger date counts as day 1")
+    include_trigger_day: bool = Field(
+        default=False, description="Whether trigger date counts as day 1"
+    )
     label: str = Field(default="নোটিশের জবাব দাখিল", description="Deadline label")
 
 
@@ -58,7 +68,9 @@ class ConfirmDeadlineRequest(BaseModel):
     due_date: str = Field(..., description="Target due date (YYYY-MM-DD)")
     title: str = Field(default="আইনি নোটিশের জবাব দাখিল", description="Deadline title")
     case_id: str | None = Field(default=None, description="Optional associated case ID")
-    calculation_steps: list[str] = Field(default_factory=list, description="Reasoning / calculation steps")
+    calculation_steps: list[str] = Field(
+        default_factory=list, description="Reasoning / calculation steps"
+    )
     note: str | None = Field(default=None, description="Basis note")
     is_user_set: bool = Field(default=False, description="Whether explicitly overridden by user")
 
@@ -66,8 +78,12 @@ class ConfirmDeadlineRequest(BaseModel):
 class SaveToCaseRequest(BaseModel):
     case_id: str | None = Field(default=None, description="Existing case ID or None to create new")
     new_case_title: str | None = Field(default=None, description="Title for new case if creating")
-    selected_task_indices: list[int] | None = Field(default=None, description="Selected checklist item indices")
-    confirmed_deadline: dict[str, Any] | None = Field(default=None, description="Confirmed deadline details to save")
+    selected_task_indices: list[int] | None = Field(
+        default=None, description="Selected checklist item indices"
+    )
+    confirmed_deadline: dict[str, Any] | None = Field(
+        default=None, description="Confirmed deadline details to save"
+    )
 
 
 class DismissDeadlineRequest(BaseModel):
@@ -103,6 +119,8 @@ async def upload_document(
             case_id=case_id,
         )
         return {"status": "success", "document": doc}
+    except UploadRateLimitExceededError as e:
+        raise HTTPException(status_code=429, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -140,10 +158,99 @@ async def upload_resumable_chunk(
 
 
 @router.get("/api/v1/documents")
+@router.get("/api/v1/documents/", include_in_schema=False)
 def list_documents(user: dict[str, Any] = Depends(get_current_user)):
-    """Lists current user's documents."""
+    """Lists current user's documents across modern M03 engine and legacy drafting."""
     docs = document_service.db.list_documents(owner_id=user["id"])
-    return {"documents": docs, "count": len(docs)}
+    from backend.app.api.v1.documents import list_documents as legacy_list_documents
+    from backend.app.core.database import SessionLocal
+
+    db_session = SessionLocal()
+    legacy_docs = []
+    try:
+        legacy_docs = legacy_list_documents(db=db_session, current_user=user)
+    except Exception:
+        pass
+    finally:
+        db_session.close()
+
+    result_list = []
+    for d in docs:
+        result_list.append(d)
+    for ld in legacy_docs:
+        result_list.append(ld.dict() if hasattr(ld, "dict") else dict(ld))
+
+    return result_list
+
+
+@router.put("/api/v1/documents/{doc_id}")
+def update_document(
+    doc_id: str,
+    payload: dict[str, Any],
+    user: dict[str, Any] = Depends(get_current_user),
+):
+    """
+    Updates document content and recalculates exports.
+    Delegates to legacy drafting document handler if document was created via drafting.
+    """
+    from backend.app.api.v1.documents import update_document as legacy_update_document
+    from backend.app.core.database import SessionLocal
+    from backend.app.schemas.document import DocumentUpdateRequest
+
+    db_session = SessionLocal()
+    try:
+        data = DocumentUpdateRequest(**payload)
+        return legacy_update_document(document_id=doc_id, data=data, db=db_session, current_user=user)
+    finally:
+        db_session.close()
+
+
+@router.get("/api/v1/documents/{doc_id}/versions")
+def get_document_versions(
+    doc_id: str,
+    user: dict[str, Any] = Depends(get_current_user),
+):
+    """Retrieves document revision and version history."""
+    from backend.app.api.v1.documents import get_document_versions as legacy_get_versions
+    from backend.app.core.database import SessionLocal
+
+    db_session = SessionLocal()
+    try:
+        return legacy_get_versions(document_id=doc_id, db=db_session, current_user=user)
+    finally:
+        db_session.close()
+
+
+@router.get("/api/v1/documents/{doc_id}/export/docx")
+def download_docx(
+    doc_id: str,
+    user: dict[str, Any] = Depends(get_current_user),
+):
+    """Downloads generated DOCX export for document."""
+    from backend.app.api.v1.documents import download_docx as legacy_download_docx
+    from backend.app.core.database import SessionLocal
+
+    db_session = SessionLocal()
+    try:
+        return legacy_download_docx(document_id=doc_id, db=db_session, current_user=user)
+    finally:
+        db_session.close()
+
+
+@router.get("/api/v1/documents/{doc_id}/export/pdf")
+def download_pdf(
+    doc_id: str,
+    user: dict[str, Any] = Depends(get_current_user),
+):
+    """Downloads generated PDF export for document."""
+    from backend.app.api.v1.documents import download_pdf as legacy_download_pdf
+    from backend.app.core.database import SessionLocal
+
+    db_session = SessionLocal()
+    try:
+        return legacy_download_pdf(document_id=doc_id, db=db_session, current_user=user)
+    finally:
+        db_session.close()
 
 
 @router.get("/api/v1/documents/{doc_id}")
@@ -165,7 +272,9 @@ def get_document_details(
 
         db_session = SessionLocal()
         try:
-            legacy_doc = db_session.query(LegacyDocument).filter(LegacyDocument.id == doc_id).first()
+            legacy_doc = (
+                db_session.query(LegacyDocument).filter(LegacyDocument.id == doc_id).first()
+            )
             if legacy_doc:
                 return legacy_get_document(document_id=doc_id, db=db_session, current_user=user)
         finally:
@@ -193,7 +302,6 @@ def get_document_details(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
-
 
 
 @router.get("/api/v1/documents/{doc_id}/status")
@@ -303,7 +411,9 @@ def get_notice_interpretation(
     Returns 8 fixed sections with citation-grounded claims, DeadlineCard, and amber AI disclaimer.
     """
     try:
-        res = notice_engine.interpret_notice(document_id=doc_id, user_id=user["id"], as_of_date=as_of_date)
+        res = notice_engine.interpret_notice(
+            document_id=doc_id, user_id=user["id"], as_of_date=as_of_date
+        )
         return {"status": "success", "notice": res}
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e

@@ -73,6 +73,9 @@ class ConsentDB(Base):
     created_at = Column(String(64), nullable=False)
 
 
+SharingConsentDB = ConsentDB
+
+
 class AuditLogDB(Base):
     __tablename__ = "trust_audit_logs"
 
@@ -319,7 +322,9 @@ class DocumentFieldDB(Base):
     page_no = Column(Integer, nullable=True)
     bbox = Column(Text, nullable=True)
     crop_key = Column(String(255), nullable=True)
-    state = Column(String(16), default="extracted", nullable=False)  # extracted -> reviewed -> verified
+    state = Column(
+        String(16), default="extracted", nullable=False
+    )  # extracted -> reviewed -> verified
     reviewed_by = Column(String(36), nullable=True)
     reviewed_at = Column(String(64), nullable=True)
     verified_by = Column(String(36), nullable=True)
@@ -418,8 +423,12 @@ class CaseNoteDB(Base):
 class CaseDocumentDB(Base):
     __tablename__ = "case_documents"
 
-    case_id = Column(String(64), ForeignKey("cases.id", ondelete="CASCADE"), primary_key=True, nullable=False)
-    document_id = Column(String(64), ForeignKey("documents.id", ondelete="CASCADE"), primary_key=True, nullable=False)
+    case_id = Column(
+        String(64), ForeignKey("cases.id", ondelete="CASCADE"), primary_key=True, nullable=False
+    )
+    document_id = Column(
+        String(64), ForeignKey("documents.id", ondelete="CASCADE"), primary_key=True, nullable=False
+    )
     attached_at = Column(String(64), nullable=False)
 
 
@@ -517,7 +526,9 @@ class NoticeAnalysisDB(Base):
     __tablename__ = "notice_analyses"
 
     id = Column(String(64), primary_key=True)
-    document_id = Column(String(64), ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, unique=True)
+    document_id = Column(
+        String(64), ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
     user_id = Column(String(64), nullable=False)
     analysis_json = Column(Text, nullable=False)
     simpler_json = Column(Text, nullable=True)
@@ -525,6 +536,140 @@ class NoticeAnalysisDB(Base):
     as_of_date = Column(String(32), nullable=False)
     created_at = Column(String(64), nullable=False)
     updated_at = Column(String(64), nullable=False)
+
+
+class IntakeSessionDB(Base):
+    __tablename__ = "intake_sessions"
+
+    id = Column(String(64), primary_key=True)
+    user_id = Column(String(64), ForeignKey("trust_users.id"), nullable=False, index=True)
+    status = Column(String(32), default="in_progress", nullable=False)
+    current_step = Column(Integer, default=1, nullable=False)
+    triage_chips_json = Column(Text, default="[]", nullable=False)
+    urgency = Column(String(32), default="normal", nullable=False)
+    urgency_reason = Column(Text, nullable=True)
+    answers_json = Column(Text, default="{}", nullable=False)
+    profile_json = Column(Text, nullable=True)
+    created_case_id = Column(String(64), ForeignKey("cases.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(String(64), nullable=False)
+    updated_at = Column(String(64), nullable=False)
+
+
+class EmergencyContactDB(Base):
+    __tablename__ = "emergency_contacts"
+
+    id = Column(String(64), primary_key=True)
+    title = Column(String(255), nullable=False)
+    phone = Column(String(64), nullable=False)
+    category = Column(String(64), default="emergency", nullable=False)
+    description_bn = Column(Text, nullable=True)
+    description_en = Column(Text, nullable=True)
+    is_verified = Column(Boolean, default=False, nullable=False)
+    last_verified_at = Column(String(64), nullable=True)
+    verified_by = Column(String(64), nullable=True)
+    source_note = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    display_order = Column(Integer, default=0, nullable=False)
+    created_at = Column(String(64), nullable=False)
+
+
+class TemplateDB(Base):
+    __tablename__ = "templates"
+
+    id = Column(String(64), primary_key=True)
+    doc_type = Column(String(32), default="general", nullable=True)
+    name = Column(String(255), default="Template", nullable=True)
+    code = Column(String(32), index=True, unique=True, nullable=False)
+    title_bn = Column(String(255), nullable=False)
+    title_en = Column(String(255), nullable=False)
+    category = Column(String(64), nullable=False)
+    description_bn = Column(Text, nullable=False)
+    description_en = Column(Text, nullable=True)
+    what_needed_bn = Column(Text, nullable=True)
+    version = Column(Integer, default=1, nullable=False)
+    status = Column(String(32), default="draft_not_reviewed", nullable=False)
+    author_id = Column(String(64), nullable=False)
+    approver_id = Column(String(64), nullable=True)
+    approval_note = Column(Text, nullable=True)
+    approved_at = Column(String(64), nullable=True)
+    effective_from = Column(String(64), nullable=True)
+    effective_to = Column(String(64), nullable=True)
+    questions_schema_json = Column(Text, default="[]", nullable=False)
+    clauses_json = Column(Text, default="[]", nullable=False)
+    checklist_schema_json = Column(Text, default="[]", nullable=False)
+    sample_answers_json = Column(Text, default="{}", nullable=False)
+    created_at = Column(String(64), nullable=False)
+    updated_at = Column(String(64), nullable=False)
+
+
+class DraftDB(Base):
+    __tablename__ = "drafts"
+
+    id = Column(String(64), primary_key=True)
+    owner_id = Column(String(64), nullable=True)
+    user_id = Column(String(64), ForeignKey("trust_users.id"), index=True, nullable=False)
+    template_id = Column(String(64), ForeignKey("templates.id"), nullable=False)
+    template_version = Column(Integer, default=1, nullable=False)
+    case_id = Column(String(64), ForeignKey("cases.id", ondelete="SET NULL"), nullable=True)
+    title = Column(String(255), nullable=False)
+    status = Column(String(32), default="in_progress", nullable=False)
+    answers_json = Column(Text, default="{}", nullable=False)
+    selected_clause_ids_json = Column(Text, default="[]", nullable=False)
+    checklist_states_json = Column(Text, default="{}", nullable=False)
+    validation_errors_json = Column(Text, default="[]", nullable=False)
+    watermark_text = Column(
+        String(255), default="খসড়া — AI-সহায়তায় তৈরি, আইনি পরামর্শ নয়", nullable=False
+    )
+    is_finalized = Column(Boolean, default=False, nullable=False)
+    finalized_at = Column(String(64), nullable=True)
+    created_at = Column(String(64), nullable=False)
+    updated_at = Column(String(64), nullable=False)
+
+
+class DraftExportDB(Base):
+    __tablename__ = "draft_exports"
+
+    id = Column(String(64), primary_key=True)
+    draft_id = Column(String(64), ForeignKey("drafts.id"), index=True, nullable=False)
+    user_id = Column(String(64), ForeignKey("trust_users.id"), index=True, nullable=False)
+    format = Column(String(16), nullable=False)
+    storage_key = Column(String(255), nullable=False)
+    file_hash = Column(String(64), nullable=False)
+    watermark_applied = Column(Boolean, default=True, nullable=False)
+    created_at = Column(String(64), nullable=False)
+
+
+class BriefDB(Base):
+    __tablename__ = "briefs"
+
+    id = Column(String(64), primary_key=True)
+    case_id = Column(String(64), ForeignKey("cases.id", ondelete="CASCADE"), index=True, nullable=False)
+    owner_id = Column(String(64), ForeignKey("trust_users.id"), index=True, nullable=False)
+    title = Column(String(255), nullable=False)
+    sections_json = Column(Text, nullable=False)
+    is_edited = Column(Boolean, default=False, nullable=False)
+    created_at = Column(String(64), nullable=False)
+    updated_at = Column(String(64), nullable=False)
+
+
+class BriefLinkDB(Base):
+    __tablename__ = "brief_links"
+
+    id = Column(String(64), primary_key=True)
+    consent_id = Column(String(64), ForeignKey("trust_consents.id", ondelete="CASCADE"), index=True, nullable=False)
+    case_id = Column(String(64), ForeignKey("cases.id", ondelete="CASCADE"), index=True, nullable=False)
+    token_hash = Column(String(64), index=True, unique=True, nullable=False)
+    recipient_contact = Column(String(128), nullable=False)
+    otp_hash = Column(String(64), nullable=True)
+    otp_expires_at = Column(String(64), nullable=True)
+    otp_attempts = Column(Integer, default=0, nullable=False)
+    otp_locked_until = Column(String(64), nullable=True)
+    otp_verified_at = Column(String(64), nullable=True)
+    view_count = Column(Integer, default=0, nullable=False)
+    last_viewed_at = Column(String(64), nullable=True)
+    expires_at = Column(String(64), nullable=False)
+    revoked_at = Column(String(64), nullable=True)
+    created_at = Column(String(64), nullable=False)
 
 
 class DatabaseManager:
@@ -546,6 +691,10 @@ class DatabaseManager:
             return cls._clock_fn
         return datetime.now(timezone.utc)
 
+    @classmethod
+    def now_iso(cls) -> str:
+        return cls.get_current_time().isoformat()
+
     def __init__(self, db_url: str | None = None):
         self.url = db_url or get_db_url()
         connect_args = {}
@@ -554,6 +703,9 @@ class DatabaseManager:
         self.engine = create_engine(self.url, connect_args=connect_args, echo=False)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self.init_schema()
+
+    def init_db(self):
+        return self.init_schema()
 
     def init_schema(self):
         Base.metadata.create_all(bind=self.engine)
@@ -603,6 +755,39 @@ class DatabaseManager:
                 ("case_notes", "include_in_brief", "BOOLEAN DEFAULT 0"),
                 ("cases", "triage_urgency", "VARCHAR(32)"),
                 ("cases", "is_urgent_triage", "BOOLEAN DEFAULT 0"),
+                ("emergency_contacts", "source_note", "TEXT"),
+                ("templates", "code", "VARCHAR(32)"),
+                ("templates", "title_bn", "VARCHAR(255) DEFAULT ''"),
+                ("templates", "title_en", "VARCHAR(255) DEFAULT ''"),
+                ("templates", "category", "VARCHAR(64) DEFAULT 'general'"),
+                ("templates", "description_bn", "TEXT DEFAULT ''"),
+                ("templates", "description_en", "TEXT"),
+                ("templates", "what_needed_bn", "TEXT"),
+                ("templates", "author_id", "VARCHAR(64) DEFAULT 'system'"),
+                ("templates", "approver_id", "VARCHAR(64)"),
+                ("templates", "approval_note", "TEXT"),
+                ("templates", "approved_at", "VARCHAR(64)"),
+                ("templates", "effective_from", "VARCHAR(64)"),
+                ("templates", "effective_to", "VARCHAR(64)"),
+                ("templates", "status", "VARCHAR(32) DEFAULT 'draft_not_reviewed'"),
+                ("templates", "questions_schema_json", "TEXT DEFAULT '[]'"),
+                ("templates", "clauses_json", "TEXT DEFAULT '[]'"),
+                ("templates", "checklist_schema_json", "TEXT DEFAULT '[]'"),
+                ("templates", "sample_answers_json", "TEXT DEFAULT '{}'"),
+                ("templates", "created_at", "VARCHAR(64) DEFAULT ''"),
+                ("templates", "updated_at", "VARCHAR(64) DEFAULT ''"),
+                ("drafts", "user_id", "VARCHAR(64)"),
+                ("drafts", "title", "VARCHAR(255) DEFAULT 'খসড়া'"),
+                ("drafts", "status", "VARCHAR(32) DEFAULT 'in_progress'"),
+                ("drafts", "answers_json", "TEXT DEFAULT '{}'"),
+                ("drafts", "selected_clause_ids_json", "TEXT DEFAULT '[]'"),
+                ("drafts", "checklist_states_json", "TEXT DEFAULT '{}'"),
+                ("drafts", "validation_errors_json", "TEXT DEFAULT '[]'"),
+                ("drafts", "watermark_text", "VARCHAR(255) DEFAULT 'খসড়া'"),
+                ("drafts", "is_finalized", "BOOLEAN DEFAULT 0"),
+                ("drafts", "finalized_at", "VARCHAR(64)"),
+                ("drafts", "created_at", "VARCHAR(64) DEFAULT ''"),
+                ("drafts", "updated_at", "VARCHAR(64) DEFAULT ''"),
             ]:
                 table, col, col_type = col_def
                 try:
@@ -610,11 +795,40 @@ class DatabaseManager:
                     conn.commit()
                 except Exception:
                     pass
+        try:
+            self.seed_default_templates()
+            self.seed_default_emergency_contacts()
+        except Exception:
+            pass
 
     def get_session(self):
         return self.SessionLocal()
 
     # User operations
+    def create_user(
+        self,
+        phone: str = "01711999888",
+        name: str | None = None,
+        role: str = "citizen",
+        preferred_lang: str = "bn",
+        user_id: str | None = None,
+    ) -> dict[str, Any]:
+        uid = user_id or f"user-{uuid.uuid4().hex[:12]}"
+        user_data = {
+            "id": uid,
+            "phone": phone,
+            "name": name,
+            "role": role,
+            "roles": [role],
+            "preferred_lang": preferred_lang,
+            "numeral_style": "bn",
+            "status": "active",
+            "is_onboarded": True,
+            "created_at": self.now_iso(),
+        }
+        self.save_user(user_data)
+        return user_data
+
     def save_user(self, user: dict[str, Any]):
         with self.get_session() as session:
             record = session.query(UserDB).filter(UserDB.id == user["id"]).first()
@@ -811,15 +1025,17 @@ class DatabaseManager:
         details: dict[str, Any] | None = None,
     ):
         entry_id = f"aud-{uuid.uuid4().hex[:12]}"
-        self.save_audit_entry({
-            "id": entry_id,
-            "actor_id": actor_id,
-            "actor_role": actor_type,
-            "action": action,
-            "object_type": object_type,
-            "object_id": object_id,
-            "meta": details or {},
-        })
+        self.save_audit_entry(
+            {
+                "id": entry_id,
+                "actor_id": actor_id,
+                "actor_role": actor_type,
+                "action": action,
+                "object_type": object_type,
+                "object_id": object_id,
+                "meta": details or {},
+            }
+        )
 
     def get_audit_logs(self, object_id: str | None = None) -> list[dict[str, Any]]:
         entries = self.load_all_audit_entries()
@@ -1160,9 +1376,17 @@ class DatabaseManager:
             record.version = rv["version"]
             record.effective_from = rv.get("effective_from", "1971-01-01")
             record.effective_to = rv.get("effective_to")
-            record.definition = json.dumps(rv.get("definition", rv.get("parameters_schema", {}))) if isinstance(rv.get("definition", rv.get("parameters_schema")), (dict, list)) else "{}"
+            record.definition = (
+                json.dumps(rv.get("definition", rv.get("parameters_schema", {})))
+                if isinstance(rv.get("definition", rv.get("parameters_schema")), (dict, list))
+                else "{}"
+            )
             record.status = rv.get("status", "approved" if rv.get("is_active", True) else "draft")
-            record.parameters_schema_json = json.dumps(rv.get("parameters_schema", {})) if isinstance(rv.get("parameters_schema"), (dict, list)) else rv.get("parameters_schema_json", "{}")
+            record.parameters_schema_json = (
+                json.dumps(rv.get("parameters_schema", {}))
+                if isinstance(rv.get("parameters_schema"), (dict, list))
+                else rv.get("parameters_schema_json", "{}")
+            )
             record.is_active = bool(rv.get("is_active", True))
             record.created_at = str(rv.get("created_at", datetime.now(timezone.utc).isoformat()))
             session.commit()
@@ -1175,7 +1399,9 @@ class DatabaseManager:
                     "id": r.id,
                     "rule_id": r.rule_id,
                     "version": r.version,
-                    "parameters_schema": json.loads(r.parameters_schema_json) if r.parameters_schema_json else {},
+                    "parameters_schema": json.loads(r.parameters_schema_json)
+                    if r.parameters_schema_json
+                    else {},
                     "is_active": r.is_active,
                     "created_at": r.created_at,
                 }
@@ -1191,8 +1417,16 @@ class DatabaseManager:
             record.rule_id = test["rule_id"]
             record.version = test["version"]
             record.test_name = test["test_name"]
-            record.input_json = json.dumps(test.get("input_data", {})) if isinstance(test.get("input_data"), (dict, list)) else test.get("input_json", "{}")
-            record.expected_output_json = json.dumps(test.get("expected_output", {})) if isinstance(test.get("expected_output"), (dict, list)) else test.get("expected_output_json", "{}")
+            record.input_json = (
+                json.dumps(test.get("input_data", {}))
+                if isinstance(test.get("input_data"), (dict, list))
+                else test.get("input_json", "{}")
+            )
+            record.expected_output_json = (
+                json.dumps(test.get("expected_output", {}))
+                if isinstance(test.get("expected_output"), (dict, list))
+                else test.get("expected_output_json", "{}")
+            )
             record.created_at = str(test.get("created_at", datetime.now(timezone.utc).isoformat()))
             session.commit()
 
@@ -1209,7 +1443,9 @@ class DatabaseManager:
                     "version": r.version,
                     "test_name": r.test_name,
                     "input_data": json.loads(r.input_json) if r.input_json else {},
-                    "expected_output": json.loads(r.expected_output_json) if r.expected_output_json else {},
+                    "expected_output": json.loads(r.expected_output_json)
+                    if r.expected_output_json
+                    else {},
                     "created_at": r.created_at,
                 }
                 for r in rows
@@ -1226,8 +1462,14 @@ class DatabaseManager:
             record.version = prompt["version"]
             record.system_prompt = prompt["system_prompt"]
             record.user_template = prompt["user_template"]
-            record.schema_json = json.dumps(prompt.get("schema", {})) if isinstance(prompt.get("schema"), (dict, list)) else prompt.get("schema_json", "{}")
-            record.created_at = str(prompt.get("created_at", datetime.now(timezone.utc).isoformat()))
+            record.schema_json = (
+                json.dumps(prompt.get("schema", {}))
+                if isinstance(prompt.get("schema"), (dict, list))
+                else prompt.get("schema_json", "{}")
+            )
+            record.created_at = str(
+                prompt.get("created_at", datetime.now(timezone.utc).isoformat())
+            )
             session.commit()
 
     def get_prompt(self, prompt_id: str) -> dict[str, Any] | None:
@@ -1261,8 +1503,12 @@ class DatabaseManager:
             record.cost_tokens = int(output.get("cost_tokens", 0))
             record.status = output.get("status", "success")
             sec_flags = output.get("security_flags", [])
-            record.security_flags = json.dumps(sec_flags) if isinstance(sec_flags, list) else str(sec_flags)
-            record.created_at = str(output.get("created_at", datetime.now(timezone.utc).isoformat()))
+            record.security_flags = (
+                json.dumps(sec_flags) if isinstance(sec_flags, list) else str(sec_flags)
+            )
+            record.created_at = str(
+                output.get("created_at", datetime.now(timezone.utc).isoformat())
+            )
             session.commit()
 
     def get_ai_output(self, output_id: str) -> dict[str, Any] | None:
@@ -1305,6 +1551,30 @@ class DatabaseManager:
                 "created_at": r.created_at,
             }
 
+    def list_ai_outputs(self, prompt_id: str | None = None) -> list[dict[str, Any]]:
+        with self.get_session() as session:
+            q = session.query(AIOutputDB)
+            if prompt_id:
+                q = q.filter(AIOutputDB.prompt_id == prompt_id)
+            rows = q.all()
+            return [
+                {
+                    "id": r.id,
+                    "prompt_id": r.prompt_id,
+                    "prompt_version": r.prompt_version,
+                    "model": r.model,
+                    "raw_input": r.raw_input,
+                    "redacted_input": r.redacted_input,
+                    "raw_output": r.raw_output,
+                    "unredacted_output": r.unredacted_output,
+                    "cost_tokens": r.cost_tokens,
+                    "status": r.status,
+                    "security_flags": json.loads(r.security_flags) if r.security_flags else [],
+                    "created_at": r.created_at,
+                }
+                for r in rows
+            ]
+
     def save_claim_link(self, claim: dict[str, Any]):
         with self.get_session() as session:
             record = session.query(ClaimLinkDB).filter(ClaimLinkDB.id == claim["id"]).first()
@@ -1318,7 +1588,11 @@ class DatabaseManager:
             record.section_ref = claim.get("section_ref")
             record.verification_status = claim.get("verification_status", "UNVERIFIED")
             record.verification_score = float(claim.get("verification_score", 0.0))
-            record.details_json = json.dumps(claim.get("details", {})) if isinstance(claim.get("details"), (dict, list)) else claim.get("details_json", "{}")
+            record.details_json = (
+                json.dumps(claim.get("details", {}))
+                if isinstance(claim.get("details"), (dict, list))
+                else claim.get("details_json", "{}")
+            )
             record.created_at = str(claim.get("created_at", datetime.now(timezone.utc).isoformat()))
             session.commit()
 
@@ -1480,7 +1754,9 @@ class DatabaseManager:
             record.language = doc_data.get("language", "bn")
             record.processing_status = doc_data.get("processing_status", "uploaded")
             record.intent = doc_data.get("intent", "understand")
-            record.uploaded_at = str(doc_data.get("uploaded_at", datetime.now(timezone.utc).isoformat()))
+            record.uploaded_at = str(
+                doc_data.get("uploaded_at", datetime.now(timezone.utc).isoformat())
+            )
             record.deleted_at = doc_data.get("deleted_at")
             record.retry_count = int(doc_data.get("retry_count", 0))
             record.error_message = doc_data.get("error_message")
@@ -1515,11 +1791,15 @@ class DatabaseManager:
 
     def find_document_by_hash(self, owner_id: str, sha256_hash: str) -> dict[str, Any] | None:
         with self.get_session() as session:
-            r = session.query(DocumentDB).filter(
-                DocumentDB.owner_id == owner_id,
-                DocumentDB.sha256 == sha256_hash,
-                DocumentDB.deleted_at.is_(None)
-            ).first()
+            r = (
+                session.query(DocumentDB)
+                .filter(
+                    DocumentDB.owner_id == owner_id,
+                    DocumentDB.sha256 == sha256_hash,
+                    DocumentDB.deleted_at.is_(None),
+                )
+                .first()
+            )
             if not r:
                 return None
             return {
@@ -1531,7 +1811,9 @@ class DatabaseManager:
                 "intent": r.intent,
             }
 
-    def list_documents(self, owner_id: str | None = None, include_deleted: bool = False) -> list[dict[str, Any]]:
+    def list_documents(
+        self, owner_id: str | None = None, include_deleted: bool = False
+    ) -> list[dict[str, Any]]:
         with self.get_session() as session:
             query = session.query(DocumentDB)
             if owner_id:
@@ -1557,7 +1839,13 @@ class DatabaseManager:
                 for r in rows
             ]
 
-    def update_document_status(self, doc_id: str, status: str, error_message: str | None = None, retry_count: int | None = None):
+    def update_document_status(
+        self,
+        doc_id: str,
+        status: str,
+        error_message: str | None = None,
+        retry_count: int | None = None,
+    ):
         with self.get_session() as session:
             record = session.query(DocumentDB).filter(DocumentDB.id == doc_id).first()
             if record:
@@ -1616,7 +1904,12 @@ class DatabaseManager:
 
     def list_document_pages(self, doc_id: str) -> list[dict[str, Any]]:
         with self.get_session() as session:
-            rows = session.query(DocumentPageDB).filter(DocumentPageDB.document_id == doc_id).order_by(DocumentPageDB.page_no.asc()).all()
+            rows = (
+                session.query(DocumentPageDB)
+                .filter(DocumentPageDB.document_id == doc_id)
+                .order_by(DocumentPageDB.page_no.asc())
+                .all()
+            )
             return [
                 {
                     "id": r.id,
@@ -1711,7 +2004,9 @@ class DatabaseManager:
                 "verified_at": r.verified_at,
             }
 
-    def update_document_field(self, field_id: str, new_value: str, user_id: str) -> dict[str, Any] | None:
+    def update_document_field(
+        self, field_id: str, new_value: str, user_id: str
+    ) -> dict[str, Any] | None:
         with self.get_session() as session:
             r = session.query(DocumentFieldDB).filter(DocumentFieldDB.id == field_id).first()
             if not r:
@@ -1736,7 +2031,9 @@ class DatabaseManager:
 
     def list_document_fields(self, doc_id: str) -> list[dict[str, Any]]:
         with self.get_session() as session:
-            rows = session.query(DocumentFieldDB).filter(DocumentFieldDB.document_id == doc_id).all()
+            rows = (
+                session.query(DocumentFieldDB).filter(DocumentFieldDB.document_id == doc_id).all()
+            )
             return [
                 {
                     "id": r.id,
@@ -1760,7 +2057,11 @@ class DatabaseManager:
     # Resumable upload operations
     def save_resumable_upload(self, upload_data: dict[str, Any]):
         with self.get_session() as session:
-            r = session.query(DocumentUploadResumableDB).filter(DocumentUploadResumableDB.upload_id == upload_data["upload_id"]).first()
+            r = (
+                session.query(DocumentUploadResumableDB)
+                .filter(DocumentUploadResumableDB.upload_id == upload_data["upload_id"])
+                .first()
+            )
             if not r:
                 r = DocumentUploadResumableDB(upload_id=upload_data["upload_id"])
                 session.add(r)
@@ -1771,13 +2072,19 @@ class DatabaseManager:
             r.uploaded_chunks_json = json.dumps(upload_data.get("uploaded_chunks", []))
             r.sha256_hash = upload_data.get("sha256_hash", "")
             r.temp_file_path = upload_data["temp_file_path"]
-            r.created_at = str(upload_data.get("created_at", datetime.now(timezone.utc).isoformat()))
+            r.created_at = str(
+                upload_data.get("created_at", datetime.now(timezone.utc).isoformat())
+            )
             r.expires_at = str(upload_data.get("expires_at", ""))
             session.commit()
 
     def get_resumable_upload(self, upload_id: str) -> dict[str, Any] | None:
         with self.get_session() as session:
-            r = session.query(DocumentUploadResumableDB).filter(DocumentUploadResumableDB.upload_id == upload_id).first()
+            r = (
+                session.query(DocumentUploadResumableDB)
+                .filter(DocumentUploadResumableDB.upload_id == upload_id)
+                .first()
+            )
             if not r:
                 return None
             return {
@@ -1786,7 +2093,9 @@ class DatabaseManager:
                 "filename": r.filename,
                 "total_size": r.total_size,
                 "total_chunks": r.total_chunks,
-                "uploaded_chunks": json.loads(r.uploaded_chunks_json) if r.uploaded_chunks_json else [],
+                "uploaded_chunks": json.loads(r.uploaded_chunks_json)
+                if r.uploaded_chunks_json
+                else [],
                 "sha256_hash": r.sha256_hash,
                 "temp_file_path": r.temp_file_path,
                 "created_at": r.created_at,
@@ -1795,7 +2104,11 @@ class DatabaseManager:
 
     def update_resumable_chunks(self, upload_id: str, chunk_index: int):
         with self.get_session() as session:
-            r = session.query(DocumentUploadResumableDB).filter(DocumentUploadResumableDB.upload_id == upload_id).first()
+            r = (
+                session.query(DocumentUploadResumableDB)
+                .filter(DocumentUploadResumableDB.upload_id == upload_id)
+                .first()
+            )
             if r:
                 chunks = json.loads(r.uploaded_chunks_json) if r.uploaded_chunks_json else []
                 if chunk_index not in chunks:
@@ -1805,7 +2118,9 @@ class DatabaseManager:
 
     def delete_resumable_upload(self, upload_id: str):
         with self.get_session() as session:
-            session.query(DocumentUploadResumableDB).filter(DocumentUploadResumableDB.upload_id == upload_id).delete()
+            session.query(DocumentUploadResumableDB).filter(
+                DocumentUploadResumableDB.upload_id == upload_id
+            ).delete()
             session.commit()
 
     # ---------------------------------------------------------------------------
@@ -1977,13 +2292,18 @@ class DatabaseManager:
                 "created_at": t.created_at,
             }
 
-    def list_tasks(self, case_id: str | None = None, document_id: str | None = None) -> list[dict[str, Any]]:
+    def list_tasks(
+        self, case_id: str | None = None, document_id: str | None = None
+    ) -> list[dict[str, Any]]:
         with self.get_session() as session:
             q = session.query(TaskDB)
             if case_id:
                 q = q.filter(TaskDB.case_id == case_id)
             if document_id:
-                q = q.filter((TaskDB.document_id == document_id) | (TaskDB.related_document_id == document_id))
+                q = q.filter(
+                    (TaskDB.document_id == document_id)
+                    | (TaskDB.related_document_id == document_id)
+                )
             return [
                 {
                     "id": t.id,
@@ -2042,8 +2362,12 @@ class DatabaseManager:
                 document_id=document_id,
                 rule_key=rule_key,
                 rule_version=rule_version,
-                calc_steps=json.dumps(calc_steps, ensure_ascii=False) if calc_steps is not None else None,
-                assumptions=json.dumps(assumptions, ensure_ascii=False) if assumptions is not None else None,
+                calc_steps=json.dumps(calc_steps, ensure_ascii=False)
+                if calc_steps is not None
+                else None,
+                assumptions=json.dumps(assumptions, ensure_ascii=False)
+                if assumptions is not None
+                else None,
                 calculation_basis=calculation_basis,
                 is_user_set=is_user_set,
                 confirmed_by_user=confirmed_by_user,
@@ -2075,12 +2399,17 @@ class DatabaseManager:
 
             if confirmed_by_user and user_id:
                 # AC-M07-1: Automatically create reminder schedule on confirmation
-                self._create_default_reminders_for_deadline(session, str(dl.id), str(user_id), due_date)
+                self._create_default_reminders_for_deadline(
+                    session, str(dl.id), str(user_id), due_date
+                )
 
             return res
 
-    def _create_default_reminders_for_deadline(self, session, deadline_id: str, user_id: str, due_date_str: str):
+    def _create_default_reminders_for_deadline(
+        self, session, deadline_id: str, user_id: str, due_date_str: str
+    ):
         from datetime import datetime, timedelta, timezone
+
         dhaka_tz = timezone(timedelta(hours=6))
         try:
             due_dt = datetime.strptime(due_date_str[:10], "%Y-%m-%d").date()
@@ -2094,7 +2423,9 @@ class DatabaseManager:
         offsets = [-7, -3, -1, 0]
         for offset in offsets:
             sched_date = due_dt + timedelta(days=offset)
-            sched_dt = datetime(sched_date.year, sched_date.month, sched_date.day, 8, 0, 0, tzinfo=dhaka_tz)
+            sched_dt = datetime(
+                sched_date.year, sched_date.month, sched_date.day, 8, 0, 0, tzinfo=dhaka_tz
+            )
 
             # Rule 6: Never create a reminder whose time is already in the past
             if sched_dt <= current_time:
@@ -2138,7 +2469,9 @@ class DatabaseManager:
                 "created_at": dl.created_at,
             }
 
-    def list_deadlines(self, case_id: str | None = None, document_id: str | None = None) -> list[dict[str, Any]]:
+    def list_deadlines(
+        self, case_id: str | None = None, document_id: str | None = None
+    ) -> list[dict[str, Any]]:
         with self.get_session() as session:
             q = session.query(DeadlineDB)
             if case_id:
@@ -2167,7 +2500,9 @@ class DatabaseManager:
                 for dl in q.all()
             ]
 
-    def confirm_deadline(self, deadline_id: str, user_id: str | None = None) -> dict[str, Any] | None:
+    def confirm_deadline(
+        self, deadline_id: str, user_id: str | None = None
+    ) -> dict[str, Any] | None:
         """
         Confirms a deadline (AC-M04-2, AC-M07-1):
         1. Updates confirmed_by_user = True, confirmed_at = now_iso, status = 'upcoming'.
@@ -2197,7 +2532,9 @@ class DatabaseManager:
                 "due_date": dl.due_date,
             }
 
-    def dismiss_or_meet_deadline(self, deadline_id: str, status: str = "completed") -> dict[str, Any] | None:
+    def dismiss_or_meet_deadline(
+        self, deadline_id: str, status: str = "completed"
+    ) -> dict[str, Any] | None:
         """
         Dismisses or meets a deadline (AC-M07-1):
         1. Sets deadline status to completed or dismissed.
@@ -2226,7 +2563,11 @@ class DatabaseManager:
 
     def get_reminders_for_deadline(self, deadline_id: str) -> list[dict[str, Any]]:
         with self.get_session() as session:
-            rows = session.query(ReminderScheduleDB).filter(ReminderScheduleDB.deadline_id == deadline_id).all()
+            rows = (
+                session.query(ReminderScheduleDB)
+                .filter(ReminderScheduleDB.deadline_id == deadline_id)
+                .all()
+            )
             return [
                 {
                     "id": r.id,
@@ -2243,10 +2584,14 @@ class DatabaseManager:
 
     def cancel_reminders_for_deadline(self, deadline_id: str) -> int:
         with self.get_session() as session:
-            cnt = session.query(ReminderScheduleDB).filter(
-                ReminderScheduleDB.deadline_id == deadline_id,
-                ReminderScheduleDB.status == "pending",
-            ).update({"status": "cancelled"})
+            cnt = (
+                session.query(ReminderScheduleDB)
+                .filter(
+                    ReminderScheduleDB.deadline_id == deadline_id,
+                    ReminderScheduleDB.status == "pending",
+                )
+                .update({"status": "cancelled"})
+            )
             session.commit()
             return cnt
 
@@ -2260,7 +2605,11 @@ class DatabaseManager:
     ) -> dict[str, Any]:
         with self.get_session() as session:
             now_iso = datetime.now(timezone.utc).isoformat()
-            rec = session.query(NoticeAnalysisDB).filter(NoticeAnalysisDB.document_id == document_id).first()
+            rec = (
+                session.query(NoticeAnalysisDB)
+                .filter(NoticeAnalysisDB.document_id == document_id)
+                .first()
+            )
             if not rec:
                 rec = NoticeAnalysisDB(
                     id=str(uuid.uuid4()),
@@ -2288,7 +2637,11 @@ class DatabaseManager:
 
     def get_notice_analysis(self, document_id: str) -> dict[str, Any] | None:
         with self.get_session() as session:
-            rec = session.query(NoticeAnalysisDB).filter(NoticeAnalysisDB.document_id == document_id).first()
+            rec = (
+                session.query(NoticeAnalysisDB)
+                .filter(NoticeAnalysisDB.document_id == document_id)
+                .first()
+            )
             if not rec:
                 return None
             return {
@@ -2303,9 +2656,15 @@ class DatabaseManager:
                 "updated_at": rec.updated_at,
             }
 
-    def update_notice_simpler(self, document_id: str, simpler: dict[str, Any]) -> dict[str, Any] | None:
+    def update_notice_simpler(
+        self, document_id: str, simpler: dict[str, Any]
+    ) -> dict[str, Any] | None:
         with self.get_session() as session:
-            rec = session.query(NoticeAnalysisDB).filter(NoticeAnalysisDB.document_id == document_id).first()
+            rec = (
+                session.query(NoticeAnalysisDB)
+                .filter(NoticeAnalysisDB.document_id == document_id)
+                .first()
+            )
             if not rec:
                 return None
             now_iso = datetime.now(timezone.utc).isoformat()
@@ -2352,14 +2711,20 @@ class DatabaseManager:
 
             # Handle associated documents
             if document_action == "delete":
-                doc_links = session.query(CaseDocumentDB).filter(CaseDocumentDB.case_id == case_id).all()
+                doc_links = (
+                    session.query(CaseDocumentDB).filter(CaseDocumentDB.case_id == case_id).all()
+                )
                 for dl in doc_links:
                     d = session.query(DocumentDB).filter(DocumentDB.id == dl.document_id).first()
                     if d:
                         d.deleted_at = now_iso
-                session.query(DocumentDB).filter(DocumentDB.case_id == case_id).update({"deleted_at": now_iso})
+                session.query(DocumentDB).filter(DocumentDB.case_id == case_id).update(
+                    {"deleted_at": now_iso}
+                )
             elif document_action in ("unlink", "keep"):
-                session.query(DocumentDB).filter(DocumentDB.case_id == case_id).update({"case_id": None})
+                session.query(DocumentDB).filter(DocumentDB.case_id == case_id).update(
+                    {"case_id": None}
+                )
                 session.query(CaseDocumentDB).filter(CaseDocumentDB.case_id == case_id).delete()
 
             # Clean tasks and deadlines
@@ -2370,18 +2735,37 @@ class DatabaseManager:
             return True
 
     # Parties
-    def add_case_party(self, case_id: str, name: str, role: str, contact_info: str | None = None) -> dict[str, Any]:
+    def add_case_party(
+        self, case_id: str, name: str, role: str, contact_info: str | None = None
+    ) -> dict[str, Any]:
         with self.get_session() as session:
             party_id = str(uuid.uuid4())
-            party = CasePartyDB(id=party_id, case_id=case_id, name=name, role=role, contact_info=contact_info)
+            party = CasePartyDB(
+                id=party_id, case_id=case_id, name=name, role=role, contact_info=contact_info
+            )
             session.add(party)
             session.commit()
-            return {"id": party.id, "case_id": party.case_id, "name": party.name, "role": party.role, "contact_info": party.contact_info}
+            return {
+                "id": party.id,
+                "case_id": party.case_id,
+                "name": party.name,
+                "role": party.role,
+                "contact_info": party.contact_info,
+            }
 
     def list_case_parties(self, case_id: str) -> list[dict[str, Any]]:
         with self.get_session() as session:
             rows = session.query(CasePartyDB).filter(CasePartyDB.case_id == case_id).all()
-            return [{"id": r.id, "case_id": r.case_id, "name": r.name, "role": r.role, "contact_info": r.contact_info} for r in rows]
+            return [
+                {
+                    "id": r.id,
+                    "case_id": r.case_id,
+                    "name": r.name,
+                    "role": r.role,
+                    "contact_info": r.contact_info,
+                }
+                for r in rows
+            ]
 
     def delete_case_party(self, party_id: str) -> bool:
         with self.get_session() as session:
@@ -2427,7 +2811,12 @@ class DatabaseManager:
 
     def list_case_events(self, case_id: str) -> list[dict[str, Any]]:
         with self.get_session() as session:
-            rows = session.query(CaseEventDB).filter(CaseEventDB.case_id == case_id).order_by(CaseEventDB.event_date.asc()).all()
+            rows = (
+                session.query(CaseEventDB)
+                .filter(CaseEventDB.case_id == case_id)
+                .order_by(CaseEventDB.event_date.asc())
+                .all()
+            )
             return [
                 {
                     "id": r.id,
@@ -2618,10 +3007,14 @@ class DatabaseManager:
     def attach_document_to_case(self, case_id: str, document_id: str) -> dict[str, Any]:
         with self.get_session() as session:
             now_iso = datetime.now(timezone.utc).isoformat()
-            link = session.query(CaseDocumentDB).filter(
-                CaseDocumentDB.case_id == case_id,
-                CaseDocumentDB.document_id == document_id,
-            ).first()
+            link = (
+                session.query(CaseDocumentDB)
+                .filter(
+                    CaseDocumentDB.case_id == case_id,
+                    CaseDocumentDB.document_id == document_id,
+                )
+                .first()
+            )
             if not link:
                 link = CaseDocumentDB(case_id=case_id, document_id=document_id, attached_at=now_iso)
                 session.add(link)
@@ -2640,7 +3033,11 @@ class DatabaseManager:
 
             if not all_doc_ids:
                 return []
-            docs = session.query(DocumentDB).filter(DocumentDB.id.in_(all_doc_ids), DocumentDB.deleted_at.is_(None)).all()
+            docs = (
+                session.query(DocumentDB)
+                .filter(DocumentDB.id.in_(all_doc_ids), DocumentDB.deleted_at.is_(None))
+                .all()
+            )
             return [
                 {
                     "id": d.id,
@@ -2775,7 +3172,9 @@ class DatabaseManager:
 
     def mark_notification_read(self, notification_id: str) -> dict[str, Any] | None:
         with self.get_session() as session:
-            notif = session.query(NotificationDB).filter(NotificationDB.id == notification_id).first()
+            notif = (
+                session.query(NotificationDB).filter(NotificationDB.id == notification_id).first()
+            )
             if not notif:
                 return None
             now_iso = self.get_current_time().isoformat()
@@ -2790,7 +3189,9 @@ class DatabaseManager:
 
     def update_notification(self, notification_id: str, **kwargs) -> dict[str, Any] | None:
         with self.get_session() as session:
-            notif = session.query(NotificationDB).filter(NotificationDB.id == notification_id).first()
+            notif = (
+                session.query(NotificationDB).filter(NotificationDB.id == notification_id).first()
+            )
             if not notif:
                 return None
             for k, v in kwargs.items():
@@ -2807,7 +3208,11 @@ class DatabaseManager:
 
     def get_notification_preferences(self, user_id: str) -> dict[str, Any]:
         with self.get_session() as session:
-            prefs = session.query(NotificationPreferenceDB).filter(NotificationPreferenceDB.user_id == user_id).first()
+            prefs = (
+                session.query(NotificationPreferenceDB)
+                .filter(NotificationPreferenceDB.user_id == user_id)
+                .first()
+            )
             if not prefs:
                 return {
                     "user_id": user_id,
@@ -2830,7 +3235,11 @@ class DatabaseManager:
 
     def save_notification_preferences(self, user_id: str, prefs: dict[str, Any]) -> dict[str, Any]:
         with self.get_session() as session:
-            rec = session.query(NotificationPreferenceDB).filter(NotificationPreferenceDB.user_id == user_id).first()
+            rec = (
+                session.query(NotificationPreferenceDB)
+                .filter(NotificationPreferenceDB.user_id == user_id)
+                .first()
+            )
             now_iso = datetime.now(timezone.utc).isoformat()
             if not rec:
                 rec = NotificationPreferenceDB(
@@ -2864,10 +3273,16 @@ class DatabaseManager:
     def get_legacy_matter(self, matter_id: str) -> dict[str, Any] | None:
         with self.get_session() as session:
             try:
-                res = session.execute(
-                    text("SELECT id, user_id, title, matter_type, client_name, status, created_at FROM matters WHERE id = :mid"),
-                    {"mid": matter_id},
-                ).mappings().first()
+                res = (
+                    session.execute(
+                        text(
+                            "SELECT id, user_id, title, matter_type, client_name, status, created_at FROM matters WHERE id = :mid"
+                        ),
+                        {"mid": matter_id},
+                    )
+                    .mappings()
+                    .first()
+                )
                 if res:
                     return dict(res)
             except Exception:
@@ -2877,16 +3292,1679 @@ class DatabaseManager:
     def list_legacy_matters(self) -> list[dict[str, Any]]:
         with self.get_session() as session:
             try:
-                rows = session.execute(
-                    text("SELECT id, user_id, title, matter_type, client_name, status, created_at FROM matters")
-                ).mappings().all()
+                rows = (
+                    session.execute(
+                        text(
+                            "SELECT id, user_id, title, matter_type, client_name, status, created_at FROM matters"
+                        )
+                    )
+                    .mappings()
+                    .all()
+                )
                 return [dict(r) for r in rows]
             except Exception:
                 return []
 
+    # ---------------------------------------------------------------------------
+    # Intake Sessions & Emergency Contacts (M11 / S7)
+    # ---------------------------------------------------------------------------
+
+    def create_intake_session(
+        self,
+        user_id: str,
+        triage_chips: list[str] | None = None,
+        urgency: str = "normal",
+        urgency_reason: str | None = None,
+    ) -> dict[str, Any]:
+        sid = str(uuid.uuid4())
+        now = self.now_iso()
+        chips = triage_chips or []
+        with self.get_session() as session:
+            db_obj = IntakeSessionDB(
+                id=sid,
+                user_id=user_id,
+                status="in_progress",
+                current_step=1,
+                triage_chips_json=json.dumps(chips, ensure_ascii=False),
+                urgency=urgency,
+                urgency_reason=urgency_reason,
+                answers_json=json.dumps({}, ensure_ascii=False),
+                profile_json=None,
+                created_case_id=None,
+                created_at=now,
+                updated_at=now,
+            )
+            session.add(db_obj)
+            session.commit()
+            return self._session_to_dict(db_obj)
+
+    def get_intake_session(self, session_id: str) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(IntakeSessionDB).filter(IntakeSessionDB.id == session_id).first()
+            if not obj:
+                return None
+            return self._session_to_dict(obj)
+
+    def update_intake_session(self, session_id: str, **kwargs: Any) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(IntakeSessionDB).filter(IntakeSessionDB.id == session_id).first()
+            if not obj:
+                return None
+            for k, v in kwargs.items():
+                if k == "triage_chips" and isinstance(v, list):
+                    obj.triage_chips_json = json.dumps(v, ensure_ascii=False)
+                elif k == "answers" and isinstance(v, dict):
+                    obj.answers_json = json.dumps(v, ensure_ascii=False)
+                elif k == "profile" and isinstance(v, dict):
+                    obj.profile_json = json.dumps(v, ensure_ascii=False)
+                elif hasattr(obj, k):
+                    setattr(obj, k, v)
+            obj.updated_at = self.now_iso()
+            session.commit()
+            return self._session_to_dict(obj)
+
+    def list_intake_sessions(self, user_id: str) -> list[dict[str, Any]]:
+        with self.get_session() as session:
+            objs = (
+                session.query(IntakeSessionDB)
+                .filter(IntakeSessionDB.user_id == user_id)
+                .order_by(IntakeSessionDB.created_at.desc())
+                .all()
+            )
+            return [self._session_to_dict(o) for o in objs]
+
+    def _session_to_dict(self, obj: IntakeSessionDB) -> dict[str, Any]:
+        chips_str = str(obj.triage_chips_json) if obj.triage_chips_json else "[]"
+        answers_str = str(obj.answers_json) if obj.answers_json else "{}"
+        profile_str = str(obj.profile_json) if obj.profile_json else None
+        return {
+            "id": str(obj.id),
+            "user_id": str(obj.user_id),
+            "status": str(obj.status),
+            "current_step": int(obj.current_step),
+            "triage_chips": json.loads(chips_str),
+            "urgency": str(obj.urgency),
+            "urgency_reason": str(obj.urgency_reason) if obj.urgency_reason else None,
+            "answers": json.loads(answers_str),
+            "profile": json.loads(profile_str) if profile_str else None,
+            "created_case_id": str(obj.created_case_id) if obj.created_case_id else None,
+            "created_at": str(obj.created_at),
+            "updated_at": str(obj.updated_at),
+        }
+
+    def create_emergency_contact(
+        self,
+        title: str,
+        phone: str,
+        category: str = "emergency",
+        description_bn: str | None = None,
+        description_en: str | None = None,
+        is_verified: bool = False,
+        last_verified_at: str | None = None,
+        verified_by: str | None = None,
+        source_note: str | None = None,
+        display_order: int = 0,
+    ) -> dict[str, Any]:
+        cid = str(uuid.uuid4())
+        now = self.now_iso()
+        with self.get_session() as session:
+            db_obj = EmergencyContactDB(
+                id=cid,
+                title=title,
+                phone=phone,
+                category=category,
+                description_bn=description_bn,
+                description_en=description_en,
+                is_verified=is_verified,
+                last_verified_at=last_verified_at,
+                verified_by=verified_by,
+                source_note=source_note,
+                is_active=True,
+                display_order=display_order,
+                created_at=now,
+            )
+            session.add(db_obj)
+            session.commit()
+            return self._contact_to_dict(db_obj)
+
+    def get_emergency_contact(self, contact_id: str) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = (
+                session.query(EmergencyContactDB)
+                .filter(EmergencyContactDB.id == contact_id)
+                .first()
+            )
+            if not obj:
+                return None
+            return self._contact_to_dict(obj)
+
+    def list_emergency_contacts(self, active_only: bool = True) -> list[dict[str, Any]]:
+        with self.get_session() as session:
+            q = session.query(EmergencyContactDB)
+            if active_only:
+                q = q.filter(EmergencyContactDB.is_active == True)  # noqa: E712
+            objs = q.order_by(
+                EmergencyContactDB.display_order.asc(), EmergencyContactDB.created_at.asc()
+            ).all()
+            return [self._contact_to_dict(o) for o in objs]
+
+    def update_emergency_contact(self, contact_id: str, **kwargs: Any) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = (
+                session.query(EmergencyContactDB)
+                .filter(EmergencyContactDB.id == contact_id)
+                .first()
+            )
+            if not obj:
+                return None
+            for k, v in kwargs.items():
+                if hasattr(obj, k):
+                    setattr(obj, k, v)
+            session.commit()
+            return self._contact_to_dict(obj)
+
+    def delete_emergency_contact(self, contact_id: str) -> bool:
+        with self.get_session() as session:
+            obj = (
+                session.query(EmergencyContactDB)
+                .filter(EmergencyContactDB.id == contact_id)
+                .first()
+            )
+            if not obj:
+                return False
+            session.delete(obj)
+            session.commit()
+            return True
+
+    # ---------------------------------------------------------------------------
+    # Template & Guided Drafting Operations (M05 / S8)
+    # ---------------------------------------------------------------------------
+
+    def _template_to_dict(self, obj: TemplateDB) -> dict[str, Any]:
+        return {
+            "id": obj.id,
+            "code": obj.code,
+            "title_bn": obj.title_bn,
+            "title_en": obj.title_en,
+            "category": obj.category,
+            "description_bn": obj.description_bn,
+            "description_en": obj.description_en,
+            "what_needed_bn": obj.what_needed_bn,
+            "version": obj.version,
+            "status": obj.status,
+            "author_id": obj.author_id,
+            "approver_id": obj.approver_id,
+            "approval_note": obj.approval_note,
+            "approved_at": obj.approved_at,
+            "effective_from": obj.effective_from,
+            "effective_to": obj.effective_to,
+            "questions_schema": json.loads(str(obj.questions_schema_json))
+            if obj.questions_schema_json
+            else [],
+            "clauses": json.loads(str(obj.clauses_json)) if obj.clauses_json else [],
+            "checklist_schema": json.loads(str(obj.checklist_schema_json))
+            if obj.checklist_schema_json
+            else [],
+            "sample_answers": json.loads(str(obj.sample_answers_json))
+            if obj.sample_answers_json
+            else {},
+            "created_at": obj.created_at,
+            "updated_at": obj.updated_at,
+        }
+
+    def create_template(
+        self,
+        code: str,
+        title_bn: str,
+        title_en: str,
+        category: str,
+        description_bn: str,
+        author_id: str,
+        description_en: str | None = None,
+        what_needed_bn: str | None = None,
+        version: int = 1,
+        status: str = "draft_not_reviewed",
+        effective_from: str | None = None,
+        effective_to: str | None = None,
+        questions_schema: list[dict[str, Any]] | None = None,
+        clauses: list[dict[str, Any]] | None = None,
+        checklist_schema: list[dict[str, Any]] | None = None,
+        sample_answers: dict[str, Any] | None = None,
+        template_id: str | None = None,
+    ) -> dict[str, Any]:
+        tid = template_id or f"tmpl-{code.lower().replace('_', '-')}"
+        now = self.now_iso()
+        with self.get_session() as session:
+            obj = TemplateDB(
+                id=tid,
+                doc_type=category,
+                name=title_en or title_bn or "Template",
+                code=code,
+                title_bn=title_bn,
+                title_en=title_en,
+                category=category,
+                description_bn=description_bn,
+                description_en=description_en,
+                what_needed_bn=what_needed_bn,
+                version=version,
+                status=status,
+                author_id=author_id,
+                effective_from=effective_from,
+                effective_to=effective_to,
+                questions_schema_json=json.dumps(questions_schema or [], ensure_ascii=False),
+                clauses_json=json.dumps(clauses or [], ensure_ascii=False),
+                checklist_schema_json=json.dumps(checklist_schema or [], ensure_ascii=False),
+                sample_answers_json=json.dumps(sample_answers or {}, ensure_ascii=False),
+                created_at=now,
+                updated_at=now,
+            )
+            session.add(obj)
+            session.commit()
+            return self._template_to_dict(obj)
+
+    def get_template(self, template_id: str) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            try:
+                obj = (
+                    session.query(TemplateDB)
+                    .filter((TemplateDB.id == template_id) | (TemplateDB.code == template_id))
+                    .first()
+                )
+            except Exception:
+                session.rollback()
+                obj = session.query(TemplateDB).filter(TemplateDB.id == template_id).first()
+            if not obj:
+                return None
+            return self._template_to_dict(obj)
+
+    def get_template_by_code(self, code: str) -> dict[str, Any] | None:
+        return self.get_template(code)
+
+    def list_templates(
+        self,
+        status: str | None = None,
+        category: str | None = None,
+    ) -> list[dict[str, Any]]:
+        with self.get_session() as session:
+            q = session.query(TemplateDB)
+            if status:
+                q = q.filter(TemplateDB.status == status)
+            if category:
+                q = q.filter(TemplateDB.category == category)
+            rows = q.order_by(TemplateDB.code.asc()).all()
+            return [self._template_to_dict(r) for r in rows]
+
+    def update_template(self, template_id: str, **kwargs) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = (
+                session.query(TemplateDB)
+                .filter((TemplateDB.id == template_id) | (TemplateDB.code == template_id))
+                .first()
+            )
+            if not obj:
+                return None
+            for k, v in kwargs.items():
+                if k in ("questions_schema", "clauses", "checklist_schema", "sample_answers"):
+                    setattr(obj, f"{k}_json", json.dumps(v, ensure_ascii=False))
+                elif hasattr(obj, k):
+                    setattr(obj, k, v)
+            obj.updated_at = self.now_iso()
+            session.commit()
+            return self._template_to_dict(obj)
+
+    def approve_template(
+        self,
+        template_id: str,
+        approver_id: str,
+        note: str,
+        effective_from: str | None = None,
+        effective_to: str | None = None,
+    ) -> dict[str, Any]:
+        """Approves template. Enforces dual custody: approver_id != author_id (AC-M05-1)."""
+        with self.get_session() as session:
+            obj = (
+                session.query(TemplateDB)
+                .filter((TemplateDB.id == template_id) | (TemplateDB.code == template_id))
+                .first()
+            )
+            if not obj:
+                raise ValueError(f"Template '{template_id}' not found")
+            if obj.author_id == approver_id:
+                raise ValueError(
+                    "Author cannot approve own template (approver_id must differ from author_id)"
+                )
+            if not note or not note.strip():
+                raise ValueError("Approval note is mandatory")
+
+            now = self.now_iso()
+            obj.status = "approved"
+            obj.approver_id = approver_id
+            obj.approval_note = note.strip()
+            obj.approved_at = now
+            if effective_from:
+                obj.effective_from = effective_from
+            if effective_to:
+                obj.effective_to = effective_to
+            obj.updated_at = now
+            session.commit()
+
+            # Record in audit log
+            from packages.trust_kernel.audit import audit_service
+
+            audit_service.log(
+                actor_id=approver_id,
+                actor_role="admin",
+                action="APPROVE_TEMPLATE",
+                object_type="template",
+                object_id=obj.id,
+                meta={
+                    "code": obj.code,
+                    "version": obj.version,
+                    "note": note,
+                    "effective_from": obj.effective_from,
+                },
+            )
+            return self._template_to_dict(obj)
+
+    def retire_template(
+        self, template_id: str, actor_id: str, note: str | None = None
+    ) -> dict[str, Any]:
+        with self.get_session() as session:
+            obj = (
+                session.query(TemplateDB)
+                .filter((TemplateDB.id == template_id) | (TemplateDB.code == template_id))
+                .first()
+            )
+            if not obj:
+                raise ValueError(f"Template '{template_id}' not found")
+            now = self.now_iso()
+            obj.status = "retired"
+            obj.updated_at = now
+            session.commit()
+
+            from packages.trust_kernel.audit import audit_service
+
+            audit_service.log(
+                actor_id=actor_id,
+                actor_role="admin",
+                action="RETIRE_TEMPLATE",
+                object_type="template",
+                object_id=obj.id,
+                meta={"code": obj.code, "note": note},
+            )
+            return self._template_to_dict(obj)
+
+    def _draft_to_dict(self, obj: DraftDB) -> dict[str, Any]:
+        return {
+            "id": obj.id,
+            "user_id": obj.user_id,
+            "template_id": obj.template_id,
+            "template_version": obj.template_version,
+            "case_id": obj.case_id,
+            "title": obj.title,
+            "status": obj.status,
+            "answers": json.loads(str(obj.answers_json)) if obj.answers_json else {},
+            "selected_clause_ids": json.loads(str(obj.selected_clause_ids_json))
+            if obj.selected_clause_ids_json
+            else [],
+            "checklist_states": json.loads(str(obj.checklist_states_json))
+            if obj.checklist_states_json
+            else {},
+            "validation_errors": json.loads(str(obj.validation_errors_json))
+            if obj.validation_errors_json
+            else [],
+            "watermark_text": obj.watermark_text,
+            "is_finalized": bool(obj.is_finalized),
+            "finalized_at": obj.finalized_at,
+            "created_at": obj.created_at,
+            "updated_at": obj.updated_at,
+        }
+
+    def create_draft(
+        self,
+        user_id: str,
+        template_id: str,
+        case_id: str | None = None,
+        title: str | None = None,
+        answers: dict[str, Any] | None = None,
+        draft_id: str | None = None,
+    ) -> dict[str, Any]:
+        tmpl = self.get_template(template_id)
+        if not tmpl:
+            raise ValueError(f"Template '{template_id}' not found")
+        did = draft_id or f"drf-{uuid.uuid4().hex[:12]}"
+        now = self.now_iso()
+        doc_title = title or f"{tmpl['title_bn']} (খসড়া)"
+
+        # Initialize default optional clause selection
+        default_clauses = [
+            c["id"]
+            for c in tmpl.get("clauses", [])
+            if not c.get("is_optional", False) or c.get("default_included", False)
+        ]
+
+        # Initialize checklist states to false
+        default_checklist = {item["id"]: False for item in tmpl.get("checklist_schema", [])}
+
+        with self.get_session() as session:
+            obj = DraftDB(
+                id=did,
+                owner_id=user_id,
+                user_id=user_id,
+                template_id=tmpl["id"],
+                template_version=tmpl["version"],
+                case_id=case_id,
+                title=doc_title,
+                status="in_progress",
+                answers_json=json.dumps(answers or {}, ensure_ascii=False),
+                selected_clause_ids_json=json.dumps(default_clauses, ensure_ascii=False),
+                checklist_states_json=json.dumps(default_checklist, ensure_ascii=False),
+                validation_errors_json="[]",
+                watermark_text="খসড়া — AI-সহায়তায় তৈরি, আইনি পরামর্শ নয়",
+                is_finalized=False,
+                finalized_at=None,
+                created_at=now,
+                updated_at=now,
+            )
+            session.add(obj)
+            session.commit()
+            return self._draft_to_dict(obj)
+
+    def get_draft(self, draft_id: str) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(DraftDB).filter(DraftDB.id == draft_id).first()
+            if not obj:
+                return None
+            return self._draft_to_dict(obj)
+
+    def list_drafts(
+        self, user_id: str | None = None, case_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        with self.get_session() as session:
+            q = session.query(DraftDB).filter(DraftDB.status != "deleted")
+            if user_id:
+                q = q.filter(DraftDB.user_id == user_id)
+            if case_id:
+                q = q.filter(DraftDB.case_id == case_id)
+            rows = q.order_by(DraftDB.created_at.desc()).all()
+            return [self._draft_to_dict(r) for r in rows]
+
+    def update_draft(self, draft_id: str, **kwargs) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(DraftDB).filter(DraftDB.id == draft_id).first()
+            if not obj:
+                return None
+            for k, v in kwargs.items():
+                if k in ("answers", "selected_clause_ids", "checklist_states", "validation_errors"):
+                    setattr(obj, f"{k}_json", json.dumps(v, ensure_ascii=False))
+                elif hasattr(obj, k):
+                    setattr(obj, k, v)
+            obj.updated_at = self.now_iso()
+            session.commit()
+            return self._draft_to_dict(obj)
+
+    def delete_draft(self, draft_id: str, user_id: str) -> bool:
+        with self.get_session() as session:
+            obj = (
+                session.query(DraftDB)
+                .filter(DraftDB.id == draft_id, DraftDB.user_id == user_id)
+                .first()
+            )
+            if not obj:
+                return False
+            obj.status = "deleted"
+            obj.updated_at = self.now_iso()
+            session.commit()
+            return True
+
+    def create_draft_export(
+        self,
+        draft_id: str,
+        user_id: str,
+        format: str,
+        storage_key: str,
+        file_hash: str,
+        watermark_applied: bool,
+    ) -> dict[str, Any]:
+        eid = f"exp-{uuid.uuid4().hex[:12]}"
+        now = self.now_iso()
+        with self.get_session() as session:
+            obj = DraftExportDB(
+                id=eid,
+                draft_id=draft_id,
+                user_id=user_id,
+                format=format,
+                storage_key=storage_key,
+                file_hash=file_hash,
+                watermark_applied=watermark_applied,
+                created_at=now,
+            )
+            session.add(obj)
+            session.commit()
+            return {
+                "id": obj.id,
+                "draft_id": obj.draft_id,
+                "user_id": obj.user_id,
+                "format": obj.format,
+                "storage_key": obj.storage_key,
+                "file_hash": obj.file_hash,
+                "watermark_applied": obj.watermark_applied,
+                "created_at": obj.created_at,
+            }
+
+    def list_draft_exports(self, draft_id: str) -> list[dict[str, Any]]:
+        with self.get_session() as session:
+            rows = (
+                session.query(DraftExportDB)
+                .filter(DraftExportDB.draft_id == draft_id)
+                .order_by(DraftExportDB.created_at.desc())
+                .all()
+            )
+            return [
+                {
+                    "id": r.id,
+                    "draft_id": r.draft_id,
+                    "user_id": r.user_id,
+                    "format": r.format,
+                    "storage_key": r.storage_key,
+                    "file_hash": r.file_hash,
+                    "watermark_applied": r.watermark_applied,
+                    "created_at": r.created_at,
+                }
+                for r in rows
+            ]
+
+    def get_draft_export(self, export_id: str) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(DraftExportDB).filter(DraftExportDB.id == export_id).first()
+            if not obj:
+                return None
+            return {
+                "id": obj.id,
+                "draft_id": obj.draft_id,
+                "user_id": obj.user_id,
+                "format": obj.format,
+                "storage_key": obj.storage_key,
+                "file_hash": obj.file_hash,
+                "watermark_applied": obj.watermark_applied,
+                "created_at": obj.created_at,
+            }
+
+    def seed_default_templates(self) -> None:
+        """Seeds the 5 default templates as DRAFT_NOT_REVIEWED placeholders with clearly fake text (SRS M05, B3)."""
+        if self.get_template("DT-01"):
+            return
+
+        templates_to_seed = [
+            {
+                "code": "DT-01",
+                "title_bn": "বাড়ি বা ফ্ল্যাট ভাড়ার চুক্তিপত্র",
+                "title_en": "House / Premises Rental Agreement",
+                "category": "rental",
+                "description_bn": "বাড়ি, ফ্ল্যাট বা বাণিজ্যিক দোকান ভাড়ার জন্য স্ট্যান্ডার্ড খসড়া চুক্তিপত্র।",
+                "description_en": "Standard draft agreement for renting house, apartment, or commercial premises.",
+                "what_needed_bn": "বাড়িওয়ালা ও ভাড়াটিয়ার নাম-ঠিকানা, এনআইডি নম্বর, ভাড়ার পরিমাণ, জামানত ও চুক্তির মেয়াদ।",
+                "version": 1,
+                "status": "draft_not_reviewed",
+                "author_id": "admin-seed",
+                "questions_schema": [
+                    {
+                        "id": "landlord_name",
+                        "type": "text",
+                        "label_bn": "বাড়িওয়ালার নাম",
+                        "label_en": "Landlord Name",
+                        "required": True,
+                        "prefill_from": ["landlord_name", "owner_name", "first_party_name"],
+                    },
+                    {
+                        "id": "landlord_father",
+                        "type": "text",
+                        "label_bn": "বাড়িওয়ালার পিতা/স্বামীর নাম",
+                        "label_en": "Landlord Father/Husband",
+                        "required": True,
+                    },
+                    {
+                        "id": "landlord_address",
+                        "type": "address",
+                        "label_bn": "বাড়িওয়ালার বর্তমান ও স্থায়ী ঠিকানা",
+                        "label_en": "Landlord Address",
+                        "required": True,
+                    },
+                    {
+                        "id": "landlord_nid",
+                        "type": "text",
+                        "label_bn": "বাড়িওয়ালার এনআইডি নম্বর",
+                        "label_en": "Landlord NID",
+                        "required": True,
+                    },
+                    {
+                        "id": "tenant_name",
+                        "type": "text",
+                        "label_bn": "ভাড়াটিয়ার নাম",
+                        "label_en": "Tenant Name",
+                        "required": True,
+                        "prefill_from": ["tenant_name", "client_name", "second_party_name"],
+                    },
+                    {
+                        "id": "tenant_father",
+                        "type": "text",
+                        "label_bn": "ভাড়াটিয়ার পিতা/স্বামীর নাম",
+                        "label_en": "Tenant Father/Husband",
+                        "required": True,
+                    },
+                    {
+                        "id": "tenant_address",
+                        "type": "address",
+                        "label_bn": "ভাড়াটিয়ার স্থায়ী ঠিকানা",
+                        "label_en": "Tenant Permanent Address",
+                        "required": True,
+                    },
+                    {
+                        "id": "tenant_nid",
+                        "type": "text",
+                        "label_bn": "ভাড়াটিয়ার এনআইডি নম্বর",
+                        "label_en": "Tenant NID",
+                        "required": True,
+                    },
+                    {
+                        "id": "premises_address",
+                        "type": "address",
+                        "label_bn": "ভাড়া দেওয়া সম্পত্তির পূর্ণ ঠিকানা ও বিবরণ",
+                        "label_en": "Premises Address",
+                        "required": True,
+                    },
+                    {
+                        "id": "start_date",
+                        "type": "date",
+                        "label_bn": "চুক্তি কার্যকরের শুরুর তারিখ",
+                        "label_en": "Agreement Start Date",
+                        "required": True,
+                    },
+                    {
+                        "id": "end_date",
+                        "type": "date",
+                        "label_bn": "চুক্তি সমাপ্তির তারিখ",
+                        "label_en": "Agreement End Date",
+                        "required": True,
+                    },
+                    {
+                        "id": "monthly_rent",
+                        "type": "amount",
+                        "label_bn": "মাসিক ভাড়ার পরিমাণ (টাকা)",
+                        "label_en": "Monthly Rent (BDT)",
+                        "required": True,
+                    },
+                    {
+                        "id": "monthly_rent_words",
+                        "type": "text",
+                        "label_bn": "মাসিক ভাড়া কথায়",
+                        "label_en": "Monthly Rent in Words",
+                        "required": True,
+                    },
+                    {
+                        "id": "security_deposit",
+                        "type": "amount",
+                        "label_bn": "অগ্রিম জামানত (টাকা)",
+                        "label_en": "Security Deposit (BDT)",
+                        "required": True,
+                    },
+                    {
+                        "id": "security_deposit_words",
+                        "type": "text",
+                        "label_bn": "অগ্রিম জামানত কথায়",
+                        "label_en": "Security Deposit in Words",
+                        "required": True,
+                    },
+                    {
+                        "id": "rent_due_day",
+                        "type": "number",
+                        "label_bn": "প্রতি মাসের কত তারিখের মধ্যে ভাড়া প্রদেয়?",
+                        "label_en": "Rent Due Day of Month",
+                        "required": True,
+                    },
+                    {
+                        "id": "utility_included",
+                        "type": "yes_no",
+                        "label_bn": "গ্যাস, বিদ্যুৎ ও পানির বিল কি ভাড়ার অন্তর্ভুক্ত?",
+                        "label_en": "Utilities Included in Rent?",
+                        "required": True,
+                    },
+                    {
+                        "id": "utility_details",
+                        "type": "text",
+                        "label_bn": "বিল পরিশোধের শর্তাবলী",
+                        "label_en": "Utility Details",
+                        "required": False,
+                        "depends_on": {"id": "utility_included", "value": "no"},
+                    },
+                ],
+                "clauses": [
+                    {
+                        "id": "C-01",
+                        "title_bn": "১. পক্ষগণের পরিচয়",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: প্রথম পক্ষ (বাড়িওয়ালা): {landlord_name}, পিতা/স্বামী: {landlord_father}, ঠিকানা: {landlord_address}, এনআইডি: {landlord_nid}। দ্বিতীয় পক্ষ (ভাড়াটিয়া): {tenant_name}, পিতা/স্বামী: {tenant_father}, ঠিকানা: {tenant_address}, এনআইডি: {tenant_nid}।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-02",
+                        "title_bn": "২. ভাড়া সম্পত্তির বিবরণ",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: দ্বিতীয় পক্ষ প্রথম পক্ষের মালিকানাধীন নিম্ন তফসিলভুক্ত সম্পত্তি ভাড়ায় গ্রহণ করিলেন: {premises_address}।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-03",
+                        "title_bn": "৩. চুক্তির মেয়াদ",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: এই চুক্তির মেয়াদ {start_date} হইতে {end_date} তারিখ পর্যন্ত বলবৎ থাকিবে।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-04",
+                        "title_bn": "৪. মাসিক ভাড়া ও জামানত",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: মাসিক ভাড়া {monthly_rent}/- ({monthly_rent_words}) টাকা ধার্য করা হইল, যাহা প্রতি মাসের {rent_due_day} তারিখের মধ্যে প্রদেয়। অগ্রিম জামানত বাবদ {security_deposit}/- ({security_deposit_words}) টাকা প্রদান করা হইল।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-05",
+                        "title_bn": "৫. ইউটিলিটি বিল পরিশোধ",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: ইউটিলিটি সংক্রান্ত শর্ত: {utility_details}।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-06",
+                        "title_bn": "৬. রক্ষণাবেক্ষণ ও উপ-ভাড়া নিষেধাজ্ঞা",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: ভাড়াটিয়া প্রাঙ্গণটি পরিষ্কার-পরিচ্ছন্ন রাখিবেন এবং অন্য কাহারো নিকট সাবলেট বা উপ-ভাড়া দিতে পারিবেন না।]",
+                        "is_optional": True,
+                        "default_included": True,
+                    },
+                    {
+                        "id": "C-07",
+                        "title_bn": "৭. চুক্তি অবসান ও নোটিশ",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: কোনো পক্ষ চুক্তি বাতিল করিতে চাহিলে অন্য পক্ষকে নূন্যতম এক মাসের লিখিত নোটিশ প্রদান করিতে হইবে।]",
+                        "is_optional": True,
+                        "default_included": True,
+                    },
+                ],
+                "checklist_schema": [
+                    {
+                        "id": "chk_stamp",
+                        "title_bn": "নন-জুডিশিয়াল স্ট্যাম্পে মুদ্রণ",
+                        "description_bn": "স্ট্যাম্প আইন অনুযায়ী ৩০০ টাকার নন-জুডিশিয়াল স্ট্যাম্পে চুক্তিপত্রটি প্রিন্ট করুন।",
+                        "legal_ref": "The Stamp Act, 1899",
+                        "is_required": True,
+                    },
+                    {
+                        "id": "chk_witness",
+                        "title_bn": "২ জন প্রাপ্তবয়স্ক সাক্ষীর স্বাক্ষর",
+                        "description_bn": "উভয় পক্ষের উপস্থিতিতে নূন্যতম ২ জন সাক্ষীর পূর্ণ নাম, ঠিকানা ও স্বাক্ষর নিশ্চিত করুন।",
+                        "legal_ref": "Evidence Act & Contract Act",
+                        "is_required": True,
+                    },
+                    {
+                        "id": "chk_registration",
+                        "title_bn": "রেজিস্ট্রেশন পর্যালোচনা (১ বছরের ঊর্ধ্ব মেয়াদ)",
+                        "description_bn": "চুক্তির মেয়াদ ১ বছরের বেশি হলে স্থানীয় সাব-রেজিস্ট্রি অফিসে নিবন্ধন করা বাধ্যতামূলক।",
+                        "legal_ref": "The Registration Act, 1908 (Section 17)",
+                        "is_required": True,
+                    },
+                ],
+                "sample_answers": {
+                    "landlord_name": "আবুল কাশেম",
+                    "landlord_father": "মরহুম রফিকুল ইসলাম",
+                    "landlord_address": "বাড়ি # ১২, রোড # ৪, ধানমন্ডি, ঢাকা",
+                    "landlord_nid": "1980269251000001",
+                    "tenant_name": "মো: তানভীর হোসেন",
+                    "tenant_father": "আনোয়ার হোসেন",
+                    "tenant_address": "গ্রাম: রামপুর, পো: সোনাপুর, নোয়াখালী",
+                    "tenant_nid": "1992269251000002",
+                    "premises_address": "ফ্ল্যাট ৪-বি, বাড়ি # ১২, রোড # ৪, ধানমন্ডি, ঢাকা",
+                    "start_date": "2026-11-01",
+                    "end_date": "2027-10-31",
+                    "monthly_rent": 25000,
+                    "monthly_rent_words": "পঁচিশ হাজার টাকা",
+                    "security_deposit": 50000,
+                    "security_deposit_words": "পঞ্চাশ হাজার টাকা",
+                    "rent_due_day": 10,
+                    "utility_included": "no",
+                    "utility_details": "বিদ্যুৎ ও গ্যাস বিল ভাড়াটিয়া নিজে প্রতি মাসে পরিশোধ করিবেন।",
+                },
+            },
+            {
+                "code": "DT-02",
+                "title_bn": "সাধারণ হলফনামা (এফিডেভিট)",
+                "title_en": "Affidavit (General)",
+                "category": "affidavit",
+                "description_bn": "নাম সংশোধন, পারিবারিক ঘোষণা বা তথ্যের সত্যতা নিশ্চিতে সাধারণ হলফনামা।",
+                "description_en": "General affidavit for name change, family declarations or factual confirmation.",
+                "what_needed_bn": "হলফকারীর ব্যক্তিগত তথ্য, এনআইডি এবং ঘোষণাকৃত বক্তব্যের বিবরণ।",
+                "version": 1,
+                "status": "draft_not_reviewed",
+                "author_id": "admin-seed",
+                "questions_schema": [
+                    {
+                        "id": "deponent_name",
+                        "type": "text",
+                        "label_bn": "হলফকারীর পূর্ণ নাম",
+                        "label_en": "Deponent Name",
+                        "required": True,
+                        "prefill_from": ["deponent_name", "client_name"],
+                    },
+                    {
+                        "id": "deponent_father",
+                        "type": "text",
+                        "label_bn": "পিতা/স্বামীর নাম",
+                        "label_en": "Father/Husband Name",
+                        "required": True,
+                    },
+                    {
+                        "id": "deponent_address",
+                        "type": "address",
+                        "label_bn": "বর্তমান ও স্থায়ী ঠিকানা",
+                        "label_en": "Deponent Address",
+                        "required": True,
+                    },
+                    {
+                        "id": "deponent_nid",
+                        "type": "text",
+                        "label_bn": "এনআইডি নম্বর",
+                        "label_en": "Deponent NID",
+                        "required": True,
+                    },
+                    {
+                        "id": "affidavit_purpose",
+                        "type": "choice",
+                        "label_bn": "হলফনামার উদ্দেশ্য",
+                        "label_en": "Affidavit Purpose",
+                        "required": True,
+                        "choices": [
+                            "নাম সংশোধন / পদবী স্পষ্টকরণ",
+                            "বৈবাহিক অবস্থা ঘোষণা",
+                            "পারিবারিক প্রত্যয়ন",
+                            "সাধারণ বিবরণ",
+                        ],
+                    },
+                    {
+                        "id": "statement_text",
+                        "type": "text",
+                        "label_bn": "হলফকৃত মূল বক্তব্য / ঘোষণা",
+                        "label_en": "Statement Text",
+                        "required": True,
+                    },
+                    {
+                        "id": "declaration_date",
+                        "type": "date",
+                        "label_bn": "হলফনামা সম্পাদনের তারিখ",
+                        "label_en": "Declaration Date",
+                        "required": True,
+                    },
+                    {
+                        "id": "place_of_execution",
+                        "type": "address",
+                        "label_bn": "সম্পাদনের স্থান (আদালত/এলাকা)",
+                        "label_en": "Place of Execution",
+                        "required": True,
+                    },
+                ],
+                "clauses": [
+                    {
+                        "id": "C-01",
+                        "title_bn": "১. হলফকারীর পরিচয়",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: আমি {deponent_name}, পিতা/স্বামী: {deponent_father}, ঠিকানা: {deponent_address}, এনআইডি: {deponent_nid}, এই মর্মে শপথপূর্বক ঘোষণা করিতেছি যে-]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-02",
+                        "title_bn": "২. শপথকৃত ঘোষণা",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: উদ্দেশ্য: {affidavit_purpose}। ঘোষণা বিবরণ: {statement_text}।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-03",
+                        "title_bn": "৩. সত্যপাঠ",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: উপরে বর্ণিত সকল বক্তব্য আমার জ্ঞান ও বিশ্বাসমতে সত্য। অদ্য {declaration_date} তারিখে {place_of_execution} স্থানে আমি স্বেচ্ছায় স্বাক্ষর করিলাম।]",
+                        "is_optional": False,
+                    },
+                ],
+                "checklist_schema": [
+                    {
+                        "id": "chk_stamp",
+                        "title_bn": "২০০ টাকার নন-জুডিশিয়াল স্ট্যাম্প",
+                        "description_bn": "হলফনামাটি ২০০ টাকার নন-জুডিশিয়াল স্ট্যাম্পে প্রিন্ট করা আবশ্যক।",
+                        "legal_ref": "The Stamp Act, 1899",
+                        "is_required": True,
+                    },
+                    {
+                        "id": "chk_notary",
+                        "title_bn": "নোটারি পাবলিক / ওথ কমিশনারের সত্যায়ন",
+                        "description_bn": "প্রথম শ্রেণির ম্যাজিস্ট্রেট, ওথ কমিশনার অথবা অনুমোদিত নোটারি পাবলিকের সম্মুখে উপস্থিতি ও স্বাক্ষর।",
+                        "legal_ref": "Notaries Ordinance, 1961",
+                        "is_required": True,
+                    },
+                    {
+                        "id": "chk_advocate_id",
+                        "title_bn": "আইনজীবীর মাধ্যমে শনাক্তকরণ",
+                        "description_bn": "শনাক্তকারী বিজ্ঞ আইনজীবীর স্বাক্ষর ও বার কাউন্সিল সনদ নম্বর সংযুক্ত করা।",
+                        "legal_ref": "Bar Council Canons",
+                        "is_required": True,
+                    },
+                ],
+                "sample_answers": {
+                    "deponent_name": "মো: তানভীর হোসেন",
+                    "deponent_father": "আনোয়ার হোসেন",
+                    "deponent_address": "বাড়ি # ১২, ধানমন্ডি, ঢাকা",
+                    "deponent_nid": "1992269251000002",
+                    "affidavit_purpose": "নাম সংশোধন / পদবী স্পষ্টকরণ",
+                    "statement_text": "আমার শিক্ষাগত সনদে নাম 'তানভীর' এবং এনআইডিতে 'মো: তানভীর হোসেন' একই ব্যক্তিকে নির্দেশ করে।",
+                    "declaration_date": "2026-10-15",
+                    "place_of_execution": "ঢাকা সিএমএম আদালত",
+                },
+            },
+            {
+                "code": "DT-03",
+                "title_bn": "আইনি নোটিশের জবাব (রেপ্লাই)",
+                "title_en": "Reply to Legal Notice",
+                "category": "notice_reply",
+                "description_bn": "প্রাপ্ত আইনি নোটিশের অভিযোগ খণ্ডন ও আইনসম্মত জবাব প্রদানের খসড়া।",
+                "description_en": "Draft reply to legal notice refuting allegations and stating legal position.",
+                "what_needed_bn": "প্রাপ্ত নোটিশের আইনজীবী ও প্রেরকের নাম, নোটিশের তারিখ, অস্বীকারকৃত তথ্যের বিবরণ।",
+                "version": 1,
+                "status": "draft_not_reviewed",
+                "author_id": "admin-seed",
+                "questions_schema": [
+                    {
+                        "id": "sender_name",
+                        "type": "text",
+                        "label_bn": "জবাব প্রদানকারীর নাম (আপনার নাম)",
+                        "label_en": "Sender Name",
+                        "required": True,
+                        "prefill_from": ["client_name", "recipient_name"],
+                    },
+                    {
+                        "id": "sender_address",
+                        "type": "address",
+                        "label_bn": "আপনার পূর্ণ ঠিকানা",
+                        "label_en": "Sender Address",
+                        "required": True,
+                    },
+                    {
+                        "id": "notice_lawyer_name",
+                        "type": "text",
+                        "label_bn": "যে আইনজীবীর মাধ্যমে নোটিশ এসেছে",
+                        "label_en": "Notice Lawyer Name",
+                        "required": True,
+                        "prefill_from": ["lawyer_name"],
+                    },
+                    {
+                        "id": "notice_lawyer_address",
+                        "type": "address",
+                        "label_bn": "উক্ত আইনজীবীর চেম্বার ঠিকানা",
+                        "label_en": "Notice Lawyer Address",
+                        "required": True,
+                    },
+                    {
+                        "id": "notice_date",
+                        "type": "date",
+                        "label_bn": "প্রাপ্ত নোটিশের তারিখ",
+                        "label_en": "Notice Date",
+                        "required": True,
+                        "prefill_from": ["notice_date", "stated_date"],
+                    },
+                    {
+                        "id": "allegation_denial",
+                        "type": "text",
+                        "label_bn": "নোটিশের দাবীকৃত অভিযোগের জবাব / অস্বীকার",
+                        "label_en": "Allegation Denial",
+                        "required": True,
+                    },
+                    {
+                        "id": "our_position",
+                        "type": "text",
+                        "label_bn": "আপনার প্রকৃত আইনগত অবস্থান ও সমাপ্তি বক্তব্য",
+                        "label_en": "Our Legal Position",
+                        "required": True,
+                    },
+                ],
+                "clauses": [
+                    {
+                        "id": "C-01",
+                        "title_bn": "১. প্রাপক ও শিরোনাম",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: বরাবর, {notice_lawyer_name}, অ্যাডভোকেট, চেম্বার: {notice_lawyer_address}। বিষয়: আপনার প্রেরিত {notice_date} তারিখের আইনি নোটিশের জবাব।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-02",
+                        "title_bn": "২. অভিযোগ খণ্ডন ও অস্বীকৃতি",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: আমার মক্কেল {sender_name}, সাং {sender_address} এর নির্দেশে জানাইতেছি যে আপনার নোটিশের বক্তব্য ভিত্তিহীন। জবাব: {allegation_denial}।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-03",
+                        "title_bn": "৩. আইনি অবস্থান ও উপসংহার",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: আমার মক্কেলের আইনগত অবস্থান: {our_position}। অতঃপর নোটিশ প্রত্যাহারপূর্বক ক্ষান্ত থাকিবার অনুরোধ করা হইল।]",
+                        "is_optional": False,
+                    },
+                ],
+                "checklist_schema": [
+                    {
+                        "id": "chk_advocate_review",
+                        "title_bn": "বিজ্ঞ আইনজীবীর দ্বারা চূড়ান্ত নিরীক্ষা",
+                        "description_bn": "আইনি নোটিশের জবাবে ভুল বক্তব্য আইনি মামলায় ক্ষতিগ্রস্ত করিতে পারে; আইনজীবীর অনুমোদন নিন।",
+                        "legal_ref": "Advocate Act & Code",
+                        "is_required": True,
+                    },
+                    {
+                        "id": "chk_postal_ad",
+                        "title_bn": "রেজিস্ট্রি ডাকযোগে এডি সহ প্রেরণ",
+                        "description_bn": "রেজিস্ট্রি ডাকযোগে প্রাপ্তিস্বীকারপত্র (A/D) সহ প্রেরণ এবং পোস্ট অফিসের মূল রসিদ যত্নসহ সংরক্ষণ।",
+                        "legal_ref": "General Clauses Act & Post Office Act",
+                        "is_required": True,
+                    },
+                ],
+                "sample_answers": {
+                    "sender_name": "মো: তানভীর হোসেন",
+                    "sender_address": "বাড়ি # ১২, ধানমন্ডি, ঢাকা",
+                    "notice_lawyer_name": "অ্যাডভোকেট এম. এ. করিম",
+                    "notice_lawyer_address": "কক্ষ ২০৪, সুপ্রিম কোর্ট বার ভবন, ঢাকা",
+                    "notice_date": "2026-09-20",
+                    "allegation_denial": "নোটিশে দাবীকৃত ৫০,০০০ টাকা ইতিমধ্যে চেকের মাধ্যমে পরিশোধ করা হইয়াছে এবং কোনো বকেয়া বিদ্যমান নাই।",
+                    "our_position": "নোটিশ গ্রহীতার বিরুদ্ধে কোনো আইনি পদক্ষেপ ভিত্তিহীন হইবে এবং ইহার সকল দায় নোটিশদাতার উপর বর্তাইবে।",
+                },
+            },
+            {
+                "code": "DT-04",
+                "title_bn": "থানায় সাধারণ ডায়েরি (জিডি) এর আবেদন খসড়া",
+                "title_en": "Draft Application for Police General Diary (GD)",
+                "category": "police",
+                "description_bn": "গুরুত্বপূর্ণ দলিল বা কাগজপত্র হারানো অথবা নিরাপত্তার হুমকিতে থানায় জিডি করার দরখাস্ত।",
+                "description_en": "Draft application for police General Diary (GD) for lost documents or security threats.",
+                "what_needed_bn": "থানার নাম, আবেদনকারীর পূর্ণ পরিচয়, হারানোর বা ঘটনার সঠিক বিবরণ ও স্থান।",
+                "version": 1,
+                "status": "draft_not_reviewed",
+                "author_id": "admin-seed",
+                "questions_schema": [
+                    {
+                        "id": "thana_name",
+                        "type": "text",
+                        "label_bn": "সংশ্লিষ্ট থানার নাম ও জেলা",
+                        "label_en": "Thana Name & District",
+                        "required": True,
+                    },
+                    {
+                        "id": "applicant_name",
+                        "type": "text",
+                        "label_bn": "আবেদনকারীর নাম",
+                        "label_en": "Applicant Name",
+                        "required": True,
+                        "prefill_from": ["client_name"],
+                    },
+                    {
+                        "id": "applicant_father",
+                        "type": "text",
+                        "label_bn": "পিতা/স্বামীর নাম",
+                        "label_en": "Applicant Father/Husband",
+                        "required": True,
+                    },
+                    {
+                        "id": "applicant_address",
+                        "type": "address",
+                        "label_bn": "আবেদনকারীর ঠিকানা ও মোবাইল",
+                        "label_en": "Applicant Address & Phone",
+                        "required": True,
+                    },
+                    {
+                        "id": "incident_type",
+                        "type": "choice",
+                        "label_bn": "জিডি করার কারণ",
+                        "label_en": "Reason for GD",
+                        "required": True,
+                        "choices": [
+                            "কাগজপত্র হারানো (এনআইডি/সার্টিফিকেট/দলিল)",
+                            "নিরাপত্তাহীনতা / হুমকির আশঙ্কা",
+                            "অন্যান্য সাধারণ বিবরণ",
+                        ],
+                    },
+                    {
+                        "id": "incident_date",
+                        "type": "date",
+                        "label_bn": "ঘটনার আনুমানিক তারিখ",
+                        "label_en": "Incident Date",
+                        "required": True,
+                    },
+                    {
+                        "id": "incident_details",
+                        "type": "text",
+                        "label_bn": "ঘটনার বিস্তারিত বিবরণ ও হারানো জিনিসের তথ্য",
+                        "label_en": "Incident Details",
+                        "required": True,
+                    },
+                ],
+                "clauses": [
+                    {
+                        "id": "C-01",
+                        "title_bn": "১. দরখাস্তের শিরোনাম",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: বরাবর, অফিসার ইনচার্জ, {thana_name} থানা। বিষয়: সাধারণ ডায়েরি (জিডি) ভুক্তির আবেদন।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-02",
+                        "title_bn": "২. আবেদনকারীর বিবরণ ও ঘটনা",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: জনাব, বিনীত নিবেদন এই যে আমি {applicant_name}, পিতা/স্বামী: {applicant_father}, সাং {applicant_address}। কারণ: {incident_type}। বিবরণ: গত {incident_date} তারিখে নিম্নরূপ ঘটনা সংঘটিত হয়: {incident_details}।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-03",
+                        "title_bn": "৩. প্রার্থিত প্রতিকার",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: অতএব, বিষয়টি আপনার থানার সাধারণ ডায়েরিতে (জিডি) লিপিবদ্ধ করিয়া একটি অনুলিপি প্রদানে মর্জি হয়।]",
+                        "is_optional": False,
+                    },
+                ],
+                "checklist_schema": [
+                    {
+                        "id": "chk_two_copies",
+                        "title_bn": "২ কপি দরখাস্ত প্রিন্ট",
+                        "description_bn": "আবেদনপত্রের ২ কপি প্রিন্ট করিয়া থানায় ডিউটি অফিসারের নিকট পেশ করুন।",
+                        "legal_ref": "Police Regulations Bengal (PRB)",
+                        "is_required": True,
+                    },
+                    {
+                        "id": "chk_receiving_seal",
+                        "title_bn": "রিসিভিং কপি ও জিডি নম্বর সংগ্রহ",
+                        "description_bn": "১টি কপির উপর থানার সিল, জিডি নম্বর, তারিখ ও ডিউটি অফিসারের স্বাক্ষরযুক্ত রিসিভিং কপি সাথে রাখুন।",
+                        "legal_ref": "PRB Rule 377",
+                        "is_required": True,
+                    },
+                ],
+                "sample_answers": {
+                    "thana_name": "মিরপুর মডেল থানা, ঢাকা",
+                    "applicant_name": "মো: তানভীর হোসেন",
+                    "applicant_father": "আনোয়ার হোসেন",
+                    "applicant_address": "বাড়ি # ৫, সেকশন # ১০, মিরপুর, ঢাকা। মোবা: 01711999888",
+                    "incident_type": "কাগজপত্র হারানো (এনআইডি/সার্টিফিকেট/দলিল)",
+                    "incident_date": "2026-10-01",
+                    "incident_details": "আমার জাতীয় পরিচয়পত্র (নম্বর: 1992269251000002) মিরপুর ১০ গোলচত্বর এলাকায় অসাবধানতাবশত হারাইয়া গিয়াছে।",
+                },
+            },
+            {
+                "code": "DT-05",
+                "title_bn": "সাধারণ সেবা বা কাজ সম্পাদনের চুক্তিপত্র",
+                "title_en": "Simple Service / Work Agreement",
+                "category": "commercial",
+                "description_bn": "ফ্রিল্যান্সার, পরামর্শক বা ঠিকাদারি কাজের সাধারণ সেবা চুক্তিপত্র।",
+                "description_en": "General service or work contract for contractors, consultants, and freelancers.",
+                "what_needed_bn": "ক্লায়েন্ট ও সেবা প্রদানকারীর তথ্য, কাজের পরিধি, পারিশ্রমিক ও সমাপ্তির সময়।",
+                "version": 1,
+                "status": "draft_not_reviewed",
+                "author_id": "admin-seed",
+                "questions_schema": [
+                    {
+                        "id": "client_name",
+                        "type": "text",
+                        "label_bn": "সেবা গ্রহণকারীর নাম (ক্লায়েন্ট)",
+                        "label_en": "Client Name",
+                        "required": True,
+                        "prefill_from": ["client_name", "first_party_name"],
+                    },
+                    {
+                        "id": "client_address",
+                        "type": "address",
+                        "label_bn": "ক্লায়েন্টের পূর্ণ ঠিকানা",
+                        "label_en": "Client Address",
+                        "required": True,
+                    },
+                    {
+                        "id": "provider_name",
+                        "type": "text",
+                        "label_bn": "সেবা প্রদানকারীর নাম (কন্ট্রাক্টর)",
+                        "label_en": "Service Provider Name",
+                        "required": True,
+                        "prefill_from": ["provider_name", "second_party_name"],
+                    },
+                    {
+                        "id": "provider_address",
+                        "type": "address",
+                        "label_bn": "সেবা প্রদানকারীর ঠিকানা",
+                        "label_en": "Provider Address",
+                        "required": True,
+                    },
+                    {
+                        "id": "scope_of_work",
+                        "type": "text",
+                        "label_bn": "কাজের সুনির্দিষ্ট পরিধি ও বিবরণ",
+                        "label_en": "Scope of Work",
+                        "required": True,
+                    },
+                    {
+                        "id": "contract_amount",
+                        "type": "amount",
+                        "label_bn": "মোট চুক্তি মূল্য (টাকা)",
+                        "label_en": "Contract Amount (BDT)",
+                        "required": True,
+                    },
+                    {
+                        "id": "contract_amount_words",
+                        "type": "text",
+                        "label_bn": "চুক্তি মূল্য কথায়",
+                        "label_en": "Contract Amount in Words",
+                        "required": True,
+                    },
+                    {
+                        "id": "start_date",
+                        "type": "date",
+                        "label_bn": "কাজ শুরুর তারিখ",
+                        "label_en": "Work Start Date",
+                        "required": True,
+                    },
+                    {
+                        "id": "end_date",
+                        "type": "date",
+                        "label_bn": "কাজ সমাপ্তির নির্ধারিত তারিখ",
+                        "label_en": "Work Completion Date",
+                        "required": True,
+                    },
+                ],
+                "clauses": [
+                    {
+                        "id": "C-01",
+                        "title_bn": "১. পক্ষদ্বয়ের পরিচয়",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: প্রথম পক্ষ (ক্লায়েন্ট): {client_name}, সাং {client_address}। দ্বিতীয় পক্ষ (সেবা প্রদানকারী): {provider_name}, সাং {provider_address}।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-02",
+                        "title_bn": "২. কাজের বিবরণ ও পরিধি",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: দ্বিতীয় পক্ষ প্রথম পক্ষের জন্য নিম্নোক্ত কাজ সম্পাদন করিবেন: {scope_of_work}।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-03",
+                        "title_bn": "৩. পারিশ্রমিক ও মূল্য পরিশোধ",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: উক্ত কাজের মোট চুক্তি মূল্য {contract_amount}/- ({contract_amount_words}) টাকা ধার্য করা হইল।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-04",
+                        "title_bn": "৪. সময়সীমা ও সমাপ্তি",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: কাজের মেয়াদ {start_date} হইতে {end_date} তারিখ পর্যন্ত নির্ধারিত রহিল।]",
+                        "is_optional": False,
+                    },
+                    {
+                        "id": "C-05",
+                        "title_bn": "৫. গোপনীয়তা ও বুদ্ধিবৃত্তিক সম্পদ",
+                        "text_template_bn": "[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER: সম্পাদিত কাজের সকল মেধা সম্পদ ও তথ্যের গোপনীয়তা রক্ষা করা হইবে।]",
+                        "is_optional": True,
+                        "default_included": True,
+                    },
+                ],
+                "checklist_schema": [
+                    {
+                        "id": "chk_stamp",
+                        "title_bn": "উপযুক্ত মূল্যের নন-জুডিশিয়াল স্ট্যাম্প",
+                        "description_bn": "চুক্তিমূল্য অনুযায়ী নির্ধারিত সরকারি নন-জুডিশিয়াল স্ট্যাম্পে চুক্তি মুদ্রণ।",
+                        "legal_ref": "The Stamp Act, 1899",
+                        "is_required": True,
+                    },
+                    {
+                        "id": "chk_witness",
+                        "title_bn": "উভয় পক্ষের উপস্থিতিতে ২ জন সাক্ষীর স্বাক্ষর",
+                        "description_bn": "চুক্তির বৈধতা ও বলবৎযোগ্যতা নিশ্চিতকরণে সাক্ষীদের স্বাক্ষর আবশ্যক।",
+                        "legal_ref": "Contract Act, 1872",
+                        "is_required": True,
+                    },
+                ],
+                "sample_answers": {
+                    "client_name": "এবিসি টেকনোলজিস লি:",
+                    "client_address": "গুলশান-২, ঢাকা",
+                    "provider_name": "মো: তানভীর হোসেন",
+                    "provider_address": "বাড়ি # ১২, ধানমন্ডি, ঢাকা",
+                    "scope_of_work": "ওয়েবসাইট ডিজাইন ও সফটওয়্যার ডেভেলপমেন্ট সেবা প্রদান।",
+                    "contract_amount": 75000,
+                    "contract_amount_words": "পঁচাত্তর হাজার টাকা",
+                    "start_date": "2026-11-01",
+                    "end_date": "2026-12-31",
+                },
+            },
+        ]
+
+        for tmpl in templates_to_seed:
+            self.create_template(**tmpl)  # type: ignore[arg-type]
+
+    def seed_default_emergency_contacts(self) -> None:
+        """Seeds standard emergency contact placeholders. Hard rule: is_verified=False, last_verified_at=None."""
+        existing = self.list_emergency_contacts(active_only=False)
+        if existing:
+            return
+
+        defaults: list[dict[str, Any]] = [
+            {
+                "title": "জাতীয় জরুরি সেবা (পুলিশ, অ্যাম্বুলেন্স, ফায়ার সার্ভিস)",
+                "phone": "999",
+                "category": "emergency",
+                "description_bn": "যে কোনো জরুরি পরিস্থিতিতে পুলিশ, অ্যাম্বুলেন্স বা ফায়ার সার্ভিসের জন্য কল করুন।",
+                "description_en": "National Emergency Service for Police, Ambulance and Fire Service.",
+                "is_verified": False,
+                "last_verified_at": None,
+                "verified_by": None,
+                "source_note": None,
+                "display_order": 1,
+            },
+            {
+                "title": "জাতীয় আইনগত সহায়তা সংস্থা (NLASO)",
+                "phone": "16430",
+                "category": "legal_aid",
+                "description_bn": "সরকারি খরচে বিনামূল্যে আইনি পরামর্শ ও আইনজীবী সহায়তা পাওয়ার জন্য।",
+                "description_en": "National Legal Aid Services Organization toll-free helpline.",
+                "is_verified": False,
+                "last_verified_at": None,
+                "verified_by": None,
+                "source_note": None,
+                "display_order": 2,
+            },
+            {
+                "title": "নারী ও শিশু নির্যাতন প্রতিরোধ হেল্পলাইন",
+                "phone": "109",
+                "category": "violence_against_women",
+                "description_bn": "নারী বা শিশু সহিংসতার শিকার হলে অবিলম্বে টোল-ফ্রি এই নম্বরে সহায়তা নিন।",
+                "description_en": "Toll-free helpline for prevention of violence against women and children.",
+                "is_verified": False,
+                "last_verified_at": None,
+                "verified_by": None,
+                "source_note": None,
+                "display_order": 3,
+            },
+        ]
+        for d in defaults:
+            self.create_emergency_contact(**d)
+
+    def _contact_to_dict(self, obj: EmergencyContactDB) -> dict[str, Any]:
+        return {
+            "id": obj.id,
+            "title": obj.title,
+            "phone": obj.phone,
+            "category": obj.category,
+            "description_bn": obj.description_bn,
+            "description_en": obj.description_en,
+            "is_verified": bool(obj.is_verified),
+            "last_verified_at": obj.last_verified_at,
+            "verified_by": obj.verified_by,
+            "source_note": obj.source_note,
+            "is_active": bool(obj.is_active),
+            "display_order": obj.display_order,
+            "created_at": obj.created_at,
+        }
+
+    # -----------------------------------------------------------------------
+    # Sprint S9 Module M08: Briefs, Consents & Secure Links Operations
+    # -----------------------------------------------------------------------
+    def create_brief(
+        self, case_id: str, owner_id: str, title: str, sections: dict[str, Any]
+    ) -> dict[str, Any]:
+        bid = f"brf-{uuid.uuid4().hex[:12]}"
+        now = self.now_iso()
+        with self.get_session() as session:
+            obj = BriefDB(
+                id=bid,
+                case_id=case_id,
+                owner_id=owner_id,
+                title=title,
+                sections_json=json.dumps(sections, ensure_ascii=False),
+                is_edited=False,
+                created_at=now,
+                updated_at=now,
+            )
+            session.add(obj)
+            session.commit()
+            return self._brief_to_dict(obj)
+
+    def get_brief(self, brief_id: str) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(BriefDB).filter(BriefDB.id == brief_id).first()
+            return self._brief_to_dict(obj) if obj else None
+
+    def get_brief_by_case(self, case_id: str) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = (
+                session.query(BriefDB)
+                .filter(BriefDB.case_id == case_id)
+                .order_by(BriefDB.created_at.desc())
+                .first()
+            )
+            return self._brief_to_dict(obj) if obj else None
+
+    def update_brief(
+        self,
+        brief_id: str,
+        title: str | None = None,
+        sections: dict[str, Any] | None = None,
+        is_edited: bool = True,
+    ) -> dict[str, Any] | None:
+        now = self.now_iso()
+        with self.get_session() as session:
+            obj = session.query(BriefDB).filter(BriefDB.id == brief_id).first()
+            if not obj:
+                return None
+            if title is not None:
+                obj.title = title
+            if sections is not None:
+                obj.sections_json = json.dumps(sections, ensure_ascii=False)
+            obj.is_edited = is_edited
+            obj.updated_at = now
+            session.commit()
+            return self._brief_to_dict(obj)
+
+    def delete_brief(self, brief_id: str) -> bool:
+        with self.get_session() as session:
+            obj = session.query(BriefDB).filter(BriefDB.id == brief_id).first()
+            if not obj:
+                return False
+            session.delete(obj)
+            session.commit()
+            return True
+
+    def _brief_to_dict(self, obj: BriefDB) -> dict[str, Any]:
+        return {
+            "id": obj.id,
+            "case_id": obj.case_id,
+            "owner_id": obj.owner_id,
+            "title": obj.title,
+            "sections": json.loads(str(obj.sections_json)) if obj.sections_json else {},
+            "is_edited": bool(obj.is_edited),
+            "created_at": obj.created_at,
+            "updated_at": obj.updated_at,
+        }
+
+    def create_brief_link(
+        self,
+        consent_id: str,
+        case_id: str,
+        token_hash: str,
+        recipient_contact: str,
+        expires_at: str,
+    ) -> dict[str, Any]:
+        lid = f"lnk-{uuid.uuid4().hex[:12]}"
+        now = self.now_iso()
+        with self.get_session() as session:
+            obj = BriefLinkDB(
+                id=lid,
+                consent_id=consent_id,
+                case_id=case_id,
+                token_hash=token_hash,
+                recipient_contact=recipient_contact,
+                otp_hash=None,
+                otp_expires_at=None,
+                otp_attempts=0,
+                otp_locked_until=None,
+                otp_verified_at=None,
+                view_count=0,
+                last_viewed_at=None,
+                expires_at=expires_at,
+                revoked_at=None,
+                created_at=now,
+            )
+            session.add(obj)
+            session.commit()
+            return self._brief_link_to_dict(obj)
+
+    def get_brief_link_by_token_hash(self, token_hash: str) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(BriefLinkDB).filter(BriefLinkDB.token_hash == token_hash).first()
+            return self._brief_link_to_dict(obj) if obj else None
+
+    def get_brief_link(self, link_id: str) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(BriefLinkDB).filter(BriefLinkDB.id == link_id).first()
+            return self._brief_link_to_dict(obj) if obj else None
+
+    def get_brief_links_for_consent(self, consent_id: str) -> list[dict[str, Any]]:
+        with self.get_session() as session:
+            rows = (
+                session.query(BriefLinkDB)
+                .filter(BriefLinkDB.consent_id == consent_id)
+                .order_by(BriefLinkDB.created_at.desc())
+                .all()
+            )
+            return [self._brief_link_to_dict(r) for r in rows]
+
+    def get_brief_links_for_case(self, case_id: str) -> list[dict[str, Any]]:
+        with self.get_session() as session:
+            rows = (
+                session.query(BriefLinkDB)
+                .filter(BriefLinkDB.case_id == case_id)
+                .order_by(BriefLinkDB.created_at.desc())
+                .all()
+            )
+            return [self._brief_link_to_dict(r) for r in rows]
+
+    def update_brief_link(self, link_id: str, **kwargs) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(BriefLinkDB).filter(BriefLinkDB.id == link_id).first()
+            if not obj:
+                return None
+            for k, v in kwargs.items():
+                if hasattr(obj, k):
+                    setattr(obj, k, v)
+            session.commit()
+            return self._brief_link_to_dict(obj)
+
+    def _brief_link_to_dict(self, obj: BriefLinkDB) -> dict[str, Any]:
+        return {
+            "id": obj.id,
+            "consent_id": obj.consent_id,
+            "case_id": obj.case_id,
+            "token_hash": obj.token_hash,
+            "recipient_contact": obj.recipient_contact,
+            "otp_hash": obj.otp_hash,
+            "otp_expires_at": obj.otp_expires_at,
+            "otp_attempts": obj.otp_attempts,
+            "otp_locked_until": obj.otp_locked_until,
+            "otp_verified_at": obj.otp_verified_at,
+            "view_count": obj.view_count,
+            "last_viewed_at": obj.last_viewed_at,
+            "expires_at": obj.expires_at,
+            "revoked_at": obj.revoked_at,
+            "created_at": obj.created_at,
+        }
+
+    def create_sharing_consent(
+        self,
+        grantor_id: str,
+        grantee_contact: str,
+        scope: str,
+        permissions: dict[str, Any],
+        starts_at: str,
+        expires_at: str,
+    ) -> dict[str, Any]:
+        cid = f"cns-{uuid.uuid4().hex[:12]}"
+        now = self.now_iso()
+        with self.get_session() as session:
+            obj = ConsentDB(
+                id=cid,
+                grantor_id=grantor_id,
+                grantee_id=grantee_contact,
+                scope=scope,
+                permissions_json=json.dumps(permissions, ensure_ascii=False),
+                starts_at=starts_at,
+                expires_at=expires_at,
+                revoked_at=None,
+                created_at=now,
+            )
+            session.add(obj)
+            session.commit()
+            return self._consent_to_dict(obj)
+
+    def get_sharing_consent(self, consent_id: str) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(ConsentDB).filter(ConsentDB.id == consent_id).first()
+            return self._consent_to_dict(obj) if obj else None
+
+    def list_sharing_consents(
+        self, grantor_id: str, status_filter: str | None = None
+    ) -> list[dict[str, Any]]:
+        now = self.now_iso()
+        with self.get_session() as session:
+            query = session.query(ConsentDB).filter(ConsentDB.grantor_id == grantor_id)
+            rows = query.order_by(ConsentDB.created_at.desc()).all()
+            res = []
+            for r in rows:
+                c_dict = self._consent_to_dict(r)
+                is_revoked = bool(r.revoked_at)
+                is_expired = not is_revoked and (now >= r.expires_at)
+
+                if is_revoked:
+                    status = "revoked"
+                elif is_expired:
+                    status = "expired"
+                else:
+                    status = "active"
+                c_dict["status"] = status
+
+                if status_filter:
+                    if status == status_filter:
+                        res.append(c_dict)
+                else:
+                    res.append(c_dict)
+            return res
+
+    def revoke_sharing_consent(self, consent_id: str, grantor_id: str) -> dict[str, Any] | None:
+        now = self.now_iso()
+        with self.get_session() as session:
+            obj = (
+                session.query(ConsentDB)
+                .filter(ConsentDB.id == consent_id, ConsentDB.grantor_id == grantor_id)
+                .first()
+            )
+            if not obj:
+                return None
+            obj.revoked_at = now
+            # Also revoke linked brief_links
+            session.query(BriefLinkDB).filter(BriefLinkDB.consent_id == consent_id).update(
+                {"revoked_at": now}
+            )
+            session.commit()
+            return self._consent_to_dict(obj)
+
+    def _consent_to_dict(self, obj: ConsentDB) -> dict[str, Any]:
+        return {
+            "id": obj.id,
+            "grantor_id": obj.grantor_id,
+            "grantee_id": obj.grantee_id,
+            "recipient_contact": obj.grantee_id,
+            "scope": obj.scope,
+            "permissions": json.loads(str(obj.permissions_json)) if obj.permissions_json else {},
+            "starts_at": obj.starts_at,
+            "expires_at": obj.expires_at,
+            "revoked_at": obj.revoked_at,
+            "created_at": obj.created_at,
+        }
+
     def clear_all_data(self):
         """Used in test fixtures to cleanly wipe test databases."""
         with self.get_session() as session:
+            session.query(BriefLinkDB).delete()
+            session.query(BriefDB).delete()
+            session.query(DraftExportDB).delete()
+            session.query(DraftDB).delete()
+            session.query(TemplateDB).delete()
+            session.query(IntakeSessionDB).delete()
+            session.query(EmergencyContactDB).delete()
             session.query(NotificationPreferenceDB).delete()
             session.query(NotificationDB).delete()
             session.query(CaseDocumentDB).delete()

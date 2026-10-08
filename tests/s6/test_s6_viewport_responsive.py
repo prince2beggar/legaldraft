@@ -27,7 +27,9 @@ from playwright.sync_api import sync_playwright
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = REPO_ROOT / "backend" / "app" / "static"
 SCREENSHOTS_DIR = REPO_ROOT / "storage" / "screenshots"
-ARTIFACT_DIR = Path("C:/Users/Lenovo/.gemini/antigravity/brain/f5b387fc-eb28-4e1b-9940-b3291f442234")
+ARTIFACT_DIR = Path(
+    "C:/Users/Lenovo/.gemini/antigravity/brain/f5b387fc-eb28-4e1b-9940-b3291f442234"
+)
 
 VIEWPORTS = [
     {"name": "mobile_360", "width": 360, "height": 640, "is_mobile": True},
@@ -119,11 +121,21 @@ def test_s6_screens_responsive_and_screenshots(browser_instance, view):
         # 3. Capture screenshot
         img_name = f"{view['id']}_{vp['name']}.png"
         target_path = SCREENSHOTS_DIR / img_name
-        page.screenshot(path=str(target_path), full_page=False)
+        try:
+            page.screenshot(path=str(target_path), full_page=False)
+        except OSError:
+            import time
+            time.sleep(0.3)
+            page.screenshot(path=str(target_path), full_page=False)
         assert target_path.exists()
 
         # Copy to artifact directory if available
         if ARTIFACT_DIR.exists():
-            shutil.copy(target_path, ARTIFACT_DIR / img_name)
+            try:
+                shutil.copy(target_path, ARTIFACT_DIR / img_name)
+            except OSError:
+                import time
+                time.sleep(0.2)
+                shutil.copy(target_path, ARTIFACT_DIR / img_name)
 
         context.close()

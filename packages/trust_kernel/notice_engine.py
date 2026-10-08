@@ -116,7 +116,9 @@ class NoticeEngine:
                     scope="documents.read",
                 )
                 if not has_consent:
-                    raise PermissionError(f"User '{user_id}' does not have permission to view document '{document_id}'.")
+                    raise PermissionError(
+                        f"User '{user_id}' does not have permission to view document '{document_id}'."
+                    )
 
         # 2. Extract Document Pages and Combined OCR Text
         pages = self.db.get_document_pages(document_id)
@@ -125,15 +127,27 @@ class NoticeEngine:
             combined_text = doc.get("full_text") or ""
             avg_confidence = 0.95 if combined_text else 0.0
         else:
-            combined_text = " ".join([p.get("ocr_text", "") for p in pages if p.get("ocr_text")]).strip()
-            confidences = [p.get("ocr_confidence", 0.9) for p in pages if p.get("ocr_confidence") is not None]
+            combined_text = " ".join(
+                [p.get("ocr_text", "") for p in pages if p.get("ocr_text")]
+            ).strip()
+            confidences = [
+                p.get("ocr_confidence", 0.9) for p in pages if p.get("ocr_confidence") is not None
+            ]
             avg_confidence = sum(confidences) / len(confidences) if confidences else 0.9
 
         eff_as_of_date = as_of_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
         # 3. Detect Edge Cases
-        is_blurry = avg_confidence < 0.50 or len(combined_text.strip()) < 25 or "[অস্পষ্ট স্ক্যান]" in combined_text
-        has_handwriting = "হাতের লেখা" in combined_text or "[হাতে লেখা]" in combined_text or "handwritten" in combined_text.lower()
+        is_blurry = (
+            avg_confidence < 0.50
+            or len(combined_text.strip()) < 25
+            or "[অস্পষ্ট স্ক্যান]" in combined_text
+        )
+        has_handwriting = (
+            "হাতের লেখা" in combined_text
+            or "[হাতে লেখা]" in combined_text
+            or "handwritten" in combined_text.lower()
+        )
         multiple_notices = (
             "একাধিক নোটিশ" in combined_text
             or "দুটি নোটিশ" in combined_text
@@ -152,7 +166,9 @@ class NoticeEngine:
         # Fallback state if scan is too blurry / unreadable (SRS M04 Edge Case)
         if is_blurry:
             fallback_res = self._build_unreadable_fallback(document_id, eff_as_of_date)
-            self.db.save_notice_analysis(document_id, user_id, fallback_res, "not_sure", eff_as_of_date)
+            self.db.save_notice_analysis(
+                document_id, user_id, fallback_res, "not_sure", eff_as_of_date
+            )
             self._log_audit(user_id, "notice.interpreted.fallback_unreadable", document_id)
             return fallback_res
 
@@ -172,10 +188,16 @@ class NoticeEngine:
                 provider_type = gw_res.get("provider", "fake")
                 break
             except SchemaValidationError as e:
-                logger.warning("Attempt %s for notice.explain.v1 schema validation failed: %s", attempt, e)
+                logger.warning(
+                    "Attempt %s for notice.explain.v1 schema validation failed: %s", attempt, e
+                )
                 if attempt == 2:
-                    fallback_res = self._build_unreadable_fallback(document_id, eff_as_of_date, error_msg="নথিটির কাঠামো স্পষ্টভাবে পড়া সম্ভব হয়নি।")
-                    self.db.save_notice_analysis(document_id, user_id, fallback_res, "not_sure", eff_as_of_date)
+                    fallback_res = self._build_unreadable_fallback(
+                        document_id, eff_as_of_date, error_msg="নথিটির কাঠামো স্পষ্টভাবে পড়া সম্ভব হয়নি।"
+                    )
+                    self.db.save_notice_analysis(
+                        document_id, user_id, fallback_res, "not_sure", eff_as_of_date
+                    )
                     return fallback_res
 
         if not analysis_data:
@@ -201,7 +223,9 @@ class NoticeEngine:
             text = item.get("text", "")
             claims = item.get("claims", [])
             for c in claims:
-                report = self.verifier.verify_span(c.get("text", text), combined_text, c.get("span_ref"))
+                report = self.verifier.verify_span(
+                    c.get("text", text), combined_text, c.get("span_ref")
+                )
                 c["verification_status"] = report.status
                 c["match_score"] = report.match_score
                 claims_to_store.append(c)
@@ -212,7 +236,9 @@ class NoticeEngine:
                 text = item.get("text", "")
                 claims = item.get("claims", [])
                 for c in claims:
-                    report = self.verifier.verify_span(c.get("text", text), combined_text, c.get("span_ref"))
+                    report = self.verifier.verify_span(
+                        c.get("text", text), combined_text, c.get("span_ref")
+                    )
                     c["verification_status"] = report.status
                     c["match_score"] = report.match_score
                     claims_to_store.append(c)
@@ -256,7 +282,11 @@ class NoticeEngine:
             stated_text = d.get("stated_text", "")
 
             # Security Guard (Decision D6): Never keep free-text LLM dates without provenance
-            if stated_date and not (stated_date in combined_text or format_bangla_date(stated_date) in combined_text or to_bangla_digits(stated_date) in combined_text):
+            if stated_date and not (
+                stated_date in combined_text
+                or format_bangla_date(stated_date) in combined_text
+                or to_bangla_digits(stated_date) in combined_text
+            ):
                 # Stated date does not match source text verbatim
                 stated_date = None
 
@@ -264,7 +294,9 @@ class NoticeEngine:
                 "label": d.get("label", "গুরুত্বপূর্ণ তারিখ"),
                 "stated_text": stated_text,
                 "stated_date": stated_date,
-                "stated_date_formatted_bn": format_bangla_date(stated_date) if stated_date else None,
+                "stated_date_formatted_bn": format_bangla_date(stated_date)
+                if stated_date
+                else None,
                 "date_label_note": "নোটিশে লেখা তারিখ, অনুগ্রহ করে নিশ্চিত করুন" if stated_date else None,
                 "relative": relative,
                 "requires_trigger_date": bool(relative),
@@ -308,7 +340,9 @@ class NoticeEngine:
 
         return analysis_data
 
-    def _build_primary_deadline_card(self, dates: list[dict[str, Any]], as_of_date: str) -> dict[str, Any]:
+    def _build_primary_deadline_card(
+        self, dates: list[dict[str, Any]], as_of_date: str
+    ) -> dict[str, Any]:
         """Builds interactive DeadlineCard view model with Bangla digits and calculation state."""
         as_of_dt = datetime.strptime(as_of_date[:10], "%Y-%m-%d").date()
 
@@ -359,7 +393,9 @@ class NoticeEngine:
             "note": "নোটিশে নির্দিষ্ট কোনো সময়সীমা উল্লেখ পাওয়া যায়নি।",
         }
 
-    def _build_unreadable_fallback(self, document_id: str, as_of_date: str, error_msg: str | None = None) -> dict[str, Any]:
+    def _build_unreadable_fallback(
+        self, document_id: str, as_of_date: str, error_msg: str | None = None
+    ) -> dict[str, Any]:
         """Returns standard fallback payload when document scan cannot be read clearly (SRS M04)."""
         msg = error_msg or "স্ক্যানটি অস্পষ্ট বা অসম্পূর্ণ হওয়ায় স্পষ্টভাবে পড়া যায়নি।"
         return {
@@ -385,7 +421,10 @@ class NoticeEngine:
                 "not_stated": True,
             },
             "questions_for_lawyer": ["এই অস্পষ্ট নোটিশটির বিষয়ে আমি কিভাবে তথ্য সংগ্রহ করতে পারি?"],
-            "primary_deadline_card": {"has_deadline": False, "note": "অস্পষ্ট নথির কারণে কোনো সময়সীমা নির্ধারণ করা যায়নি।"},
+            "primary_deadline_card": {
+                "has_deadline": False,
+                "note": "অস্পষ্ট নথির কারণে কোনো সময়সীমা নির্ধারণ করা যায়নি।",
+            },
             "label_bar": {
                 "disclaimer_text": "AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়",
                 "as_of_date": as_of_date,
@@ -460,7 +499,9 @@ class NoticeEngine:
         """
         existing = self.db.get_notice_analysis(document_id)
         if not existing or not existing.get("analysis"):
-            raise ValueError(f"Notice analysis for document '{document_id}' not found. Please interpret first.")
+            raise ValueError(
+                f"Notice analysis for document '{document_id}' not found. Please interpret first."
+            )
 
         analysis = existing["analysis"]
         gw_res = self.gateway.execute_prompt(
@@ -483,7 +524,9 @@ class NoticeEngine:
         self._log_audit(user_id, "deadline.confirmed", deadline_id)
         return res
 
-    def dismiss_or_meet_deadline(self, deadline_id: str, status: str = "completed") -> dict[str, Any]:
+    def dismiss_or_meet_deadline(
+        self, deadline_id: str, status: str = "completed"
+    ) -> dict[str, Any]:
         """
         Dismisses or meets a deadline, cancelling pending reminders (AC-M07-1).
         """
@@ -531,6 +574,7 @@ class NoticeEngine:
         # Link document to case
         # We can update document case_id directly via SQL
         from sqlalchemy import text
+
         with self.db.engine.connect() as conn:
             conn.execute(
                 text("UPDATE documents SET case_id = :case_id WHERE id = :doc_id"),
@@ -543,7 +587,11 @@ class NoticeEngine:
         created_tasks = []
         if analysis_record and analysis_record.get("analysis"):
             action_items = analysis_record["analysis"].get("action_required", [])
-            indices_to_add = selected_task_indices if selected_task_indices is not None else list(range(len(action_items)))
+            indices_to_add = (
+                selected_task_indices
+                if selected_task_indices is not None
+                else list(range(len(action_items)))
+            )
             for idx in indices_to_add:
                 if 0 <= idx < len(action_items):
                     item = action_items[idx]
@@ -591,7 +639,9 @@ class NoticeEngine:
             "deadline": created_deadline,
         }
 
-    def _log_audit(self, user_id: str, action: str, object_id: str, details: dict[str, Any] | None = None):
+    def _log_audit(
+        self, user_id: str, action: str, object_id: str, details: dict[str, Any] | None = None
+    ):
         """Records an immutable audit event in Trust Kernel audit log."""
         self.db.record_audit_event(
             actor_id=user_id,

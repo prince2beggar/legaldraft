@@ -33,11 +33,23 @@ CASE_TYPE_REQUIRED_DOCUMENTS: dict[str, list[dict[str, str]]] = {
         {"doc_type": "bank_memo", "title": "ব্যাংক রিটার্ন মেমো (Bank Memo)", "status": "APPROVED"},
     ],
     "eviction": [
-        {"doc_type": "tenancy_agreement", "title": "ভাড়া চুক্তিপত্র (Tenancy Agreement)", "status": "APPROVED"},
-        {"doc_type": "eviction_notice", "title": "উচ্ছেদ নোটিশ (Eviction Notice)", "status": "APPROVED"},
+        {
+            "doc_type": "tenancy_agreement",
+            "title": "ভাড়া চুক্তিপত্র (Tenancy Agreement)",
+            "status": "APPROVED",
+        },
+        {
+            "doc_type": "eviction_notice",
+            "title": "উচ্ছেদ নোটিশ (Eviction Notice)",
+            "status": "APPROVED",
+        },
     ],
     "money_claim": [
-        {"doc_type": "money_receipt", "title": "টাকা লেনদেনের প্রমাণ (Money Receipt)", "status": "APPROVED"},
+        {
+            "doc_type": "money_receipt",
+            "title": "টাকা লেনদেনের প্রমাণ (Money Receipt)",
+            "status": "APPROVED",
+        },
     ],
     "notice_response": [
         {"doc_type": "received_notice", "title": "প্রাপ্ত আইনি নোটিশ", "status": "APPROVED"},
@@ -115,7 +127,10 @@ class HomeEngine:
         # Priority 1: Urgent triage no help step
         # -----------------------------------------------------------------------
         for c in active_cases:
-            if c.get("is_urgent_triage") or c.get("triage_urgency") in ("urgent_no_help", "urgent_triage"):
+            if c.get("is_urgent_triage") or c.get("triage_urgency") in (
+                "urgent_no_help",
+                "urgent_triage",
+            ):
                 return {
                     "priority_tier": 1,
                     "title": f"জরুরি ট্রায়াজ: {c['title']}",
@@ -123,7 +138,9 @@ class HomeEngine:
                     "action_type": "urgent_triage",
                     "target_url": f"/cases/{c['id']}?tab=overview",
                     "case_id": c["id"],
-                    "reason_refs": [{"object_type": "case", "id": c["id"], "rule": "urgent_triage_no_help"}],
+                    "reason_refs": [
+                        {"object_type": "case", "id": c["id"], "rule": "urgent_triage_no_help"}
+                    ],
                     "explanation_bn": "মামলাটি প্রাথমিক ট্রায়াজে অত্যন্ত জরুরি হিসেবে চিহ্নিত হয়েছে এবং অবিলম্বে ব্যবস্থা গ্রহণ আবশ্যক।",
                 }
 
@@ -181,10 +198,19 @@ class HomeEngine:
                 "title": f"মেয়াদ উত্তীর্ণ সময়সীমা! ({bn_days} দিন অতিবাহিত)",
                 "description": f"মামলা '{dl.get('case_title', '')}': {dl['title']} — সময়সীমা পার হয়ে গেছে। অবিলম্বে পদক্ষেপ নিন।",
                 "action_type": "overdue_deadline",
-                "target_url": f"/cases/{dl['case_id']}?tab=deadlines" if dl.get("case_id") else f"/documents/{dl.get('document_id')}/notice",
+                "target_url": f"/cases/{dl['case_id']}?tab=deadlines"
+                if dl.get("case_id")
+                else f"/documents/{dl.get('document_id')}/notice",
                 "case_id": dl.get("case_id"),
                 "deadline_id": dl["id"],
-                "reason_refs": [{"object_type": "deadline", "id": dl["id"], "rule": "overdue_deadline", "days_overdue": days_overdue}],
+                "reason_refs": [
+                    {
+                        "object_type": "deadline",
+                        "id": dl["id"],
+                        "rule": "overdue_deadline",
+                        "days_overdue": days_overdue,
+                    }
+                ],
                 "explanation_bn": "আইনি সময়সীমা উত্তীর্ণ হওয়ায় আদালতের আদেশ বা নোটিশের প্রতিকূল প্রভাব থেকে বাঁচতে অবিলম্বে পদক্ষেপ নিন।",
             }
 
@@ -217,10 +243,19 @@ class HomeEngine:
                 "title": f"সময়সীমা নিশ্চিত করুন ({days_txt})",
                 "description": f"গণনাকৃত সময়সীমা '{dl['title']}' যাচাই ও নিশ্চিত করুন যাতে স্বয়ংক্রিয় রিমাইন্ডার সক্রিয় থাকে।",
                 "action_type": "confirm_deadline",
-                "target_url": f"/cases/{dl['case_id']}?tab=deadlines" if dl.get("case_id") else f"/documents/{dl.get('document_id')}/notice",
+                "target_url": f"/cases/{dl['case_id']}?tab=deadlines"
+                if dl.get("case_id")
+                else f"/documents/{dl.get('document_id')}/notice",
                 "case_id": dl.get("case_id"),
                 "deadline_id": dl["id"],
-                "reason_refs": [{"object_type": "deadline", "id": dl["id"], "rule": "unconfirmed_deadline_le_3d", "days_left": diff_days}],
+                "reason_refs": [
+                    {
+                        "object_type": "deadline",
+                        "id": dl["id"],
+                        "rule": "unconfirmed_deadline_le_3d",
+                        "days_left": diff_days,
+                    }
+                ],
                 "explanation_bn": "সময়সীমা ৩ দিন বা তার কম সময়ের মধ্যে শেষ হচ্ছে কিন্তু এখনও নিশ্চিত করা হয়নি। নিশ্চিত না করলে পরবর্তী নোটিফিকেশন বন্ধ থাকবে।",
             }
 
@@ -237,7 +272,12 @@ class HomeEngine:
                 diff_days = (due_d - today_date).days
                 if 0 <= diff_days <= 7:
                     cid = dl.get("case_id")
-                    open_tasks = [t for t in all_tasks if t.get("case_id") == cid and t.get("status") in ("not_started", "in_progress", "pending")]
+                    open_tasks = [
+                        t
+                        for t in all_tasks
+                        if t.get("case_id") == cid
+                        and t.get("status") in ("not_started", "in_progress", "pending")
+                    ]
                     if open_tasks:
                         tier4_candidates.append((diff_days, dl, open_tasks[0]))
             except Exception:
@@ -256,7 +296,11 @@ class HomeEngine:
                 "case_id": dl["case_id"],
                 "task_id": tsk["id"],
                 "reason_refs": [
-                    {"object_type": "deadline", "id": dl["id"], "rule": "deadline_le_7d_with_open_tasks"},
+                    {
+                        "object_type": "deadline",
+                        "id": dl["id"],
+                        "rule": "deadline_le_7d_with_open_tasks",
+                    },
                     {"object_type": "task", "id": tsk["id"], "rule": "open_task_for_deadline"},
                 ],
                 "explanation_bn": "সময়সীমা ৭ দিনের মধ্যে শেষ হতে যাচ্ছে এবং এর অধীনে অনিষ্পন্ন টাস্ক রয়েছে।",
@@ -266,8 +310,10 @@ class HomeEngine:
         # Priority 5: Lawyer/instruction task due (origin in ('lawyer', 'instruction'))
         # -----------------------------------------------------------------------
         lawyer_tasks = [
-            t for t in all_tasks
-            if t.get("origin") in ("lawyer", "instruction") and t.get("status") in ("not_started", "in_progress", "pending")
+            t
+            for t in all_tasks
+            if t.get("origin") in ("lawyer", "instruction")
+            and t.get("status") in ("not_started", "in_progress", "pending")
         ]
         if lawyer_tasks:
             tsk = lawyer_tasks[0]
@@ -279,7 +325,9 @@ class HomeEngine:
                 "target_url": f"/cases/{tsk['case_id']}?tab=tasks",
                 "case_id": tsk["case_id"],
                 "task_id": tsk["id"],
-                "reason_refs": [{"object_type": "task", "id": tsk["id"], "rule": "lawyer_instruction_task"}],
+                "reason_refs": [
+                    {"object_type": "task", "id": tsk["id"], "rule": "lawyer_instruction_task"}
+                ],
                 "explanation_bn": "আপনার আইনজীবী এই কাজটি সম্পন্ন করার নির্দেশনা দিয়েছেন। মামলার সফলতার জন্য এটি দ্রুত সম্পন্ন করুন।",
             }
 
@@ -315,10 +363,16 @@ class HomeEngine:
                 if rtype not in attached_types and rtitle not in attached_names:
                     missing_reqs.append(req)
 
-            has_explicit_missing = bool(meta_json.get("has_missing_documents") or meta_json.get("missing_documents"))
+            has_explicit_missing = bool(
+                meta_json.get("has_missing_documents") or meta_json.get("missing_documents")
+            )
 
             if missing_reqs or has_explicit_missing:
-                first_missing = missing_reqs[0] if missing_reqs else {"title": "প্রয়োজনীয় প্রমাণপত্র", "status": "APPROVED"}
+                first_missing = (
+                    missing_reqs[0]
+                    if missing_reqs
+                    else {"title": "প্রয়োজনীয় প্রমাণপত্র", "status": "APPROVED"}
+                )
                 is_draft = first_missing.get("status") == "DRAFT_NOT_REVIEWED"
                 placeholder = " [DRAFT_NOT_REVIEWED / খসড়া চেকলিস্ট]" if is_draft else ""
                 doc_name = first_missing.get("title", "দলিল")
@@ -330,7 +384,14 @@ class HomeEngine:
                     "action_type": "upload_document",
                     "target_url": f"/cases/{c['id']}?tab=documents",
                     "case_id": c["id"],
-                    "reason_refs": [{"object_type": "case", "id": c["id"], "rule": "missing_required_document", "missing_doc": doc_name}],
+                    "reason_refs": [
+                        {
+                            "object_type": "case",
+                            "id": c["id"],
+                            "rule": "missing_required_document",
+                            "missing_doc": doc_name,
+                        }
+                    ],
                     "explanation_bn": "মামলার ধরণ অনুযায়ী এই নথিটি অপরিহার্য। এটি দাখিল না করা পর্যন্ত পরবর্তী আইনি পদক্ষেপ ব্যাহত হতে পারে।",
                 }
 
@@ -339,6 +400,7 @@ class HomeEngine:
         # -----------------------------------------------------------------------
         with self.db.get_session() as session:
             from packages.trust_kernel.db import DocumentDB, DocumentFieldDB
+
             pending_fields = (
                 session.query(DocumentFieldDB)
                 .join(DocumentDB, DocumentDB.id == DocumentFieldDB.document_id)
@@ -347,7 +409,9 @@ class HomeEngine:
             )
             if pending_fields:
                 doc = self.db.get_document(pending_fields.document_id)
-                fld_doc_name: str = str(doc.get("filename")) if (doc and doc.get("filename")) else "দলিল"
+                fld_doc_name: str = (
+                    str(doc.get("filename")) if (doc and doc.get("filename")) else "দলিল"
+                )
                 return {
                     "priority_tier": 7,
                     "title": f"তথ্য যাচাই সম্পন্ন করুন: {fld_doc_name}",
@@ -356,7 +420,13 @@ class HomeEngine:
                     "target_url": f"/documents/{pending_fields.document_id}/review",
                     "case_id": doc.get("case_id") if doc else None,
                     "document_id": pending_fields.document_id,
-                    "reason_refs": [{"object_type": "document", "id": pending_fields.document_id, "rule": "extracted_fields_awaiting_review"}],
+                    "reason_refs": [
+                        {
+                            "object_type": "document",
+                            "id": pending_fields.document_id,
+                            "rule": "extracted_fields_awaiting_review",
+                        }
+                    ],
                     "explanation_bn": "স্বয়ংক্রিয়ভাবে চিহ্নিত তথ্যগুলো আইনগতভাবে ব্যবহার করার আগে আপনার যাচাই ও অনুমোদন প্রয়োজন।",
                 }
 
@@ -365,7 +435,9 @@ class HomeEngine:
         # -----------------------------------------------------------------------
         for c in active_cases:
             facts = self.db.list_case_facts(c["id"], include_proposed=True)
-            proposed_facts = [f for f in facts if f.get("is_proposed") and f.get("status") == "proposed"]
+            proposed_facts = [
+                f for f in facts if f.get("is_proposed") and f.get("status") == "proposed"
+            ]
             if proposed_facts:
                 f = proposed_facts[0]
                 return {
@@ -376,7 +448,13 @@ class HomeEngine:
                     "target_url": f"/cases/{c['id']}?tab=review",
                     "case_id": c["id"],
                     "fact_id": f["id"],
-                    "reason_refs": [{"object_type": "case_fact", "id": f["id"], "rule": "proposed_fact_confirmation"}],
+                    "reason_refs": [
+                        {
+                            "object_type": "case_fact",
+                            "id": f["id"],
+                            "rule": "proposed_fact_confirmation",
+                        }
+                    ],
                     "explanation_bn": "AI কেস রিভিউ থেকে প্রাপ্ত তথ্যটি আপনার অনুমোদন ছাড়া মামলায় সক্রিয় করা হবে না।",
                 }
 
@@ -388,7 +466,10 @@ class HomeEngine:
             if c.get("metadata_json"):
                 try:
                     m_json = json.loads(c["metadata_json"])
-                    if m_json.get("draft_in_progress") or m_json.get("draft_status") == "in_progress":
+                    if (
+                        m_json.get("draft_in_progress")
+                        or m_json.get("draft_status") == "in_progress"
+                    ):
                         is_draft = True
                 except Exception:
                     pass
@@ -400,7 +481,9 @@ class HomeEngine:
                     "action_type": "continue_draft",
                     "target_url": f"/cases/{c['id']}?tab=overview",
                     "case_id": c["id"],
-                    "reason_refs": [{"object_type": "case", "id": c["id"], "rule": "draft_in_progress"}],
+                    "reason_refs": [
+                        {"object_type": "case", "id": c["id"], "rule": "draft_in_progress"}
+                    ],
                     "explanation_bn": "আপনার একটি খসড়া প্রস্তুত প্রক্রিয়াধীন রয়েছে। এটি চূড়ান্ত করতে কাজ চালিয়ে যান।",
                 }
 
@@ -417,7 +500,9 @@ class HomeEngine:
                 "action_type": "next.none",
                 "target_url": f"/cases/{first_c['id']}?tab=overview",
                 "case_id": first_c["id"],
-                "reason_refs": [{"object_type": "case", "id": first_c["id"], "rule": "all_caught_up"}],
+                "reason_refs": [
+                    {"object_type": "case", "id": first_c["id"], "rule": "all_caught_up"}
+                ],
                 "explanation_bn": "বর্তমানে কোনো জরুরি সময়সীমা বা কাজ নেই। আপনি নিশ্চিন্ত থাকতে পারেন।",
             }
         else:
@@ -428,7 +513,9 @@ class HomeEngine:
                 "action_type": "next.none",
                 "target_url": "/intake",
                 "case_id": None,
-                "reason_refs": [{"object_type": "user", "id": user_id, "rule": "empty_state_no_cases"}],
+                "reason_refs": [
+                    {"object_type": "user", "id": user_id, "rule": "empty_state_no_cases"}
+                ],
                 "explanation_bn": "আপনার কোনো চলমান মামলা নেই। নতুন সমস্যা লিখে বা নোটিশ আপলোড করে শুরু করুন।",
             }
 
@@ -436,6 +523,7 @@ class HomeEngine:
         """Finds notice documents where deadlines are not yet confirmed."""
         with self.db.get_session() as session:
             from packages.trust_kernel.db import DocumentDB, NoticeAnalysisDB
+
             rows = (
                 session.query(DocumentDB)
                 .join(NoticeAnalysisDB, NoticeAnalysisDB.document_id == DocumentDB.id)
@@ -474,15 +562,19 @@ class HomeEngine:
                 try:
                     due_d = datetime.strptime(dl["due_date"], "%Y-%m-%d").date()
                     diff = (due_d - today_date).days
-                    upcoming_items.append({
-                        "id": dl["id"],
-                        "case_id": c["id"],
-                        "case_title": c["title"],
-                        "title": dl["title"],
-                        "due_date": dl["due_date"],
-                        "days_left": diff,
-                        "days_left_bn": to_bangla_digits(max(0, diff)) + " দিন বাকি" if diff >= 0 else "মেয়াদ উত্তীর্ণ",
-                    })
+                    upcoming_items.append(
+                        {
+                            "id": dl["id"],
+                            "case_id": c["id"],
+                            "case_title": c["title"],
+                            "title": dl["title"],
+                            "due_date": dl["due_date"],
+                            "days_left": diff,
+                            "days_left_bn": to_bangla_digits(max(0, diff)) + " দিন বাকি"
+                            if diff >= 0
+                            else "মেয়াদ উত্তীর্ণ",
+                        }
+                    )
                 except Exception:
                     pass
 

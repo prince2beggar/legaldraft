@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -43,41 +42,9 @@ VALID_STATUSES = {
     "archived",
 }
 
-OUTCOME_PROHIBITED_PATTERNS: list[tuple[re.Pattern, str]] = [
-    # English terms and phrases (win probability, "you will win", percentages, "court will rule for you", guarantees)
-    (re.compile(r"\bwin\s+probability\b", re.IGNORECASE), "[আইনি বিশ্লেষণের প্রস্তুতি]"),
-    (re.compile(r"\bprobability\s+of\s+winning\b", re.IGNORECASE), "[আইনি বিশ্লেষণের প্রস্তুতি]"),
-    (re.compile(r"\bchance\s+of\s+winning\b", re.IGNORECASE), "[আইনি বিশ্লেষণের প্রস্তুতি]"),
-    (re.compile(r"\byou\s+will\s+win\b", re.IGNORECASE), "[প্রক্রিয়াগত পর্যালোচনা প্রয়োজন]"),
-    (re.compile(r"\byou\s+will\s+lose\b", re.IGNORECASE), "[প্রক্রিয়াগত পর্যালোচনা প্রয়োজন]"),
-    (re.compile(r"\bwill\s+win\b", re.IGNORECASE), "[প্রক্রিয়াগত পর্যালোচনা প্রয়োজন]"),
-    (re.compile(r"\bwill\s+lose\b", re.IGNORECASE), "[প্রক্রিয়াগত পর্যালোচনা প্রয়োজন]"),
-    (re.compile(r"\bcourt\s+will\s+rule\s+for\s+you\b", re.IGNORECASE), "[আদালতের এখতিয়ারাধীন বিষয়]"),
-    (re.compile(r"\bcourt\s+will\s+rule\s+against\s+you\b", re.IGNORECASE), "[আদালতের এখতিয়ারাধীন বিষয়]"),
-    (re.compile(r"\bcourt\s+will\s+rule\s+in\s+your\s+favor\b", re.IGNORECASE), "[আদালতের এখতিয়ারাধীন বিষয়]"),
-    (re.compile(r"\bguarantee(d)?\b", re.IGNORECASE), "[আইনগত প্রস্তুতি]"),
-    (re.compile(r"\bvictory\b", re.IGNORECASE), "[ফলাফল অনিশ্চিত]"),
-    (re.compile(r"\bdefeat\b", re.IGNORECASE), "[ফলাফল অনিশ্চিত]"),
-    (re.compile(r"\b\d+%\b", re.IGNORECASE), "[পরিসংখ্যান অপ্রযোজ্য]"),
-    (re.compile(r"\bwin\b", re.IGNORECASE), "[তথ্য]"),
-    (re.compile(r"\blose\b", re.IGNORECASE), "[তথ্য]"),
+from packages.trust_kernel.outcome_filter import ALL_OUTCOME_PATTERNS
 
-    # Bangla terms and phrases
-    (re.compile(r"আপনি\s*জিতবেন"), "[আইনি পর্যালোচনা প্রয়োজন]"),
-    (re.compile(r"আপনি\s*হারবেন"), "[আইনি পর্যালোচনা প্রয়োজন]"),
-    (re.compile(r"জিতবেন"), "[আইনি পর্যালোচনা প্রয়োজন]"),
-    (re.compile(r"হারবেন"), "[আইনি পর্যালোচনা প্রয়োজন]"),
-    (re.compile(r"আদালত\s*আপনার\s*পক্ষে\s*রায়\s*দেবে"), "[আদালতের সিদ্ধান্তের বিষয়]"),
-    (re.compile(r"আদালত\s*আপনার\s*বিরুদ্ধে\s*রায়\s*দেবে"), "[আদালতের সিদ্ধান্তের বিষয়]"),
-    (re.compile(r"নিশ্চিত\s*রায়"), "[আদালতের সিদ্ধান্তের বিষয়]"),
-    (re.compile(r"জয়ের\s*সম্ভাবনা"), "[সম্ভাবনা নির্ধারণ অনুচিত]"),
-    (re.compile(r"পরাজয়ের\s*সম্ভাবনা"), "[সম্ভাবনা নির্ধারণ অনুচিত]"),
-    (re.compile(r"জয়লাভ"), "[প্রক্রিয়াগত পদক্ষেপ]"),
-    (re.compile(r"পরাজয়"), "[প্রক্রিয়াগত পদক্ষেপ]"),
-    (re.compile(r"গ্যারান্টি"), "[আইনগত প্রস্তুতি]"),
-    (re.compile(r"নিশ্চিত\s*বিজয়"), "[ফলাফল অনিশ্চিত]"),
-    (re.compile(r"[০-৯0-9]+%\s*(সম্ভাবনা|নিশ্চিত|বিজয়)?"), "[পরিসংখ্যান অপ্রযোজ্য]"),
-]
+OUTCOME_PROHIBITED_PATTERNS = ALL_OUTCOME_PATTERNS
 
 
 class CaseEngine:
@@ -109,7 +76,9 @@ class CaseEngine:
     ) -> dict[str, Any]:
         """Creates a new citizen case folder (SRS M06)."""
         if status not in VALID_STATUSES:
-            raise ValueError(f"Invalid case status '{status}'. Must be one of: {sorted(VALID_STATUSES)}")
+            raise ValueError(
+                f"Invalid case status '{status}'. Must be one of: {sorted(VALID_STATUSES)}"
+            )
 
         meta_json = json.dumps(metadata, ensure_ascii=False) if metadata else None
         case = self.db.create_case(
@@ -168,7 +137,9 @@ class CaseEngine:
             is_conf = False
             fact_txt = ""
             if isinstance(f, dict):
-                is_conf = bool(f.get("is_confirmed") or f.get("confirmed") or f.get("status") == "confirmed")
+                is_conf = bool(
+                    f.get("is_confirmed") or f.get("confirmed") or f.get("status") == "confirmed"
+                )
                 fact_txt = f.get("fact_text") or f.get("text", "")
             elif isinstance(f, str):
                 fact_txt = f
@@ -186,12 +157,18 @@ class CaseEngine:
         raw_events = intake_data.get("events") or intake_data.get("timeline_events", [])
         for evt in raw_events:
             if isinstance(evt, dict):
-                is_conf = bool(evt.get("is_confirmed") or evt.get("confirmed") or evt.get("status") == "confirmed")
+                is_conf = bool(
+                    evt.get("is_confirmed")
+                    or evt.get("confirmed")
+                    or evt.get("status") == "confirmed"
+                )
                 if is_conf:
                     self.db.add_case_event(
                         case_id=case_id,
                         title=evt.get("title", "ঘটনাবলী"),
-                        event_date=evt.get("event_date", datetime.now(timezone.utc).strftime("%Y-%m-%d")),
+                        event_date=evt.get(
+                            "event_date", datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                        ),
                         date_precision=evt.get("date_precision", "day"),
                         description=evt.get("description"),
                         event_type=evt.get("event_type", "other"),
@@ -253,9 +230,19 @@ class CaseEngine:
         case_id = case["id"]
 
         if m.get("client_name"):
-            self.db.add_case_party(case_id, name=m["client_name"], role="petitioner", contact_info=m.get("client_phone"))
+            self.db.add_case_party(
+                case_id,
+                name=m["client_name"],
+                role="petitioner",
+                contact_info=m.get("client_phone"),
+            )
         if m.get("opponent_name"):
-            self.db.add_case_party(case_id, name=m["opponent_name"], role="respondent", contact_info=m.get("opponent_phone"))
+            self.db.add_case_party(
+                case_id,
+                name=m["opponent_name"],
+                role="respondent",
+                contact_info=m.get("opponent_phone"),
+            )
 
         if m.get("filing_date"):
             self.db.add_case_event(
@@ -306,6 +293,7 @@ class CaseEngine:
                 DeadlineDB,
                 TaskDB,
             )
+
             session.query(CasePartyDB).filter(CasePartyDB.case_id == case_id).delete()
             session.query(CaseEventDB).filter(CaseEventDB.case_id == case_id).delete()
             session.query(CaseFactDB).filter(CaseFactDB.case_id == case_id).delete()
@@ -514,7 +502,9 @@ class CaseEngine:
         )
         return fact
 
-    def list_facts(self, case_id: str, user_id: str, include_proposed: bool = True) -> list[dict[str, Any]]:
+    def list_facts(
+        self, case_id: str, user_id: str, include_proposed: bool = True
+    ) -> list[dict[str, Any]]:
         self.get_case(case_id, user_id)
         return self.db.list_case_facts(case_id, include_proposed=include_proposed)
 
@@ -669,8 +659,12 @@ class CaseEngine:
         user = self.db.get_user(user_id) or {}
         user_name = user.get("name", "নাগরিক (গ্রহীতা)")
         sender_info = sender_text
-        self.db.add_case_party(case_id, name=user_name, role="petitioner", contact_info=user.get("phone"))
-        self.db.add_case_party(case_id, name=sender_info, role="respondent", contact_info="নোটিশে উল্লিখিত")
+        self.db.add_case_party(
+            case_id, name=user_name, role="petitioner", contact_info=user.get("phone")
+        )
+        self.db.add_case_party(
+            case_id, name=sender_info, role="respondent", contact_info="নোটিশে উল্লিখিত"
+        )
 
         # 4. Add Timeline Events
         today_iso = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -698,7 +692,10 @@ class CaseEngine:
                 for ed in existing_dls:
                     with self.db.get_session() as session:
                         from packages.trust_kernel.db import DeadlineDB
-                        session.query(DeadlineDB).filter(DeadlineDB.id == ed["id"]).update({"case_id": case_id})
+
+                        session.query(DeadlineDB).filter(DeadlineDB.id == ed["id"]).update(
+                            {"case_id": case_id}
+                        )
                         session.commit()
             else:
                 basis = (
@@ -791,7 +788,9 @@ class CaseEngine:
 
         # Prepare variables
         parties_str = ", ".join([f"{p['name']} ({p['role']})" for p in case.get("parties", [])])
-        facts_str = "\n".join([f"- {f['fact_text']}" for f in case.get("facts", []) if not f.get("is_proposed")])
+        facts_str = "\n".join(
+            [f"- {f['fact_text']}" for f in case.get("facts", []) if not f.get("is_proposed")]
+        )
         docs_str = ", ".join([d["filename"] for d in case.get("documents", [])])
         tasks_str = ", ".join([t["title"] for t in case.get("tasks", [])])
         notes_str = "\n".join(safe_notes) if safe_notes else "কোনো বিশ্লেষণযোগ্য নোট নেই"
@@ -826,7 +825,10 @@ class CaseEngine:
         raw_text = json.dumps(output_data, ensure_ascii=False)
         for pattern, replacement in OUTCOME_PROHIBITED_PATTERNS:
             if pattern.search(raw_text):
-                logger.warning("Red-team intercept: detected prohibited outcome pattern '%s' in review. Sanitizing.", pattern.pattern)
+                logger.warning(
+                    "Red-team intercept: detected prohibited outcome pattern '%s' in review. Sanitizing.",
+                    pattern.pattern,
+                )
                 raw_text = pattern.sub(replacement, raw_text)
         try:
             output_data = json.loads(raw_text)
@@ -840,11 +842,13 @@ class CaseEngine:
                 if proc.get("status") == "APPROVED":
                     filtered_processes.append(proc)
                 else:
-                    filtered_processes.append({
-                        "process_name": "[DRAFT_NOT_REVIEWED / খসড়া প্রক্রিয়া]",
-                        "statute_ref": "আইনজীবীর যাচাই প্রয়োজন",
-                        "status": "DRAFT_NOT_REVIEWED",
-                    })
+                    filtered_processes.append(
+                        {
+                            "process_name": "[DRAFT_NOT_REVIEWED / খসড়া প্রক্রিয়া]",
+                            "statute_ref": "আইনজীবীর যাচাই প্রয়োজন",
+                            "status": "DRAFT_NOT_REVIEWED",
+                        }
+                    )
             elif isinstance(proc, str):
                 filtered_processes.append({"process_name": proc, "status": "APPROVED"})
         output_data["possible_processes"] = filtered_processes
