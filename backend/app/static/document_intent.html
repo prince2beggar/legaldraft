@@ -173,7 +173,7 @@
 
     @media (max-width: 768px) {
       .app-sidebar { display: none; }
-      .mobile-bottom-nav { display: flex; }
+      .mobile-bottom-nav { display: flex !important; }
       .app-main { padding-bottom: 74px; }
     }
   </style>
@@ -191,10 +191,10 @@
     </div>
     <nav>
       <ul class="nav-links">
-        <li><a href="/" class="nav-link">হোম</a></li>
+        <li><a href="/home" class="nav-link">হোম</a></li>
         <li><a href="/documents/upload" class="nav-link active">নথি আপলোড</a></li>
         <li><a href="/library" class="nav-link">আইন পাঠাগার</a></li>
-        <li><a href="/profile" class="nav-link">প্রোফাইল</a></li>
+        <li><a href="/notification-settings" class="nav-link">সেটিংস</a></li>
       </ul>
     </nav>
   </aside>
@@ -259,10 +259,10 @@
 
   <!-- Mobile Bottom Nav -->
   <nav class="mobile-bottom-nav">
-    <a href="/" class="bottom-tab">হোম</a>
+    <a href="/home" class="bottom-tab">হোম</a>
     <a href="/documents/upload" class="bottom-tab active">আপলোড</a>
     <a href="/library" class="bottom-tab">পাঠাগার</a>
-    <a href="/profile" class="bottom-tab">প্রোফাইল</a>
+    <a href="/notification-settings" class="bottom-tab">সেটিংস</a>
   </nav>
 
   <script>
@@ -278,5 +278,7 @@
       window.location.href = `/documents/viewer?intent=${chosenIntent}&doc=sample-doc-1`;
     }
   </script>
+  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+  <script src="/static/sw-register.js"></script>
 </body>
 </html>

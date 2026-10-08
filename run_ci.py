@@ -69,11 +69,15 @@ def main():
 
     try:
         tests_dir = Path("tests")
-        sprint_dirs = sorted([d.name for d in tests_dir.iterdir() if d.is_dir() and d.name.startswith("s")])
+        sprint_dirs = sorted(
+            [d.name for d in tests_dir.iterdir() if d.is_dir() and d.name.startswith("s")]
+        )
         current_sprint = sprint_dirs[-1].upper() if sprint_dirs else "S0"
 
         print("*" * 65)
-        print(f"  AIN-AI Local CI Pipeline — Sprint {current_sprint} Definition of Done (S0-{current_sprint} Verified)")
+        print(
+            f"  AIN-AI Local CI Pipeline — Sprint {current_sprint} Definition of Done (S0-{current_sprint} Verified)"
+        )
         print("*" * 65)
 
         test_targets = [f"tests/{d}" for d in sprint_dirs]

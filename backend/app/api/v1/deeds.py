@@ -296,18 +296,26 @@ def add_deed_correction(deed_id: str, payload: DeedCorrectionRequest, db: Sessio
         message="সংশোধন সফলভাবে যাচাইকৃত প্রশিক্ষণ ডেটাসেটে সংরক্ষিত হয়েছে।"
     )
 
-@router.get("/dev/corrections")
+def require_dev_mode():
+    from packages.trust_kernel.auth import is_dev_mode
+    if not is_dev_mode():
+        raise HTTPException(status_code=404, detail="Not Found")
+
+@router.get("/dev/corrections", dependencies=[Depends(require_dev_mode)])
 def list_deed_corrections(db: Session = Depends(get_db)):
     """Phase 20: Exports all domain-specific corrections for fine-tuning dataset."""
     return deed_intelligence_service.get_corrections(db)
 
-@router.post("/dev/crop-test", response_model=DevCropTestResponse)
+@router.post("/dev/crop-test", dependencies=[Depends(require_dev_mode)], response_model=DevCropTestResponse)
 async def test_line_crop(
     file: UploadFile = File(...),
     ground_truth: Optional[str] = Form(None),
     field_key: Optional[str] = Form(None)
 ):
     """Phase 24: Developer Testing Tool - Evaluates crop across multi-pass filters, calculates CER/WER, and classifies failure."""
+    from packages.trust_kernel.auth import is_dev_mode
+    if not is_dev_mode():
+        raise HTTPException(status_code=404, detail="Not Found")
     content = await file.read()
     nparr = np.frombuffer(content, np.uint8)
     crop = cv2.imdecode(nparr, cv2.IMREAD_COLOR)

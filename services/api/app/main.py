@@ -3,7 +3,9 @@ AIN-AI Core API Application Entrypoint
 Unified FastAPI service adhering to SRS Section 2.1 & 2.2.
 """
 
+import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, Request
@@ -35,18 +37,20 @@ from packages.trust_kernel.i18n import i18n
 from services.api.app.logging_config import logger
 from services.api.app.routers.auth import (
     get_current_user,
-    get_current_user_optional,
 )
 from services.api.app.routers.auth import (
     router as auth_router,
 )
 from services.api.app.routers.cases import router as cases_router
 from services.api.app.routers.documents import router as documents_router
+from services.api.app.routers.drafts import router as drafts_router
 from services.api.app.routers.evals import router as evals_router
 from services.api.app.routers.health import router as health_router
+from services.api.app.routers.intake import router as intake_router
 from services.api.app.routers.knowledge import router as knowledge_router
 from services.api.app.routers.library import router as library_router
 from services.api.app.routers.rules import router as rules_router
+from services.api.app.routers.sharing import router as sharing_router
 
 app = FastAPI(
     title="AIN-AI (আইন-AI) API",
@@ -56,10 +60,56 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS Middleware
+
+# Security Headers Middleware
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    response = await call_next(request)
+    # Standard security headers (X-001, Hardening)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    path = request.url.path
+    if path in ("/docs", "/redoc", "/openapi.json"):
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data: https://fastapi.tiangolo.com; "
+            "font-src 'self' data: https://cdn.jsdelivr.net; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none';"
+        )
+    else:
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "font-src 'self' data:; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none';"
+        )
+    # Cache control for shared links and sensitive routes (AC-M08-2)
+    if path.startswith("/s/") or path.startswith("/api/v1/s/") or "/consents" in path or path.startswith("/me/sharing"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+    return response
+
+
+# CORS Middleware (H2 / S9 Hardening)
+ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.getenv(
+        "ALLOWED_ORIGINS",
+        "http://localhost:8000,http://127.0.0.1:8000,http://localhost:3000",
+    ).split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -95,6 +145,7 @@ async def audit_and_logging_middleware(request: Request, call_next):
 
 # Include Health routes
 app.include_router(health_router)
+app.include_router(health_router, prefix="/api/v1")
 app.include_router(auth_router)
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(library_router, prefix="/api/v1")
@@ -103,6 +154,11 @@ app.include_router(rules_router)
 app.include_router(evals_router)
 app.include_router(documents_router)
 app.include_router(cases_router, prefix="/api/v1")
+app.include_router(intake_router)
+app.include_router(intake_router, prefix="/api/v1")
+app.include_router(drafts_router)
+app.include_router(drafts_router, prefix="/api/v1")
+app.include_router(sharing_router)
 
 
 # Mount i18n lookup endpoint
@@ -136,20 +192,144 @@ except Exception as e:  # noqa: BLE001
 
 # Mount static web app if available
 STATIC_DIR = REPO_ROOT / "backend" / "app" / "static"
+SERVER_START_TIME = datetime.now(timezone.utc).isoformat()
+
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+    @app.middleware("http")
+    async def block_mock_variants_in_prod(request: Request, call_next):
+        from packages.trust_kernel.auth import is_dev_mode
+        if not is_dev_mode():
+            if request.query_params.get("variant") or request.query_params.get("mock"):
+                from fastapi.responses import JSONResponse
+                return JSONResponse(
+                    status_code=404,
+                    content={"detail": "Mock variants are disabled when DEV_MODE=false"},
+                )
+        return await call_next(request)
 
     @app.get("/signin")
     @app.get("/welcome")
     @app.get("/otp")
     @app.get("/onboarding")
     def serve_auth_page():
+        import re
+
         from fastapi.responses import HTMLResponse
+
+        from packages.trust_kernel.auth import is_dev_mode
 
         signin_file = STATIC_DIR / "signin.html"
         if signin_file.exists():
-            return HTMLResponse(signin_file.read_text(encoding="utf-8"), status_code=200)
+            content = signin_file.read_text(encoding="utf-8")
+            if not is_dev_mode():
+                # Strictly strip out demo login buttons in production / non-dev mode (Sprint S7 E5)
+                content = re.sub(
+                    r"<!-- DEV_MODE_START -->.*?<!-- DEV_MODE_END -->", "", content, flags=re.DOTALL
+                )
+            return HTMLResponse(content, status_code=200)
         return HTMLResponse("<h1>AIN-AI Sign In</h1>", status_code=200)
+
+    def get_build_stamp() -> dict[str, str]:
+        import hashlib
+        import subprocess
+
+        git_commit = "87fe026"
+        is_dirty = False
+        try:
+            res = subprocess.run(
+                ["git", "rev-parse", "--short", "HEAD"],
+                capture_output=True,
+                text=True,
+                cwd=str(REPO_ROOT),
+            )
+            if res.returncode == 0 and res.stdout.strip():
+                git_commit = res.stdout.strip()
+            status_res = subprocess.run(
+                ["git", "status", "--porcelain"],
+                capture_output=True,
+                text=True,
+                cwd=str(REPO_ROOT),
+            )
+            if status_res.returncode == 0 and status_res.stdout.strip():
+                is_dirty = True
+        except Exception:
+            pass
+
+        git_hash = f"{git_commit}-dirty" if is_dirty else git_commit
+
+        static_hash = "00000000"
+        try:
+            hasher = hashlib.sha256()
+            for p in sorted(STATIC_DIR.rglob("*")):
+                if p.is_file():
+                    hasher.update(p.name.encode("utf-8"))
+                    hasher.update(p.read_bytes())
+            static_hash = hasher.hexdigest()[:8]
+        except Exception:
+            pass
+
+        build_id = f"{git_hash}+{static_hash}"
+        return {
+            "version": "2.0.0",
+            "build_id": build_id,
+            "git_hash": git_hash,
+            "static_hash": static_hash,
+        }
+
+    @app.get("/api/v1/build")
+    def get_build_info():
+        from packages.trust_kernel.auth import is_dev_mode
+
+        info = get_build_stamp()
+        if os.getenv("DEMO_MODE", "").lower() in ("true", "1"):
+            mode = "demo"
+        elif is_dev_mode():
+            mode = "dev"
+        else:
+            mode = "prod"
+
+        return {
+            "version": info["version"],
+            "build_id": info["build_id"],
+            "git_hash": info["git_hash"],
+            "static_hash": info["static_hash"],
+            "started_at": SERVER_START_TIME,
+            "mode": mode,
+        }
+
+    @app.get("/sw.js")
+    def serve_sw():
+        from fastapi.responses import Response
+
+        from packages.trust_kernel.auth import is_dev_mode
+
+        info = get_build_stamp()
+        if is_dev_mode():
+            content = (
+                f"// Service Worker disabled when DEV_MODE=true\n"
+                f"// Build ID: {info['build_id']}\n"
+                f"self.addEventListener('install', () => self.skipWaiting());\n"
+                f"self.addEventListener('activate', () => self.clients.claim());\n"
+            )
+            return Response(
+                content=content,
+                media_type="application/javascript",
+                headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache, no-store, must-revalidate"},
+            )
+        sw_path = STATIC_DIR / "sw.js"
+        if sw_path.exists():
+            content = sw_path.read_text(encoding="utf-8")
+            content = content.replace("__DYNAMIC_BUILD_ID__", info["build_id"])
+            return Response(
+                content=content,
+                media_type="application/javascript",
+                headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache, no-store, must-revalidate"},
+            )
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="sw.js not found")
 
     @app.get("/")
     def serve_index(
@@ -158,220 +338,75 @@ if STATIC_DIR.exists():
         accept_language: str | None = Header(default=None),
         authorization: str | None = Header(default=None),
     ):
-        from fastapi import HTTPException, status
+        import re
+
         from fastapi.responses import HTMLResponse
 
-        user = get_current_user_optional(request, authorization)
-        if not user:
-            accept = request.headers.get("accept", "")
-            if "text/html" not in accept:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required. Please sign in via OTP.",
-                )
-
-            # Browser navigation: return 401 with HTML auto-redirect to /signin
-            html_redirect = """<!DOCTYPE html>
-<html lang="bn">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=/signin">
-  <title>আইন-AI — প্রবেশ প্রয়োজন</title>
-  <style>
-    body { font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; }
-    .card { background: white; padding: 2.5rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.06); text-align: center; max-width: 440px; border: 1px solid #e2e8f0; }
-    .icon { font-size: 3rem; margin-bottom: 0.5rem; }
-    h2 { margin: 0.5rem 0; color: #0f172a; font-size: 1.25rem; font-weight: 700; }
-    p { color: #64748b; font-size: 0.9rem; line-height: 1.5; margin: 0.75rem 0; }
-    .btn { display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #047857; color: white; text-decoration: none; border-radius: 0.75rem; font-weight: 600; font-size: 0.875rem; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="icon">⚖️</div>
-    <h2>আইন-AI (AIN-AI)</h2>
-    <p>অ্যাডভোকেট ড্যাশবোর্ড সুরক্ষার জন্য <strong>প্রবেশ বা অনবোর্ডিং</strong> বাধ্যতামূলক।</p>
-    <p>আপনাকে সাইন-ইন পেজে নিয়ে যাওয়া হচ্ছে...</p>
-    <a href="/signin" class="btn">লগইন বা অনবোর্ডিং করুন</a>
-  </div>
-  <script>
-    window.location.replace('/signin');
-  </script>
-</body>
-</html>"""
-            return HTMLResponse(content=html_redirect, status_code=status.HTTP_401_UNAUTHORIZED)
-
-        preferred = (
-            "en"
-            if (
-                lang == "en"
-                or (
-                    accept_language
-                    and "en" in accept_language.lower()
-                    and "bn" not in accept_language.lower()
-                )
-            )
-            else "bn"
-        )
-        index_file = STATIC_DIR / "index.html"
-        content = index_file.read_text(encoding="utf-8")
-        if preferred == "en":
+        home_file = STATIC_DIR / "home.html"
+        content = home_file.read_text(encoding="utf-8")
+        if lang == "en":
             content = content.replace('<html lang="bn">', '<html lang="en">')
             content = content.replace(
-                "<title>Bangladesh Legal Intelligence & Operations SaaS</title>",
-                "<title>AIN-AI — Bangladesh Legal Intelligence & Operations SaaS (English)</title>",
+                "<title>আইন-AI — হোম ও পরবর্তী পদক্ষেপ</title>",
+                "<title>AIN-AI — Home & Next Action (English)</title>",
             )
+        info = get_build_stamp()
+        stamp_str = f"build: {info['git_hash']} | static: {info['static_hash']} | id: {info['build_id']}"
+        content = re.sub(
+            r'<div class="build-stamp"[^>]*>.*?</div>',
+            f'<div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0; pointer-events:none;">{stamp_str}</div>',
+            content,
+        )
         return HTMLResponse(content=content, status_code=200)
 
-    @app.get("/admin")
+    def _require_auth_page(
+        request: Request, authorization: str | None, page_name: str, fallback_title: str
+    ):
+        import re
+
+        from fastapi.responses import HTMLResponse
+
+        target_file = STATIC_DIR / page_name
+        if target_file.exists():
+            content = target_file.read_text(encoding="utf-8")
+        else:
+            content = f"<h1>{fallback_title}</h1>"
+
+        is_demo = os.getenv("DEMO_MODE", "").lower() in ("true", "1")
+        if is_demo and "demoModeBanner" not in content:
+            demo_banner = '<div id="demoModeBanner" style="background:#fef3c7; color:#92400e; border-bottom:1px solid #f59e0b; padding:8px; text-align:center; font-weight:700; font-size:14px; position:sticky; top:0; z-index:9999;">⚠️ ডেমো ডেটা — নমুনা (Demo Mode)</div>'
+            content = content.replace("<body>", f"<body>\n{demo_banner}")
+
+        info = get_build_stamp()
+        stamp_str = f"build: {info['git_hash']} | static: {info['static_hash']} | id: {info['build_id']}"
+        content = re.sub(
+            r'<div class="build-stamp"[^>]*>.*?</div>',
+            f'<div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0; pointer-events:none;">{stamp_str}</div>',
+            content,
+        )
+
+        return HTMLResponse(content=content, status_code=200)
+
+    @app.get("/admin", response_class=HTMLResponse)
     def serve_admin(
         request: Request,
         authorization: str | None = Header(default=None),
     ):
-        from fastapi import HTTPException, status
-        from fastapi.responses import FileResponse, HTMLResponse
-
-        user = get_current_user_optional(request, authorization)
-        if not user:
-            accept = request.headers.get("accept", "")
-            if "text/html" not in accept:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required. Please sign in via OTP.",
-                )
-            html_redirect = """<!DOCTYPE html>
-<html lang="bn">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=/signin">
-  <title>অ্যাডমিন প্রবেশ প্রয়োজন — AIN-AI</title>
-</head>
-<body style="font-family: sans-serif; text-align: center; padding: 40px; background: #f8fafc;">
-  <h2>🔒 অ্যাডমিন প্যানেল — প্রমাণীকরণ প্রয়োজন</h2>
-  <p>অ্যাডমিন প্যানেলে প্রবেশের জন্য অনুগ্রহ করে সাইন-ইন করুন।</p>
-  <p><a href="/signin" style="display:inline-block; padding:10px 20px; background:#047857; color:#fff; text-decoration:none; border-radius:8px;">লগইন করুন</a></p>
-  <script>window.location.replace('/signin');</script>
-</body>
-</html>"""
-            return HTMLResponse(content=html_redirect, status_code=status.HTTP_401_UNAUTHORIZED)
-
-        if user.get("role") not in ("admin", "reviewer"):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Forbidden. Admin or reviewer role required.",
-            )
-        return FileResponse(str(STATIC_DIR / "admin.html"))
+        return _require_auth_page(request, authorization, "admin.html", "AIN-AI Admin Portal")
 
     @app.get("/library")
     def serve_library(
         request: Request,
         authorization: str | None = Header(default=None),
     ):
-        from fastapi import HTTPException, status
-        from fastapi.responses import FileResponse, HTMLResponse
-
-        user = get_current_user_optional(request, authorization)
-        if not user:
-            accept = request.headers.get("accept", "")
-            if "text/html" not in accept:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required. Please sign in via OTP.",
-                )
-            html_redirect = """<!DOCTYPE html>
-<html lang="bn">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=/signin">
-  <title>আইন পাঠাগার — প্রবেশ প্রয়োজন</title>
-</head>
-<body style="font-family: sans-serif; text-align: center; padding: 40px; background: #f8fafc;">
-  <h2>🔒 আইন পাঠাগার — সাইন ইন প্রয়োজন</h2>
-  <p>আইন পাঠাগার ব্যবহারের জন্য অনুগ্রহ করে সাইন-ইন করুন।</p>
-  <p><a href="/signin" style="display:inline-block; padding:10px 20px; background:#0B5D4B; color:#fff; text-decoration:none; border-radius:8px;">সাইন ইন করুন</a></p>
-  <script>window.location.replace('/signin');</script>
-</body>
-</html>"""
-            return HTMLResponse(content=html_redirect, status_code=status.HTTP_401_UNAUTHORIZED)
-
-        library_file = STATIC_DIR / "library.html"
-        if library_file.exists():
-            return FileResponse(str(library_file))
-        return HTMLResponse("<h1>AIN-AI Citizen Library</h1>", status_code=200)
+        return _require_auth_page(request, authorization, "library.html", "AIN-AI Citizen Library")
 
     @app.get("/admin/sources")
     def serve_admin_sources(
         request: Request,
         authorization: str | None = Header(default=None),
     ):
-        from fastapi import HTTPException, status
-        from fastapi.responses import FileResponse, HTMLResponse
-
-        user = get_current_user_optional(request, authorization)
-        if not user:
-            accept = request.headers.get("accept", "")
-            if "text/html" not in accept:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required. Please sign in via OTP.",
-                )
-            html_redirect = """<!DOCTYPE html>
-<html lang="bn">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=/signin">
-  <title>অ্যাডমিন প্রবেশ প্রয়োজন</title>
-</head>
-<body style="font-family: sans-serif; text-align: center; padding: 40px; background: #f8fafc;">
-  <h2>🔒 নলেজ সেন্টার — প্রমাণীকরণ প্রয়োজন</h2>
-  <p>অ্যাডমিন নলেজ সেন্টারে প্রবেশের জন্য অনুগ্রহ করে সাইন-ইন করুন।</p>
-  <p><a href="/signin" style="display:inline-block; padding:10px 20px; background:#0B5D4B; color:#fff; text-decoration:none; border-radius:8px;">লগইন করুন</a></p>
-  <script>window.location.replace('/signin');</script>
-</body>
-</html>"""
-            return HTMLResponse(content=html_redirect, status_code=status.HTTP_401_UNAUTHORIZED)
-
-        if user.get("role") not in ("admin", "reviewer"):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Forbidden. Admin or reviewer role required.",
-            )
-        admin_sources_file = STATIC_DIR / "admin_sources.html"
-        if admin_sources_file.exists():
-            return FileResponse(str(admin_sources_file))
-        return HTMLResponse("<h1>AIN-AI Admin Knowledge Center</h1>", status_code=200)
-
-    def _require_auth_page(request: Request, authorization: str | None, page_name: str, fallback_title: str):
-        from fastapi import HTTPException, status
-        from fastapi.responses import HTMLResponse
-
-        user = get_current_user_optional(request, authorization)
-        if not user:
-            accept = request.headers.get("accept", "")
-            if "text/html" not in accept:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Authentication required. Please sign in via OTP.",
-                )
-            html_redirect = """<!DOCTYPE html>
-<html lang="bn">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0; url=/signin">
-  <title>আইন-AI — প্রমাণীকরণ প্রয়োজন</title>
-</head>
-<body style="font-family: sans-serif; text-align: center; padding: 40px; background: #f8fafc;">
-  <h2>🔒 প্রমাণীকরণ প্রয়োজন</h2>
-  <p>এই পেজে প্রবেশের জন্য অনুগ্রহ করে সাইন-ইন করুন।</p>
-  <p><a href="/signin" style="display:inline-block; padding:10px 20px; background:#0B5D4B; color:#fff; text-decoration:none; border-radius:8px;">সাইন ইন করুন</a></p>
-  <script>window.location.replace('/signin');</script>
-</body>
-</html>"""
-            return HTMLResponse(content=html_redirect, status_code=status.HTTP_401_UNAUTHORIZED)
-        target_file = STATIC_DIR / page_name
-        if target_file.exists():
-            return HTMLResponse(target_file.read_text(encoding="utf-8"), status_code=200)
-        return HTMLResponse(f"<h1>{fallback_title}</h1>", status_code=200)
+        return _require_auth_page(request, authorization, "admin_sources.html", "AIN-AI Admin Knowledge Center")
 
     @app.get("/home", response_class=HTMLResponse)
     def serve_home(request: Request, authorization: str | None = Header(default=None)):
@@ -383,13 +418,74 @@ if STATIC_DIR.exists():
         return _require_auth_page(request, authorization, "cases.html", "AIN-AI Case Folders")
 
     @app.get("/cases/{case_id}", response_class=HTMLResponse)
-    def serve_case_detail(case_id: str, request: Request, authorization: str | None = Header(default=None)):
-        return _require_auth_page(request, authorization, "case_detail.html", f"AIN-AI Case Detail: {case_id}")
+    def serve_case_detail(
+        case_id: str, request: Request, authorization: str | None = Header(default=None)
+    ):
+        return _require_auth_page(
+            request, authorization, "case_detail.html", f"AIN-AI Case Detail: {case_id}"
+        )
 
     @app.get("/notifications", response_class=HTMLResponse)
     def serve_notifications(request: Request, authorization: str | None = Header(default=None)):
-        return _require_auth_page(request, authorization, "notifications.html", "AIN-AI Notifications")
+        return _require_auth_page(
+            request, authorization, "notifications.html", "AIN-AI Notifications"
+        )
 
     @app.get("/notification-settings", response_class=HTMLResponse)
-    def serve_notification_settings(request: Request, authorization: str | None = Header(default=None)):
-        return _require_auth_page(request, authorization, "notification_settings.html", "AIN-AI Notification Settings")
+    def serve_notification_settings(
+        request: Request, authorization: str | None = Header(default=None)
+    ):
+        return _require_auth_page(
+            request, authorization, "notification_settings.html", "AIN-AI Notification Settings"
+        )
+
+    @app.get("/intake", response_class=HTMLResponse)
+    def serve_intake(request: Request, authorization: str | None = Header(default=None)):
+        return _require_auth_page(request, authorization, "intake.html", "AIN-AI Citizen Intake")
+
+    @app.get("/draft", response_class=HTMLResponse)
+    @app.get("/draft/{draft_id}", response_class=HTMLResponse)
+    @app.get("/draft/{draft_id}/q/{step}", response_class=HTMLResponse)
+    @app.get("/draft/{draft_id}/check", response_class=HTMLResponse)
+    @app.get("/draft/{draft_id}/preview", response_class=HTMLResponse)
+    @app.get("/draft/{draft_id}/export", response_class=HTMLResponse)
+    def serve_draft(request: Request, authorization: str | None = Header(default=None)):
+        return _require_auth_page(request, authorization, "draft.html", "AIN-AI Guided Drafting")
+
+    @app.get("/admin/emergency-contacts", response_class=HTMLResponse)
+    def serve_admin_emergency_contacts(
+        request: Request, authorization: str | None = Header(default=None)
+    ):
+        return _require_auth_page(
+            request,
+            authorization,
+            "admin_emergency_contacts.html",
+            "AIN-AI Admin Emergency Contacts",
+        )
+
+    @app.get("/admin/templates", response_class=HTMLResponse)
+    def serve_admin_templates(request: Request, authorization: str | None = Header(default=None)):
+        return _require_auth_page(
+            request, authorization, "admin_templates.html", "AIN-AI Admin Templates"
+        )
+
+    @app.get("/cases/{case_id}/lawyer", response_class=HTMLResponse)
+    def serve_case_lawyer_brief(
+        case_id: str, request: Request, authorization: str | None = Header(default=None)
+    ):
+        return _require_auth_page(
+            request, authorization, "case_brief.html", f"AIN-AI Case Brief: {case_id}"
+        )
+
+    @app.get("/me/sharing", response_class=HTMLResponse)
+    def serve_me_sharing(request: Request, authorization: str | None = Header(default=None)):
+        return _require_auth_page(
+            request, authorization, "sharing.html", "AIN-AI Sharing Management"
+        )
+
+    @app.get("/admin/system", response_class=HTMLResponse)
+    def serve_admin_system(request: Request, authorization: str | None = Header(default=None)):
+        return _require_auth_page(
+            request, authorization, "admin_system.html", "AIN-AI System Observability"
+        )
+

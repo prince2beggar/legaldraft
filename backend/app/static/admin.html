@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Super Admin & Legal AI Knowledge Hub - Bangladesh Legal SaaS</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/static/vendor/tailwind.min.js"></script>
   <link rel="stylesheet" href="/static/fonts.css">
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/vendor/lucide.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     html, body {
@@ -52,6 +52,18 @@
           <i data-lucide="terminal" class="w-3.5 h-3.5"></i>
           <span>Swagger API Docs</span>
         </a>
+      </div>
+    </div>
+    <!-- Admin Module Sub-Nav -->
+    <div class="bg-slate-950/80 border-b border-slate-800 px-4 sm:px-6 lg:px-8 py-2">
+      <div class="max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto text-xs font-medium">
+        <a href="/admin" class="px-3 py-1.5 rounded-lg bg-emerald-700 text-white font-bold">📊 ড্যাশবোর্ড</a>
+        <a href="/admin/templates" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800">📄 টেমপ্লেট</a>
+        <a href="/admin/sources" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800">📚 নলেজ সোর্স</a>
+        <a href="/admin/emergency-contacts" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800">☎️ জরুরি নম্বর</a>
+        <a href="/admin/rules" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800">⚖️ রুলস ইঞ্জিন</a>
+        <a href="/admin/evals" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800">🧪 ইভ্যালস</a>
+        <a href="/admin/system" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800">🖥️ সিস্টেম মনিটরিং</a>
       </div>
     </div>
   </header>
@@ -560,6 +572,8 @@
       } catch (e) {}
     }
   </script>
+  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+  <script src="/static/sw-register.js"></script>
 </body>
 </html>
 

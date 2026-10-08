@@ -5,6 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>আইন-AI — হোম ও পরবর্তী পদক্ষেপ</title>
   <link rel="stylesheet" href="/static/fonts.css">
+  <script>
+    (function() {
+      if ((window.location.search && window.location.search.includes('variant=')) || window.location.protocol === 'file:') {
+        return;
+      }
+      const token = localStorage.getItem('ain_token') || localStorage.getItem('ain_ai_token') || localStorage.getItem('auth_token') || localStorage.getItem('token');
+      function isExpired(t) {
+        if (!t) return true;
+        try {
+          const parts = t.split('.');
+          if (parts.length === 3) {
+            const p = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            return p.exp && (p.exp * 1000) < Date.now();
+          }
+          return false;
+        } catch(e) { return false; }
+      }
+      if (!token || isExpired(token)) {
+        window.location.replace('/welcome?return_url=' + encodeURIComponent(window.location.pathname));
+      } else if (window.location.pathname === '/' || window.location.pathname === '') {
+        window.location.replace('/home');
+      }
+    })();
+  </script>
   <style>
     :root {
       --color-primary: #047857;
@@ -503,6 +527,50 @@
       .btn-submit-problem {
         width: 100%;
       }
+      .mobile-bottom-nav { display: flex !important; }
+      body { padding-bottom: 68px; }
+    }
+
+    /* Mobile Bottom Navigation (M4) */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      z-index: 1000;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      align-items: center;
+      gap: 2px;
+      padding: 0 4px;
+    }
+    .mobile-bottom-nav::-webkit-scrollbar {
+      display: none;
+    }
+    .bottom-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 0.68rem;
+      gap: 2px;
+      flex: 0 0 auto;
+      min-width: 48px;
+      height: 100%;
+      min-height: 44px;
+      padding: 4px;
+      white-space: nowrap;
+    }
+    .bottom-tab.active {
+      color: var(--color-primary);
+      font-weight: 700;
     }
   </style>
 </head>
@@ -517,12 +585,29 @@
     <ul class="nav-links">
       <li><a href="/home" class="nav-link active">🏠 হোম</a></li>
       <li><a href="/cases" class="nav-link">📁 মামলা ফোল্ডার</a></li>
+      <li><a href="/intake" class="nav-link">⚖️ আইনি মূল্যায়ন</a></li>
+      <li><a href="/draft" class="nav-link">📝 আইনি খসড়া</a></li>
       <li><a href="/documents/upload" class="nav-link">📄 নোটিশ স্ক্যান</a></li>
       <li><a href="/notifications" class="nav-link">🔔 বিজ্ঞপ্তি</a></li>
       <li><a href="/library" class="nav-link">📚 আইন পাঠাগার</a></li>
+      <li><a href="/me/sharing" class="nav-link">🔗 ব্রিফ শেয়ারিং</a></li>
       <li><a href="/notification-settings" class="nav-link">⚙️ সেটিংস</a></li>
+      <li id="adminNavLink" style="display:none;"><a href="/admin" class="nav-link">🔒 অ্যাডমিন</a></li>
     </ul>
   </aside>
+
+  <!-- Mobile Bottom Nav (M4) -->
+  <nav class="mobile-bottom-nav" aria-label="মোবাইল নেভিগেশন">
+    <a href="/home" class="bottom-tab active"><span>🏠</span><span>হোম</span></a>
+    <a href="/cases" class="bottom-tab"><span>📁</span><span>মামলা</span></a>
+    <a href="/intake" class="bottom-tab"><span>⚖️</span><span>সমস্যা</span></a>
+    <a href="/draft" class="bottom-tab"><span>📝</span><span>খসড়া</span></a>
+    <a href="/documents/upload" class="bottom-tab"><span>📄</span><span>আপলোড</span></a>
+    <a href="/library" class="bottom-tab"><span>📚</span><span>পাঠাগার</span></a>
+    <a href="/notifications" class="bottom-tab"><span>🔔</span><span>বিজ্ঞপ্তি</span></a>
+    <a href="/me/sharing" class="bottom-tab"><span>🔗</span><span>শেয়ার</span></a>
+    <a href="/notification-settings" class="bottom-tab"><span>⚙️</span><span>সেটিংস</span></a>
+  </nav>
 
   <!-- Main Area -->
   <main class="app-main">
@@ -617,7 +702,7 @@
             <div class="quick-card-title">আইন পাঠাগার</div>
             <div class="quick-card-desc">বাংলাদেশের আইন ও অধিকারের ব্যাখ্যা পড়ুন</div>
           </a>
-          <a href="#" class="quick-card" onclick="alert('আইনজীবীর পরামর্শ সেবা মডিউল (M08) শীঘ্রই আসছে।'); return false;">
+          <a href="/me/sharing" class="quick-card">
             <div class="quick-card-icon">👨‍⚖️</div>
             <div class="quick-card-title">আইনজীবীর পরামর্শ</div>
             <div class="quick-card-desc">অনলাইন ব্রিফ প্রস্তুত করে আইনজীবীর সাথে শেয়ার করুন</div>
@@ -756,7 +841,12 @@
       }
 
       try {
-        const res = await fetch('/api/v1/home');
+        const token = localStorage.getItem('ain_token') ||
+                      localStorage.getItem('ain_ai_token') ||
+                      localStorage.getItem('auth_token') ||
+                      localStorage.getItem('token');
+        const fetchHeaders = token ? { 'Authorization': 'Bearer ' + token } : {};
+        const res = await fetch('/api/v1/home', { headers: fetchHeaders });
         if (!res.ok) {
           throw new Error('হোম ডেটা লোড করতে ব্যর্থ হয়েছে');
         }
@@ -770,6 +860,13 @@
     }
 
     function renderHome(data) {
+      // 0. Role check for admin link in sidebar (Directive M4)
+      const role = localStorage.getItem('ain_user_role') || (data.user && data.user.role) || '';
+      if (role === 'admin' || role === 'reviewer') {
+        const adminLi = document.getElementById('adminNavLink');
+        if (adminLi) adminLi.style.display = 'block';
+      }
+
       // 1. Greeting
       const greetingEl = document.getElementById('greetingText');
       if (greetingEl) {
@@ -896,5 +993,7 @@
 
     window.addEventListener('DOMContentLoaded', loadHome);
   </script>
+  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+  <script src="/static/sw-register.js"></script>
 </body>
 </html>

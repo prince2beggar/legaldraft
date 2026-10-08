@@ -68,17 +68,26 @@ yarn-error.log*
 *.key
 
 # Local Databases & Dynamic Storage
-backend/legal_saas.db
-backend/legal_saas.db-journal
-backend/legal_saas.db-wal
-backend/legal_saas.db-shm
+*.db
 *.db-journal
 *.db-wal
 *.db-shm
-test_*.db
-services/api/*.db
+*.log
+backend/legal_saas.db*
+legal_saas.db*
+demo.db*
+ain_ai.db*
+test_*.db*
+services/api/*.db*
 backend/storage/*
 !backend/storage/.gitkeep
+storage/drafts/
+storage/uploads/
+storage/*.pdf
+storage/*.docx
+storage/*.json
+storage/screenshots/*.docx
+storage/screenshots/*.pdf
 learning/uploads/*
 !learning/uploads/.gitkeep
 

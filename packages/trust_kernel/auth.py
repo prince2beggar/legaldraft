@@ -23,6 +23,50 @@ from packages.trust_kernel.db import db_manager
 from packages.trust_kernel.policy_consent import policy_consent
 from packages.trust_kernel.sms import get_sms_provider
 
+DEV_JWT_SECRET_DEFAULT = "ain-ai-development-signing-key-bangladesh-legal-os-s1"
+DEV_OTP_PEPPER_DEFAULT = "ain-ai-dev-otp-pepper-2026"
+DEV_LINK_TOKEN_PEPPER_DEFAULT = "ain-ai-dev-brief-link-pepper-2026"
+
+
+def is_dev_mode() -> bool:
+    return os.getenv("DEV_MODE", "false").lower() in ("true", "1", "yes")
+
+
+def get_jwt_secret() -> str:
+    """Returns JWT secret. Fails closed in production (DEV_MODE=false) if missing or default."""
+    secret = os.getenv("JWT_SECRET")
+    if not is_dev_mode():
+        if not secret or secret == DEV_JWT_SECRET_DEFAULT:
+            raise RuntimeError(
+                "CRITICAL SECURITY CONFIGURATION: 'JWT_SECRET' must be set to a secure non-default secret in production (DEV_MODE=false)."
+            )
+        return secret
+    return secret or DEV_JWT_SECRET_DEFAULT
+
+
+def get_otp_pepper() -> str:
+    """Returns OTP pepper. Fails closed in production (DEV_MODE=false) if missing or default."""
+    pepper = os.getenv("OTP_PEPPER")
+    if not is_dev_mode():
+        if not pepper or pepper == DEV_OTP_PEPPER_DEFAULT:
+            raise RuntimeError(
+                "CRITICAL SECURITY CONFIGURATION: 'OTP_PEPPER' must be set to a secure non-default pepper in production (DEV_MODE=false)."
+            )
+        return pepper
+    return pepper or DEV_OTP_PEPPER_DEFAULT
+
+
+def get_link_token_pepper() -> str:
+    """Returns Link Token pepper. Fails closed in production (DEV_MODE=false) if missing or default."""
+    pepper = os.getenv("LINK_TOKEN_PEPPER")
+    if not is_dev_mode():
+        if not pepper or pepper == DEV_LINK_TOKEN_PEPPER_DEFAULT:
+            raise RuntimeError(
+                "CRITICAL SECURITY CONFIGURATION: 'LINK_TOKEN_PEPPER' must be set to a secure non-default pepper in production (DEV_MODE=false)."
+            )
+        return pepper
+    return pepper or DEV_LINK_TOKEN_PEPPER_DEFAULT
+
 
 class AuthException(Exception):
     def __init__(self, message: str, status_code: int = 400, details: dict[str, Any] | None = None):
@@ -37,7 +81,7 @@ class TokenService:
 
     @classmethod
     def get_secret(cls) -> str:
-        return os.getenv("JWT_SECRET", "ain-ai-development-signing-key-bangladesh-legal-os-s1")
+        return get_jwt_secret()
 
     @classmethod
     def encode_token(cls, payload: dict[str, Any]) -> str:
@@ -118,6 +162,7 @@ class AuthService:
                 from pathlib import Path
 
                 from dotenv import load_dotenv
+
                 env_p = Path(__file__).resolve().parent.parent.parent / ".env"
                 if env_p.exists():
                     load_dotenv(dotenv_path=env_p)
@@ -260,13 +305,15 @@ class AuthService:
             ip=ip,
         )
 
-        return {
+        resp: dict[str, Any] = {
             "status": "sent",
             "phone": clean_phone,
             "resend_after_seconds": 60,
             "expires_in_seconds": 300,
-            "dev_otp": code,  # Facilitates deterministic verification in automated testing
         }
+        if is_dev_mode():
+            resp["dev_otp"] = code  # Only exposed when DEV_MODE is active (Sprint S7 E5)
+        return resp
 
     def verify_otp(
         self,
@@ -753,3 +800,53 @@ class AuthService:
 
 
 auth_service = AuthService()
+
+
+def create_access_token(data: dict[str, Any]) -> str:
+    """Helper to generate JWT access token and register user/device in auth_service."""
+    payload = data.copy()
+    user_id = payload.get("sub") or payload.get("id") or "usr-test-user"
+    dev_id = payload.get("device_id") or f"dev-{user_id}"
+    phone = payload.get("phone") or "01711000000"
+    role = payload.get("role") or "citizen"
+    roles = payload.get("roles") or [role]
+    payload["sub"] = user_id
+    payload["device_id"] = dev_id
+    payload["type"] = "access"
+    payload["role"] = role
+    payload["roles"] = roles
+    if "exp" not in payload:
+        payload["exp"] = int((datetime.now(timezone.utc) + timedelta(hours=1)).timestamp())
+
+    # Ensure user and device exist in auth_service in-memory cache
+    if user_id not in auth_service._users:
+        user_record = {
+            "id": user_id,
+            "phone": phone,
+            "name": payload.get("name", "Test User"),
+            "role": role,
+            "roles": roles,
+            "preferred_lang": "bn",
+            "numeral_style": "bn",
+            "status": "active",
+            "is_onboarded": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "deleted_at": None,
+        }
+        auth_service._users[user_id] = user_record
+        auth_service._users_by_phone[phone] = user_id
+        db_manager.save_user(user_record)
+
+    if dev_id not in auth_service._devices:
+        dev_record = {
+            "id": dev_id,
+            "user_id": user_id,
+            "label": "Test Device",
+            "last_seen_at": datetime.now(timezone.utc).isoformat(),
+            "revoked_at": None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        auth_service._devices[dev_id] = dev_record
+        db_manager.save_device(dev_record)
+
+    return TokenService.encode_token(payload)

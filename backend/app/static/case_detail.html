@@ -479,6 +479,50 @@
       .tabs-nav { padding: 4px 6px 0; }
       .tab-button { padding: 8px 10px; font-size: 13px; }
       .tab-panel { padding: 16px; }
+      .mobile-bottom-nav { display: flex !important; }
+      body { padding-bottom: 68px; }
+    }
+
+    /* Mobile Bottom Navigation (M4) */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      z-index: 1000;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      align-items: center;
+      gap: 2px;
+      padding: 0 4px;
+    }
+    .mobile-bottom-nav::-webkit-scrollbar {
+      display: none;
+    }
+    .bottom-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 0.68rem;
+      gap: 2px;
+      flex: 0 0 auto;
+      min-width: 48px;
+      height: 100%;
+      min-height: 44px;
+      padding: 4px;
+      white-space: nowrap;
+    }
+    .bottom-tab.active {
+      color: var(--color-primary);
+      font-weight: 700;
     }
   </style>
 </head>
@@ -493,12 +537,28 @@
     <ul class="nav-links">
       <li><a href="/home" class="nav-link">🏠 হোম</a></li>
       <li><a href="/cases" class="nav-link active">📁 মামলা ফোল্ডার</a></li>
+      <li><a href="/intake" class="nav-link">⚖️ আইনি মূল্যায়ন</a></li>
+      <li><a href="/draft" class="nav-link">📝 আইনি খসড়া</a></li>
       <li><a href="/documents/upload" class="nav-link">📄 নোটিশ স্ক্যান</a></li>
       <li><a href="/notifications" class="nav-link">🔔 বিজ্ঞপ্তি</a></li>
       <li><a href="/library" class="nav-link">📚 আইন পাঠাগার</a></li>
+      <li><a href="/me/sharing" class="nav-link">🔗 ব্রিফ শেয়ারিং</a></li>
       <li><a href="/notification-settings" class="nav-link">⚙️ সেটিংস</a></li>
     </ul>
   </aside>
+
+  <!-- Mobile Bottom Nav (M4) -->
+  <nav class="mobile-bottom-nav" aria-label="মোবাইল নেভিগেশন">
+    <a href="/home" class="bottom-tab"><span>🏠</span><span>হোম</span></a>
+    <a href="/cases" class="bottom-tab active"><span>📁</span><span>মামলা</span></a>
+    <a href="/intake" class="bottom-tab"><span>⚖️</span><span>সমস্যা</span></a>
+    <a href="/draft" class="bottom-tab"><span>📝</span><span>খসড়া</span></a>
+    <a href="/documents/upload" class="bottom-tab"><span>📄</span><span>আপলোড</span></a>
+    <a href="/library" class="bottom-tab"><span>📚</span><span>পাঠাগার</span></a>
+    <a href="/notifications" class="bottom-tab"><span>🔔</span><span>বিজ্ঞপ্তি</span></a>
+    <a href="/me/sharing" class="bottom-tab"><span>🔗</span><span>শেয়ার</span></a>
+    <a href="/notification-settings" class="bottom-tab"><span>⚙️</span><span>সেটিংস</span></a>
+  </nav>
 
   <!-- Main Area -->
   <main class="app-main">
@@ -663,9 +723,9 @@
           <p style="font-size: 14px; color: var(--color-text-main); max-width: 500px; margin: 0 auto 16px;">
             এই মামলার সারসংক্ষেপ, টাইমলাইন এবং সংযুক্ত নথিপত্র দিয়ে এক ক্লিকে আইনজীবীর জন্য একটি গোপনীয় আইনি ব্রিফ প্রস্তুত করতে পারবেন।
           </p>
-          <button type="button" class="btn-primary" onclick="alert('আইনজীবী প্ল্যাটফর্ম সংযোগ সেবা (M08/S9) পরবর্তী ধাপে উন্মুক্ত হবে। আপনার নথিগুলো সুরক্ষিত রয়েছে।')">
-            আইনি ব্রিফ তৈরি করুন (শীঘ্রই আসছে)
-          </button>
+          <a id="btnOpenCaseBrief" href="#" class="btn-primary" style="display:inline-block; text-decoration:none; padding:10px 20px; border-radius:8px; background:var(--color-primary); color:white; font-weight:600;" onclick="window.location.href='/cases/' + caseId + '/lawyer'; return false;">
+            আইনি ব্রিফ তৈরি ও শেয়ার করুন →
+          </a>
         </div>
       </section>
 
@@ -1104,5 +1164,7 @@
 
     window.addEventListener('DOMContentLoaded', loadCaseDetail);
   </script>
+  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+  <script src="/static/sw-register.js"></script>
 </body>
 </html>

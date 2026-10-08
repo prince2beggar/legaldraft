@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>আইন-AI (AIN-AI) — প্রবেশ ও অ্যাকাউন্ট তৈরি</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/static/fonts.css">
   <style>
     * { box-sizing: border-box; }
@@ -139,25 +137,26 @@
         <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs space-y-2 mt-4 text-slate-600">
           <div class="flex items-center space-x-2">
             <span class="text-emerald-600 font-bold">✓</span>
-            <span>যাচাইকৃত আইন ও বিধিমালা (১০০% উদ্ধৃতি সমর্থিত)</span>
+            <span>আইনি তথ্য ও নথি পর্যালোচনার প্রাথমিক প্রস্তুতি</span>
           </div>
           <div class="flex items-center space-x-2">
             <span class="text-emerald-600 font-bold">✓</span>
-            <span>স্বয়ংক্রিয় তামাদি ও আইনি নোটিশ ক্যালকুলেটর</span>
+            <span>তামাদি ও সময়সীমা সংক্রান্ত নিয়মভিত্তিক বিশ্লেষণ</span>
           </div>
           <div class="flex items-center space-x-2">
             <span class="text-emerald-600 font-bold">✓</span>
-            <span>নিরাপদ ডেটা সুরক্ষা ও এন্ড-টু-এন্ড অডিট ট্রেইল</span>
+            <span>নিরাপদ উপাত্ত সুরক্ষা ও অপরিবর্তনীয় অডিট ট্রেইল</span>
           </div>
         </div>
 
         <button type="button" onclick="goToStep('Signin')" class="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow transition">
-          এগিয়ে যান (Continue)
+          এগিয়ে যান
         </button>
 
+        <!-- DEV_MODE_START -->
         <!-- Quick 1-Click Demo Login -->
-        <div class="pt-4 border-t border-slate-200">
-          <p class="text-xs text-slate-500 font-semibold mb-2.5 text-center">⚡ দ্রুত ডেমো প্রবেশ (Quick 1-Click Access):</p>
+        <div class="pt-4 border-t border-slate-200" id="devQuickLoginSection">
+          <p class="text-xs text-slate-500 font-semibold mb-2.5 text-center">⚡ ডেভেলপমেন্ট মোড: ডেমো লগইন</p>
           <div class="grid grid-cols-2 gap-2">
             <button type="button" onclick="quickLogin('citizen')" id="btnQuickCitizen" class="p-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center">
               <span class="text-base mb-1">⚖️</span>
@@ -169,6 +168,7 @@
             </button>
           </div>
         </div>
+        <!-- DEV_MODE_END -->
       </section>
 
       <!-- Step 2: Mobile Number Sign-in -->
@@ -217,7 +217,7 @@
         </button>
 
         <div class="flex items-center justify-between text-xs text-slate-500 pt-2 border-t">
-          <span id="timerText">পুনরায় কোড পাঠানোর সময়: <strong id="timerSec">60</strong>s</span>
+          <span id="timerText">পুনরায় কোড পাঠানোর সময়: <strong id="timerSec">৬০</strong> সেকেন্ড</span>
           <button type="button" id="btnResend" onclick="resendOtp()" disabled class="text-emerald-700 font-bold opacity-50 cursor-not-allowed">
             পুনরায় পাঠান
           </button>
@@ -289,6 +289,12 @@
     let accessToken = '';
     let countdownInterval;
 
+    function toBanglaDigits(str) {
+      if (str === null || str === undefined) return '';
+      const bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      return String(str).replace(/[0-9]/g, d => bn[Number(d)]);
+    }
+
     function setLang(lang) {
       selectedLang = lang;
       document.getElementById('btnLangBn').className = lang === 'bn' ? 'p-3.5 border-2 border-emerald-600 bg-emerald-50 rounded-xl font-bold text-emerald-900 text-center shadow-sm' : 'p-3.5 border border-slate-200 rounded-xl font-semibold text-slate-700 text-center hover:bg-slate-50';
@@ -328,7 +334,7 @@
         }
 
         userPhone = phoneInput;
-        document.getElementById('displayPhone').textContent = userPhone;
+        document.getElementById('displayPhone').textContent = toBanglaDigits(userPhone);
         goToStep('Otp');
         startResendTimer(data.resend_after_seconds || 60);
 
@@ -337,7 +343,7 @@
           document.getElementById('otpCodeInput').value = data.dev_otp;
           const badge = document.getElementById('otpDevBadge');
           if (badge) {
-            document.getElementById('devOtpSpan').textContent = data.dev_otp;
+            document.getElementById('devOtpSpan').textContent = toBanglaDigits(data.dev_otp);
             badge.classList.remove('hidden');
           }
         }
@@ -351,13 +357,14 @@
       clearInterval(countdownInterval);
       let rem = seconds;
       const secSpan = document.getElementById('timerSec');
+      secSpan.textContent = toBanglaDigits(rem);
       const btnResend = document.getElementById('btnResend');
       btnResend.disabled = true;
       btnResend.classList.add('opacity-50', 'cursor-not-allowed');
 
       countdownInterval = setInterval(() => {
         rem--;
-        secSpan.textContent = rem;
+        secSpan.textContent = toBanglaDigits(rem);
         if (rem <= 0) {
           clearInterval(countdownInterval);
           btnResend.disabled = false;
@@ -368,6 +375,30 @@
 
     async function resendOtp() {
       await requestOtp();
+    }
+
+    function saveSessionAndRedirect(token, user) {
+      const role = (user && user.role) || 'citizen';
+      const userId = (user && user.id) || '';
+      localStorage.setItem('ain_token', token);
+      localStorage.setItem('ain_ai_token', token);
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('token', token);
+      localStorage.setItem('ain_user_role', role);
+      localStorage.setItem('ain_user_id', userId);
+      document.cookie = "ain_ai_token=" + token + "; path=/; max-age=86400; SameSite=Lax";
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrl = urlParams.get('return_url');
+      if (returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//') && returnUrl !== '/' && returnUrl !== '/welcome' && returnUrl !== '/signin') {
+        window.location.href = returnUrl;
+        return;
+      }
+      if (role === 'admin' || role === 'reviewer') {
+        window.location.href = '/admin';
+      } else {
+        window.location.href = '/home';
+      }
     }
 
     async function verifyOtp() {
@@ -395,12 +426,13 @@
         }
 
         accessToken = data.access_token;
-        localStorage.setItem('ain_ai_token', accessToken);
-        document.cookie = "ain_ai_token=" + accessToken + "; path=/; max-age=86400; SameSite=Lax";
-
         if (data.user && data.user.is_onboarded) {
-          window.location.href = '/';
+          saveSessionAndRedirect(accessToken, data.user);
         } else {
+          localStorage.setItem('ain_token', accessToken);
+          localStorage.setItem('ain_ai_token', accessToken);
+          localStorage.setItem('auth_token', accessToken);
+          localStorage.setItem('token', accessToken);
           goToStep('Onboarding');
         }
       } catch (err) {
@@ -449,10 +481,7 @@
           return;
         }
 
-        // Onboarding complete, navigate to Home
-        localStorage.setItem('ain_ai_token', accessToken);
-        document.cookie = "ain_ai_token=" + accessToken + "; path=/; max-age=86400; SameSite=Lax";
-        window.location.href = '/';
+        saveSessionAndRedirect(accessToken, data.user);
       } catch (err) {
         errBox.textContent = 'অনবোর্ডিং প্রক্রিয়াকরণে ত্রুটি।';
         errBox.classList.remove('hidden');
@@ -479,12 +508,11 @@
         });
         const dataVer = await resVer.json();
         accessToken = dataVer.access_token;
-        localStorage.setItem('ain_ai_token', accessToken);
-        document.cookie = "ain_ai_token=" + accessToken + "; path=/; max-age=86400; SameSite=Lax";
 
         // Step 3: Complete onboarding if needed
-        if (!dataVer.user || !dataVer.user.is_onboarded) {
-          await fetch('/auth/onboarding', {
+        let userData = dataVer.user;
+        if (!userData || !userData.is_onboarded) {
+          const resOb = await fetch('/auth/onboarding', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -499,18 +527,20 @@
               ai_disclaimer: true
             })
           });
+          if (resOb.ok) {
+            const dataOb = await resOb.json();
+            userData = dataOb.user;
+          }
         }
 
         // Step 4: Seamless redirect
-        if (role === 'admin') {
-          window.location.href = '/admin';
-        } else {
-          window.location.href = '/';
-        }
+        saveSessionAndRedirect(accessToken, userData || { role: role });
       } catch (err) {
         alert('ডেমো লগইনে ত্রুটি ঘটেছে: ' + err.message);
       }
     }
   </script>
+  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+  <script src="/static/sw-register.js"></script>
 </body>
 </html>
