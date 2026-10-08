@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI এডমিন — জরুরি হেল্পলাইন ও নম্বর যাচাই</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #047857;
+      --color-primary-dark: #065F46;
+      --color-primary-soft: #ECFDF5;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-danger: #EF4444;
+      --color-success: #10B981;
+      --radius: 10px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: var(--font-bn);
+      background: var(--color-bg);
+      color: var(--color-text-main);
+      font-size: 15px;
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+
+    /* -----------------------------------------------------------------------
+       App Shell: Desktop Sidebar (1280px) & Tablet Rail (768px)
+       ----------------------------------------------------------------------- */
+    .app-sidebar {
+      width: 240px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      color: var(--color-primary);
+    }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      font-weight: 600;
+    }
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    /* Main Area */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .container {
+      max-width: 1000px;
+      width: 100%;
+      margin: 24px auto;
+      padding: 0 16px 80px;
+    }
+    .card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--color-border); font-size: 14px; }
+    th { background: #F1F5F9; font-weight: 600; color: #475569; }
+    .badge-verified { background: #DCFCE7; color: #166534; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; }
+    .badge-unverified { background: #FEE2E2; color: #991B1B; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; }
+    .btn { padding: 8px 14px; border-radius: 6px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
+    .btn-verify { background: var(--color-primary); color: #FFFFFF; }
+    .btn-verify:hover { background: var(--color-primary-dark); }
+
+    /* -----------------------------------------------------------------------
+       App Shell: Mobile Bottom Tab Bar (360px) & Tablet Rail (768px)
+       ----------------------------------------------------------------------- */
+    .mobile-tab-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      z-index: 100;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    .mobile-tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 600;
+      flex: 1;
+      height: 100%;
+    }
+    .mobile-tab-item.active {
+      color: var(--color-primary);
+    }
+    .mobile-tab-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .app-sidebar {
+        width: 72px;
+        padding: 16px 8px;
+        align-items: center;
+      }
+      .brand-title span:last-child {
+        display: none;
+      }
+      .nav-link {
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 4px;
+        font-size: 11px;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .app-sidebar {
+        display: none;
+      }
+      .mobile-tab-bar {
+        display: flex;
+      }
+      .container {
+        padding: 16px 12px 80px;
+      }
+      .card {
+        padding: 16px 12px;
+      }
+      th, td {
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Desktop / Tablet Navigation Shell -->
+  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+    <a href="/home" class="brand-title">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <span>আইন-AI</span>
+    </a>
+    <ul class="nav-list">
+      <li>
+        <a href="/home" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <span>হোম</span>
+        </a>
+      </li>
+      <li>
+        <a href="/cases" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          <span>মামলা</span>
+        </a>
+      </li>
+      <li>
+        <a href="/intake" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          <span>ইনটেক</span>
+        </a>
+      </li>
+      <li>
+        <a href="/documents/upload" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          <span>নথি</span>
+        </a>
+      </li>
+      <li>
+        <a href="/notifications" class="nav-link">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span>বিজ্ঞপ্তি</span>
+        </a>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- Main Area -->
+  <div class="main-wrapper">
+    <div class="header">
+      <div style="font-weight: 700; font-size: 18px; color: var(--color-primary);">আইন-AI এডমিন — জরুরি হেল্পলাইন ও নম্বর যাচাই</div>
+      <a href="/static/intake.html" style="color: var(--color-primary); text-decoration: none; font-size: 14px; font-weight: 600;">← ইনটেকে ফিরে যান</a>
+    </div>
+
+    <div class="container">
+      <div class="card">
+        <div>
+          <h3 style="font-size: 16px; font-weight: 700;">জরুরি নম্বর তালিকা ও যাচাই স্থিতি</h3>
+          <p style="font-size: 13px; color: var(--color-text-muted); margin-top: 4px;">
+            অফিসিয়াল সূত্র ছাড়া কোনো নম্বর যাচাইকৃত হিসেবে চিহ্নিত করা যাবে না। কেবল এডমিন দ্বারা যাচাইকৃত নম্বরগুলোই সাধারণ নাগরিকদের জরুরি সহায়তা তালিকায় উপস্থাপিত হয়।
+          </p>
+        </div>
+
+        <table id="contactsTable">
+          <thead>
+            <tr>
+              <th>শিরোনাম</th>
+              <th>হটলাইন / নম্বর</th>
+              <th>ক্যাটাগরি</th>
+              <th>যাচাই স্থিতি</th>
+              <th>সর্বশেষ যাচাই</th>
+              <th>অফিসিয়াল সূত্র</th>
+              <th>অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody id="contactsBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Tab Navigation (5 Tabs) -->
+  <nav class="mobile-tab-bar" aria-label="মোবাইল নেভিগেশন">
+    <a href="/home" class="mobile-tab-item">
+      <svg class="mobile-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>হোম</span>
+    </a>
+    <a href="/cases" class="mobile-tab-item">
+      <svg class="mobile-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      <span>মামলা</span>
+    </a>
+    <a href="/intake" class="mobile-tab-item">
+      <svg class="mobile-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+      <span>ইনটেক</span>
+    </a>
+    <a href="/documents/upload" class="mobile-tab-item">
+      <svg class="mobile-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+      <span>নথি</span>
+    </a>
+    <a href="/notifications" class="mobile-tab-item">
+      <svg class="mobile-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+      <span>বিজ্ঞপ্তি</span>
+    </a>
+  </nav>
+
+  <script>
+    function toBanglaDigits(str) {
+      if (str === null || str === undefined) return '';
+      const bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      return String(str).replace(/[0-9]/g, d => bn[Number(d)]);
+    }
+
+    function formatBanglaDate(isoStr) {
+      if (!isoStr) return 'যাচাই করা হয়নি';
+      try {
+        const d = new Date(isoStr);
+        if (isNaN(d.getTime())) return 'যাচাই করা হয়নি';
+        const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+        return `${toBanglaDigits(d.getDate())} ${months[d.getMonth()]} ${toBanglaDigits(d.getFullYear())}`;
+      } catch (e) {
+        return 'যাচাই করা হয়নি';
+      }
+    }
+
+    async function loadContacts() {
+      try {
+        const res = await fetch('/emergency-contacts?active_only=false');
+        const data = await res.json();
+        const tbody = document.getElementById('contactsBody');
+        tbody.innerHTML = '';
+
+        (data.contacts || []).forEach(c => {
+          const tr = document.createElement('tr');
+          const badge = c.is_verified 
+            ? '<span class="badge-verified">✓ যাচাইকৃত</span>'
+            : '<span class="badge-unverified">যাচাই করা হয়নি</span>';
+          const lastVer = formatBanglaDate(c.last_verified_at);
+          const sourceNote = c.source_note ? c.source_note : 'কোনো তথ্য নেই';
+
+          tr.innerHTML = `
+            <td><strong>${c.title}</strong></td>
+            <td><code>${toBanglaDigits(c.phone)}</code></td>
+            <td>${c.category}</td>
+            <td>${badge}</td>
+            <td>${lastVer}</td>
+            <td style="font-size: 12px; color: var(--color-text-muted); max-width: 200px; word-break: break-word;">${sourceNote}</td>
+            <td>
+              <button class="btn btn-verify" onclick="verifyContact('${c.id}')">${c.is_verified ? 'পুনরায় যাচাই' : 'যাচাই করুন'}</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Failed to load contacts", err);
+      }
+    }
+
+    async function verifyContact(id) {
+      const sourceNote = prompt('অফিসিয়াল সরকারি গেজেট, প্রজ্ঞাপন বা অনুমোদিত ওয়েবসাইটের রেফারেন্স লিংক প্রদান করুন (বাধ্যতামূলক):');
+      if (!sourceNote || !sourceNote.trim()) {
+        alert('যাচাই করার জন্য অফিসিয়াল সূত্র বা রেফারেন্স প্রদান করা বাধ্যতামূলক।');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/admin/emergency-contacts/${id}/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source_note: sourceNote.trim() })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.detail || 'যাচাইকরণ ব্যর্থ হয়েছে।');
+          return;
+        }
+        alert('নম্বরটি অফিসিয়াল সূত্রসহ সফলভাবে যাচাইকৃত হয়েছে।');
+        loadContacts();
+      } catch (e) {
+        alert('সার্ভার যোগাযোগে সমস্যা হয়েছে।');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadContacts);
+  </script>
+  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+  <script src="/static/sw-register.js"></script>
+</body>
+</html>

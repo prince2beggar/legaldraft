@@ -1,0 +1,322 @@
+[
+  {
+    "id": "triage_01",
+    "title": "Police Custody without Warrant",
+    "user_text": "আমার ভাইকে কাল রাতে পুলিশ থানায় নিয়ে গেছে এবং আটকে রেখেছে। কোনো ওয়ারেন্ট দেখায়নি।",
+    "triage_chips": ["arrested_detained"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "urgent",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "chip"
+  },
+  {
+    "id": "triage_02",
+    "title": "Domestic Violence and Life Threat",
+    "user_text": "স্বামী আমাকে মারধর করছে এবং মেরে ফেলার হুমকি দিচ্ছে। আমি এখন বাবার বাড়িতে আশ্রয় নিয়েছি।",
+    "triage_chips": ["violence_threat"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "urgent",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "chip"
+  },
+  {
+    "id": "triage_03",
+    "title": "Minor Child Forcefully Taken",
+    "user_text": "আমার ৪ বছরের বাচ্চা কেড়ে নেওয়া হয়েছে জোরপূর্বক। তাকে আটকে রাখা হয়েছে।",
+    "triage_chips": ["child_at_risk"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "urgent",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "chip"
+  },
+  {
+    "id": "triage_04",
+    "title": "Forced Eviction in 24 Hours",
+    "user_text": "বাড়িওয়ালা মাস্তান নিয়ে এসে ঘরবাড়ি ভাঙচুর করে উচ্ছেদ করার হুমকি দিচ্ছে।",
+    "triage_chips": ["lose_home_soon"],
+    "stated_deadline_days": 1,
+    "user_selected_urgency": "urgent",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "chip"
+  },
+  {
+    "id": "triage_05",
+    "title": "Court Hearing Tomorrow Morning",
+    "user_text": "বিজ্ঞ আদালতে আগামীকাল শুনানি রয়েছে এবং আমার আইনজীবী উপস্থিত থাকতে পারছেন না।",
+    "triage_chips": ["deadline_hearing_soon"],
+    "stated_deadline_days": 1,
+    "user_selected_urgency": "urgent",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "chip"
+  },
+  {
+    "id": "triage_06",
+    "title": "Arrest Keyword in Text (No chip selected)",
+    "user_text": "গতকাল রাত ১০টায় আমাদের গ্রামে পুলিশ রেইড দিয়ে বাবাকে গ্রেফতার করে নিয়ে গেছে।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "keyword"
+  },
+  {
+    "id": "triage_07",
+    "title": "Physical Assault and Weapon Threat (No chip selected)",
+    "user_text": "প্রতিপক্ষ লোকজন ধারালো অস্ত্র নিয়ে হামলা চালিয়ে আমাকে গুরুতর জখম করেছে এবং মারার হুমকি দিচ্ছে।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "keyword"
+  },
+  {
+    "id": "triage_08",
+    "title": "Child Kidnapping (English, no chip)",
+    "user_text": "My 7-year-old child was kidnapped this afternoon near the primary school.",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "keyword"
+  },
+  {
+    "id": "triage_09",
+    "title": "Bulldozer Demolition at Gate",
+    "user_text": "Local land grabbers brought a bulldozer to evict us from our ancestral home.",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "keyword"
+  },
+  {
+    "id": "triage_10",
+    "title": "Stay Order Deadline in 2 Days",
+    "user_text": "আমরা আদালতের একটি নোটিশ পেয়েছি যেখানে ২ দিনের মধ্যে শুনানি উপস্থিত হতে বলা হয়েছে।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": 2,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "deadline"
+  },
+  {
+    "id": "triage_11",
+    "title": "Police Remand Threat",
+    "user_text": "The investigating officer is threatening a 5-day remand without legal representation.",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "keyword"
+  },
+  {
+    "id": "triage_12",
+    "title": "Life Threat Extortion",
+    "user_text": "চাঁদা না দিলে প্রাণনাশের হুমকি দেওয়া হচ্ছে এবং পরিবারকে মেরে ফেলার কথা বলেছে।",
+    "triage_chips": ["violence_threat"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "urgent",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "chip"
+  },
+  {
+    "id": "triage_13",
+    "title": "Immediate Child Protection",
+    "user_text": "A minor child is being subjected to severe child abuse by legal guardians.",
+    "triage_chips": ["child_at_risk"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "urgent",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "chip"
+  },
+  {
+    "id": "triage_14",
+    "title": "Arrest Warrant Issued Today",
+    "user_text": "আমার নামে আজ মিথ্যা মামলায় ওয়ারেন্ট জারি হয়েছে। পুলিশ বাসায় এসেছে।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "keyword"
+  },
+  {
+    "id": "triage_15",
+    "title": "Illegal Land Grabbing and Dispossession",
+    "user_text": "জোরপূর্বক উচ্ছেদ করে আমাদের দোকানঘর দখল করে নিয়েছে সন্ত্রাসী বাহিনী।",
+    "triage_chips": ["lose_home_soon"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "urgent",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "chip"
+  },
+  {
+    "id": "triage_16",
+    "title": "High Court Hearing Tomorrow",
+    "user_text": "Hearing tomorrow at the High Court Division for criminal revision bail petition.",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": 1,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "deadline"
+  },
+  {
+    "id": "triage_17",
+    "title": "Severe Domestic Beating",
+    "user_text": "My in-laws assaulted me physically and threw me out on the street.",
+    "triage_chips": ["violence_threat"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "urgent",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "chip"
+  },
+  {
+    "id": "triage_18",
+    "title": "Imminent Demolition Notice 3 Days",
+    "user_text": "সিটি কর্পোরেশন থেকে আগামী ৩ দিনের মধ্যে ঘর অপসারণের আলটিমেটাম দিয়েছে।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": 3,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "urgent",
+    "expected_trigger": "deadline"
+  },
+  {
+    "id": "triage_19",
+    "title": "Routine Land Mutation Question",
+    "user_text": "আমি পৈত্রিক জমির নামজারি বা খারিজ করার সঠিক প্রক্রিয়া ও সরকারি ফি জানতে চাই।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_20",
+    "title": "Commercial Lease Renewal Next Year",
+    "user_text": "আমাদের অফিসের বাণিজ্যিক ভাড়ার চুক্তি আগামী ৬ মাস পর শেষ হবে। নবায়নের শর্ত দেখতে চাই।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": 180,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_21",
+    "title": "Civil Partition Suit Consultation",
+    "user_text": "আমরা তিন ভাই পৈত্রিক সম্পত্তির বাঁটোয়ারা বা বণ্টননামা দলিল রেজিস্ট্রি করতে আগ্রহী।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_22",
+    "title": "Supplier Contract Breach 3 Months Ago",
+    "user_text": "A raw material supplier delayed delivery by 2 months back in July. We want advice on penalty clause.",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_23",
+    "title": "Trade License Name Change",
+    "user_text": "ব্যবসার ট্রেড লাইসেন্সে স্বত্বাধিকারীর নাম পরিবর্তনের নিয়মাবলী ও প্রয়োজনীয় কাগজপত্র কী?",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_24",
+    "title": "Power of Attorney Verification",
+    "user_text": "আমার প্রবাসে থাকা চাচা আমাকে আমমোক্তারনামা দলিল দিয়েছেন, এটি সাব-রেজিস্ট্রি অফিসে যাচাই করতে চাই।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_25",
+    "title": "Employment Gratuity Calculation",
+    "user_text": "স্বেচ্ছায় চাকরি থেকে অবসর নেওয়ার পর ভবিষ্যৎ তহবিল এবং গ্র্যাচুইটি গণনার নিয়ম জানতে চাই।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": 45,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_26",
+    "title": "Copyright Registration Inquiry",
+    "user_text": "আমি একটি বই প্রকাশ করতে যাচ্ছি এবং কপিরাইট নিবন্ধন সনদ কিভাবে পেতে পারি?",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_27",
+    "title": "Consumer Product Quality Complaint",
+    "user_text": "অনলাইন থেকে কেনা ফ্রিজে ত্রুটি আছে। ভোক্তা অধিকার সংরক্ষণ অধিদপ্তরে অভিযোগ জানানোর পদ্ধতি কী?",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": 30,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_28",
+    "title": "Will and Probate Drafting Advice",
+    "user_text": "Will drafting consultation for estate planning. No court disputes or family contentions.",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_29",
+    "title": "Tax Identification Number Correction",
+    "user_text": "আমার ই-টিন সার্টিফিকেটে জন্মতারিখ ভুল উঠেছে। সংশোধন করার প্রক্রিয়াটি বুঝতে চাই।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_30",
+    "title": "Family Heirship Certificate Information",
+    "user_text": "সিটি কর্পোরেশনের কাউন্সিলর অফিস থেকে ওয়ারিশান সনদপত্র উত্তোলনের জন্য কী কী তথ্য জমা দিতে হয়?",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_31",
+    "title": "Civil Boundary Wall Dispute without Threat",
+    "user_text": "প্রতিবেশীর সাথে সীমানা প্রাচীর নির্মাণের দূরত্ব নিয়ে অমিল রয়েছে। কোনো হুমকি বা ঝামেলা নেই।",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": null,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  },
+  {
+    "id": "triage_32",
+    "title": "Partnership Deed Review",
+    "user_text": "Reviewing a draft deed of partnership for an export software development agency.",
+    "triage_chips": ["none_of_these"],
+    "stated_deadline_days": 60,
+    "user_selected_urgency": "normal",
+    "ground_truth_urgency": "normal",
+    "expected_trigger": "none"
+  }
+]
