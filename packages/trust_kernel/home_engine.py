@@ -25,29 +25,29 @@ DHAKA_TZ = timezone(timedelta(hours=6))
 
 CASE_TYPE_REQUIRED_DOCUMENTS: dict[str, list[dict[str, str]]] = {
     "land_dispute": [
-        {"doc_type": "khatian", "title": "খতিয়ান বা পরচা (Khatian)", "status": "APPROVED"},
-        {"doc_type": "deed", "title": "মালিকানা দলিল (Title Deed)", "status": "APPROVED"},
+        {"doc_type": "khatian", "title": "খতিয়ান বা পরচা", "status": "APPROVED"},
+        {"doc_type": "deed", "title": "মালিকানা দলিল", "status": "APPROVED"},
     ],
     "cheque_dishonor": [
-        {"doc_type": "cheque_copy", "title": "ডিসঅনারকৃত চেক (Cheque Copy)", "status": "APPROVED"},
-        {"doc_type": "bank_memo", "title": "ব্যাংক রিটার্ন মেমো (Bank Memo)", "status": "APPROVED"},
+        {"doc_type": "cheque_copy", "title": "ডিসঅনারকৃত চেক", "status": "APPROVED"},
+        {"doc_type": "bank_memo", "title": "ব্যাংক রিটার্ন মেমো", "status": "APPROVED"},
     ],
     "eviction": [
         {
             "doc_type": "tenancy_agreement",
-            "title": "ভাড়া চুক্তিপত্র (Tenancy Agreement)",
+            "title": "ভাড়া চুক্তিপত্র",
             "status": "APPROVED",
         },
         {
             "doc_type": "eviction_notice",
-            "title": "উচ্ছেদ নোটিশ (Eviction Notice)",
+            "title": "উচ্ছেদ নোটিশ",
             "status": "APPROVED",
         },
     ],
     "money_claim": [
         {
             "doc_type": "money_receipt",
-            "title": "টাকা লেনদেনের প্রমাণ (Money Receipt)",
+            "title": "টাকা লেনদেনের প্রমাণ",
             "status": "APPROVED",
         },
     ],
@@ -136,6 +136,7 @@ class HomeEngine:
                     "title": f"জরুরি ট্রায়াজ: {c['title']}",
                     "description": "মামলাটিতে জরুরি সহায়তা এবং তাৎক্ষণিক আইনি পদক্ষেপ গ্রহণ প্রয়োজন।",
                     "action_type": "urgent_triage",
+                    "urgency": "urgent",
                     "target_url": f"/cases/{c['id']}?tab=overview",
                     "case_id": c["id"],
                     "reason_refs": [
@@ -198,6 +199,7 @@ class HomeEngine:
                 "title": f"মেয়াদ উত্তীর্ণ সময়সীমা! ({bn_days} দিন অতিবাহিত)",
                 "description": f"মামলা '{dl.get('case_title', '')}': {dl['title']} — সময়সীমা পার হয়ে গেছে। অবিলম্বে পদক্ষেপ নিন।",
                 "action_type": "overdue_deadline",
+                "urgency": "urgent",
                 "target_url": f"/cases/{dl['case_id']}?tab=deadlines"
                 if dl.get("case_id")
                 else f"/documents/{dl.get('document_id')}/notice",
@@ -243,6 +245,7 @@ class HomeEngine:
                 "title": f"সময়সীমা নিশ্চিত করুন ({days_txt})",
                 "description": f"গণনাকৃত সময়সীমা '{dl['title']}' যাচাই ও নিশ্চিত করুন যাতে স্বয়ংক্রিয় রিমাইন্ডার সক্রিয় থাকে।",
                 "action_type": "confirm_deadline",
+                "urgency": "urgent",
                 "target_url": f"/cases/{dl['case_id']}?tab=deadlines"
                 if dl.get("case_id")
                 else f"/documents/{dl.get('document_id')}/notice",
@@ -560,8 +563,21 @@ class HomeEngine:
                 if dl.get("status") in ("completed", "cancelled"):
                     continue
                 try:
-                    due_d = datetime.strptime(dl["due_date"], "%Y-%m-%d").date()
+                    due_d = datetime.strptime(dl["due_date"][:10], "%Y-%m-%d").date()
                     diff = (due_d - today_date).days
+                    basis = (
+                        "user_entered"
+                        if dl.get("is_user_set")
+                        else ("rule_based" if dl.get("rule_key") else "stated_date")
+                    )
+                    dl_basis = dl.get("calculation_basis") or basis
+                    if diff < 0:
+                        days_left_bn = f"{to_bangla_digits(abs(diff))} দিন অতিবাহিত"
+                    elif diff == 0:
+                        days_left_bn = "আজই শেষ দিন"
+                    else:
+                        days_left_bn = f"{to_bangla_digits(diff)} দিন বাকি"
+
                     upcoming_items.append(
                         {
                             "id": dl["id"],
@@ -570,9 +586,12 @@ class HomeEngine:
                             "title": dl["title"],
                             "due_date": dl["due_date"],
                             "days_left": diff,
-                            "days_left_bn": to_bangla_digits(max(0, diff)) + " দিন বাকি"
-                            if diff >= 0
-                            else "মেয়াদ উত্তীর্ণ",
+                            "days_left_bn": days_left_bn,
+                            "confirmed_by_user": bool(dl.get("confirmed_by_user")),
+                            "is_user_set": bool(dl.get("is_user_set")),
+                            "rule_key": dl.get("rule_key"),
+                            "calculation_basis": dl_basis,
+                            "source_ref": dl.get("source_ref"),
                         }
                     )
                 except Exception:

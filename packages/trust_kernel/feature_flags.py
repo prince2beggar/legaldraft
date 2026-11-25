@@ -33,7 +33,7 @@ DEFAULT_FLAGS: dict[str, bool] = {
     "M21_BILLING_PAYMENTS": False,
     # Phase 4: Ecosystem (Disabled in P1)
     "M22_LAWYER_MARKETPLACE": False,
-    "M23_TAX_COMPLIANCE": False,
+    "M23_TAX_COMPLIANCE": True,
     "M24_OFFICIAL_INTEGRATIONS": False,
 }
 

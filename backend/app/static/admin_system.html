@@ -83,6 +83,8 @@
       display: flex;
       flex-direction: column;
       min-width: 0;
+      max-width: 100%;
+      overflow-x: hidden;
     }
     .app-header {
       background: #FFFFFF;
@@ -94,6 +96,8 @@
       position: sticky;
       top: 0;
       z-index: 10;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .container {
@@ -101,6 +105,8 @@
       width: 100%;
       margin: 0 auto;
       padding: 24px 16px 80px;
+      box-sizing: border-box;
+      min-width: 0;
     }
 
     /* Metrics Grid */
@@ -143,6 +149,14 @@
       padding: 20px;
       margin-bottom: 24px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .section-title {
       font-size: 16px;
@@ -165,6 +179,7 @@
       font-size: 12px;
       color: var(--color-text-muted);
       border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
     }
     td {
       padding: 12px 14px;
@@ -180,6 +195,7 @@
       border-radius: 12px;
       font-size: 11px;
       font-weight: 600;
+      white-space: nowrap;
     }
     .badge-success { background: var(--color-success-bg); color: var(--color-success-text); }
     .badge-amber { background: var(--color-amber-bg); color: var(--color-amber-text); }
@@ -208,7 +224,9 @@
       }
       .app-sidebar .brand-title { display: none; }
       .nav-list { flex-direction: row; justify-content: space-around; width: 100%; }
-      .container { padding-bottom: 90px; }
+      .container { padding: 16px 12px 90px; }
+      .app-header { padding: 12px 14px; }
+      .section-card { padding: 14px; }
     }
   </style>
 </head>
@@ -232,7 +250,7 @@
   <!-- Main Content -->
   <div class="main-wrapper">
     <header class="app-header">
-      <div style="font-weight: 700; font-size: 16px;">সিস্টেম অবস্থা ও নির্ভরযোগ্যতা ড্যাশবোর্ড</div>
+      <h1 style="font-weight: 700; font-size: 16px; margin: 0; color: var(--color-text-main);">সিস্টেম অবস্থা ও নির্ভরযোগ্যতা ড্যাশবোর্ড</h1>
       <div id="systemStatusBadge" class="badge badge-success">সিস্টেম স্বাভাবিক</div>
     </header>
 
@@ -240,12 +258,12 @@
       <!-- High Level Metrics -->
       <div class="metrics-grid">
         <div class="metric-card">
-          <div class="metric-label">পাঠ্য ল্যাটেন্সি (p95 Read)</div>
+          <div class="metric-label">পাঠ্য ল্যাটেন্সি (৯৫ তম পার্সেন্টাইল)</div>
           <div class="metric-value" id="valP95Read">৩৮ মি.সে.</div>
-          <div class="metric-sub">টার্গেট: < ৫০০ মি.সে.</div>
+          <div class="metric-sub">টার্গেট: ৫০০ মি.সে. এর নিচে</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">সার্ভিস আপটাইম (SLO)</div>
+          <div class="metric-label">সার্ভিস আপটাইম</div>
           <div class="metric-value">৯৯.৯%</div>
           <div class="metric-sub">বাজেট অবশিষ্ট: ৯৪%</div>
         </div>
@@ -279,37 +297,37 @@
           </thead>
           <tbody id="healthTableBody">
             <tr>
-              <td><strong>Trust Kernel DB</strong></td>
-              <td>SQLite / Postgres</td>
-              <td><span class="badge badge-success">সচল (HEALTHY)</span></td>
+              <td><strong>ট্রাস্ট কার্নেল ডাটাবেজ</strong></td>
+              <td>এসকিউএল ডাটাবেজ</td>
+              <td><span class="badge badge-success">সচল</span></td>
               <td>৪ মি.সে.</td>
               <td>স্বয়ংক্রিয়</td>
             </tr>
             <tr>
-              <td><strong>Secure Storage Engine</strong></td>
-              <td>AES-256-GCM Encrypted</td>
-              <td><span class="badge badge-success">সুরক্ষিত (HEALTHY)</span></td>
+              <td><strong>সুরক্ষিত স্টোরেজ ইঞ্জিন</strong></td>
+              <td>সুরক্ষিত এনক্রিপশন</td>
+              <td><span class="badge badge-success">সুরক্ষিত</span></td>
               <td>২ মি.সে.</td>
               <td>স্বয়ংক্রিয়</td>
             </tr>
             <tr>
-              <td><strong>SMS Provider Adapter</strong></td>
-              <td>Mock / Production Gateway</td>
-              <td><span class="badge badge-success">প্রস্তুত (HEALTHY)</span></td>
+              <td><strong>এসএমএস গেটওয়ে</strong></td>
+              <td>বার্তা সংযোগ</td>
+              <td><span class="badge badge-success">প্রস্তুত</span></td>
               <td>১৫ মি.সে.</td>
               <td>স্বয়ংক্রিয়</td>
             </tr>
             <tr>
-              <td><strong>AI Trust Gateway</strong></td>
-              <td>FakeLLM / Production LLM</td>
-              <td><span class="badge badge-amber">স্টাব মোড (DEV_STUB)</span></td>
+              <td><strong>আইনি এআই গেটওয়ে</strong></td>
+              <td>স্থানীয় মডেল</td>
+              <td><span class="badge badge-amber">স্টাব মোড</span></td>
               <td>০ মি.সে.</td>
               <td>স্থানীয় স্যান্ডবক্স</td>
             </tr>
             <tr>
-              <td><strong>Audit Service</strong></td>
-              <td>Append-only Hash Chain</td>
-              <td><span class="badge badge-success">অক্ষত (VERIFIED)</span></td>
+              <td><strong>অডিট ট্রেইল সার্ভিস</strong></td>
+              <td>হ্যাশ চেইন সংরক্ষিত</td>
+              <td><span class="badge badge-success">অক্ষত ও প্রমাণিত</span></td>
               <td>১ মি.সে.</td>
               <td>স্বয়ংক্রিয়</td>
             </tr>
@@ -320,7 +338,7 @@
       <!-- Feature Flags Configuration -->
       <div class="section-card">
         <div class="section-title">
-          <span>ফিচার ফ্ল্যাগ ও রুলিং স্ট্যাটাস (X-007)</span>
+          <span>ফিচার ফ্ল্যাগ ও কনফিগারেশন স্ট্যাটাস</span>
           <span style="font-size: 12px; color: var(--color-text-muted);">কনফিগারেশন নিয়ন্ত্রণ</span>
         </div>
         <table>
@@ -336,25 +354,25 @@
             <tr>
               <td><code>DEV_MODE</code></td>
               <td>ডেভেলপমেন্ট বাইপাস ও ডেমো লগইন মোড</td>
-              <td><span class="badge badge-success">নিষ্ক্রিয় (FALSE - PROD SAFE)</span></td>
+              <td><span class="badge badge-success">নিষ্ক্রিয়</span></td>
               <td>পরিবেশ ভিত্তিক</td>
             </tr>
             <tr>
-              <td><code>STAGING_ALLOW_DRAFT_TEMPLATES</code></td>
+              <td><code>খসড়া_টেমপ্লেট_অনুমতি</code></td>
               <td>অননুমোদিত খসড়া টেমপ্লেট পরীক্ষার সুযোগ</td>
-              <td><span class="badge badge-amber">বন্ধ (DEFAULT OFF)</span></td>
+              <td><span class="badge badge-amber">বন্ধ</span></td>
               <td>স্ট্যাজিং স্যান্ডবক্স</td>
             </tr>
             <tr>
-              <td><code>ENABLE_OTP_RATE_LIMITING</code></td>
-              <td>ওটিপি অনুরোধে রেট লিমিট নিরাপত্তা (X-006)</td>
-              <td><span class="badge badge-success">সক্রিয় (ENABLED)</span></td>
+              <td><code>ওটিপি_রেট_লিমিট</code></td>
+              <td>ওটিপি অনুরোধে রেট লিমিট নিরাপত্তা</td>
+              <td><span class="badge badge-success">সক্রিয়</span></td>
               <td>সার্বজনীন</td>
             </tr>
             <tr>
-              <td><code>ENFORCE_CONFIRMED_FACTS_ONLY</code></td>
+              <td><code>শুধুমাত্র_নিশ্চিত_তথ্য</code></td>
               <td>বিবরণী ও ড্রাফটে শুধুমাত্র নিশ্চিত তথ্য ব্যবহার</td>
-              <td><span class="badge badge-success">সক্রিয় (STRICT)</span></td>
+              <td><span class="badge badge-success">সক্রিয়</span></td>
               <td>সার্বজনীন</td>
             </tr>
           </tbody>
@@ -364,7 +382,7 @@
       <!-- Notification Stats & Error Budget -->
       <div class="section-card">
         <div class="section-title">
-          <span>নোটিফিকেশন ও এরর পরিসংখ্যান (X-006)</span>
+          <span>নোটিফিকেশন ও এরর পরিসংখ্যান</span>
         </div>
         <table>
           <thead>
@@ -378,7 +396,7 @@
           </thead>
           <tbody>
             <tr>
-              <td><strong>এসএমএস ওটিপি (SMS OTP)</strong></td>
+              <td><strong>এসএমএস ওটিপি</strong></td>
               <td>১৪২ টি</td>
               <td>০ টি</td>
               <td>৩ টি (সুরক্ষিত)</td>
@@ -392,14 +410,14 @@
               <td><span class="badge badge-success">স্বাভাবিক</span></td>
             </tr>
             <tr>
-              <td><strong>এইচটিটিপি ৪xx রেসপন্স</strong></td>
+              <td><strong>ক্লায়েন্ট ত্রুটি (৪xx)</strong></td>
               <td>-</td>
               <td>-</td>
               <td>৫ টি</td>
               <td><span class="badge badge-success">নিয়ন্ত্রিত</span></td>
             </tr>
             <tr>
-              <td><strong>এইচটিটিপি ৫xx রেসপন্স</strong></td>
+              <td><strong>সার্ভার ত্রুটি (৫xx)</strong></td>
               <td>-</td>
               <td>-</td>
               <td>০ টি</td>

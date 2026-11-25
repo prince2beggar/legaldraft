@@ -139,13 +139,22 @@ class VirusScanner(ABC):
         pass
 
 
+try:
+    from backend.app.core.config import settings
+    MAX_UPLOAD_SIZE_MB = getattr(settings, "MAX_UPLOAD_SIZE_MB", 20)
+    MAX_UPLOAD_SIZE_BYTES = getattr(settings, "MAX_UPLOAD_SIZE_BYTES", 20 * 1024 * 1024)
+except Exception:
+    MAX_UPLOAD_SIZE_MB = int(os.getenv("MAX_UPLOAD_SIZE_MB", "20"))
+    MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024
+
+
 class BasicMagicBytesScanner(VirusScanner):
     """
     Real safety scanner inspecting magic bytes, file extensions, and size limits.
     Rejects executables, scripts, shell binaries, and macro files.
     """
 
-    MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
+    MAX_FILE_SIZE = MAX_UPLOAD_SIZE_BYTES  # 20 MB (Directive ZW1 / SRS §5.3)
     DANGEROUS_EXTENSIONS = {
         ".exe",
         ".bat",

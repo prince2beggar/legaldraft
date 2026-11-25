@@ -27,10 +27,18 @@
       background-color: var(--color-bg);
       color: var(--color-text-main);
       display: flex;
+      flex-direction: column;
       min-height: 100vh;
       overflow-x: hidden;
       font-size: 16px;
       line-height: 1.6;
+    }
+
+    .app-layout {
+      display: flex;
+      flex: 1;
+      width: 100%;
+      min-width: 0;
     }
 
     /* Sticky Sidebar Navigation (Desktop) */
@@ -499,7 +507,7 @@
   </style>
 </head>
 <body>
-
+  <div class="app-layout">
   <!-- Left Sidebar (Desktop & Tablet) -->
   <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
     <div class="logo-area">
@@ -621,6 +629,7 @@
       </section>
     </div>
   </main>
+  </div>
 
   <!-- Mobile Bottom Nav (Citizen Only - No Admin Links) -->
   <nav class="mobile-bottom-nav" aria-label="মোবাইল নেভিগেশন">

@@ -233,9 +233,10 @@
     .bottom-tab.active { color: var(--color-primary); }
 
     @media (max-width: 768px) {
+      body { flex-direction: column; }
       .app-sidebar { display: none; }
       .mobile-bottom-nav { display: flex; }
-      .app-main { padding-bottom: 74px; }
+      .app-main { width: 100%; padding-bottom: 74px; }
     }
   </style>
 </head>
@@ -280,7 +281,7 @@
       <div class="card">
         <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 8px;">নথি নির্বাচন করুন</h2>
         <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 20px;">
-          পিডিএফ ফাইল অথবা স্ক্যান করা স্পষ্ট ছবি নির্বাচন করুন (সর্বোচ্চ ৫০ মেগাবাইট)।
+          পিডিএফ ফাইল অথবা স্ক্যান করা স্পষ্ট ছবি নির্বাচন করুন (সর্বোচ্চ <span id="maxUploadLimitText">২০ মেগাবাইট</span>)।
         </p>
 
         <div class="dropzone" id="dropArea" onclick="document.getElementById('fileInput').click()">
@@ -299,6 +300,7 @@
           <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;" onchange="handleFileSelect(this.files)">
         </div>
 
+        <div id="uploadErrorBadge" style="display: none; background: #FEE2E2; border: 1px solid #EF4444; color: #991B1B; padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-top: 14px; font-weight: 600;"></div>
         <div id="offlineQueuedBadge" style="display: none; background: #FEF3C7; border: 1px solid #F59E0B; color: #92400E; padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-top: 14px; font-weight: 600;">
           ⏳ অফলাইনে সংরক্ষিত: নথি কিউতে অপেক্ষমান (সংযোগ ফিরলে স্বয়ংক্রিয়ভাবে আপলোড হবে)
         </div>
@@ -334,10 +336,11 @@
           </div>
           <div class="feature-chip">
             <span>⚡</span>
-            <span>রিজিউমেবল খণ্ড আপলোড (Resumable)</span>
+            <span>রিজিউমেবল খণ্ড আপলোড</span>
           </div>
         </div>
       </div>
+      <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
     </div>
   </main>
 
@@ -422,9 +425,34 @@
       }
     }
 
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.MAX_UPLOAD_SIZE_MB) {
+        const bengaliNums = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+        const mbBn = String(window.MAX_UPLOAD_SIZE_MB).split('').map(d => bengaliNums[d] || d).join('');
+        const el = document.getElementById('maxUploadLimitText');
+        if (el) el.innerText = `${mbBn} মেগাবাইট`;
+      }
+    });
+
     async function handleFileSelect(files) {
       if (!files || files.length === 0) return;
       const file = files[0];
+      const maxUploadBytes = window.MAX_UPLOAD_SIZE_BYTES || (20 * 1024 * 1024);
+      const maxUploadMB = window.MAX_UPLOAD_SIZE_MB || 20;
+      const errBadge = document.getElementById('uploadErrorBadge');
+      if (errBadge) { errBadge.style.display = 'none'; errBadge.innerText = ''; }
+
+      if (file.size > maxUploadBytes) {
+        const bengaliNums = {'0':'০','1':'১','2':'২','3':'৩','4':'৪','5':'৫','6':'৬','7':'৭','8':'৮','9':'৯'};
+        const mbBn = String(maxUploadMB).split('').map(d => bengaliNums[d] || d).join('');
+        const errMsg = `ফাইলের আকার সীমা (${mbBn} মেগাবাইট) অতিক্রম করেছে। অনুগ্রহ করে ছোট ফাইল নির্বাচন করুন।`;
+        if (errBadge) {
+          errBadge.innerText = errMsg;
+          errBadge.style.display = 'block';
+        }
+        alert(errMsg);
+        return;
+      }
       const idempotencyKey = await computeIdempotencyKey(file);
 
       const pContainer = document.getElementById('progressContainer');
@@ -552,7 +580,6 @@
     // Check queued on initial load
     renderQueuedList();
   </script>
-  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
   <script src="/static/sw-register.js"></script>
 </body>
 </html>

@@ -292,7 +292,11 @@
     .mobile-nav a.active { color: var(--color-primary); font-weight: 600; }
 
     @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
       .app-sidebar { display: none; }
+      .app-main { width: 100%; }
       .mobile-nav { display: flex; }
       .container { padding: 20px 16px; }
       .doc-meta-grid { grid-template-columns: 1fr; }
@@ -329,7 +333,7 @@
         <div class="doc-meta-grid">
           <div class="meta-item">
             <span class="meta-label">নথির নাম</span>
-            <span class="meta-value" id="docFilename">sample_kabinnama_scan.pdf</span>
+            <span class="meta-value" id="docFilename">কাবিননামা_নথি.pdf</span>
           </div>
           <div class="meta-item">
             <span class="meta-label">নথির ধরন</span>
@@ -374,7 +378,7 @@
           <div class="step-item active" id="stepOcr">
             <div class="step-icon">৪</div>
             <div class="step-content">
-              <div class="step-title">অক্ষর ও পাঠ রূপান্তর (OCR)</div>
+              <div class="step-title">অক্ষর ও পাঠ রূপান্তর</div>
               <div class="step-desc">বাংলা ও ইংরেজি হরফগুলো নির্ভুলভাবে ডিজিটাল লেখায় রূপান্তর করা হচ্ছে।</div>
             </div>
           </div>

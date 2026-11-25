@@ -86,7 +86,6 @@ def build_or_update_brief(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/cases/{case_id}/brief")
 @router.get("/api/v1/cases/{case_id}/brief")
 def get_case_brief(
     case_id: str,
@@ -304,6 +303,7 @@ def get_shared_recipient_view(
     accept = request.headers.get("accept", "")
     if "text/html" in accept and not request.url.path.startswith("/api/"):
         from fastapi.responses import HTMLResponse
+
         static_dir = Path(__file__).resolve().parents[4] / "backend" / "app" / "static"
         shared_file = static_dir / "shared_brief.html"
         if shared_file.exists():
@@ -344,7 +344,7 @@ def get_shared_recipient_view(
             "watermark_text": data.get("watermark_text"),
         }
     except KeyError:
-        # Indistinguishable 404 (no enumeration)
+        # Indistinguishable 404 (no enumeration - ADR-033 / ZX2)
         audit_service.log(
             actor_id="anonymous_recipient",
             actor_role="recipient",
@@ -356,7 +356,8 @@ def get_shared_recipient_view(
         )
         raise HTTPException(
             status_code=404,
-            detail="লিংকটি পাওয়া যায়নি অথবা এর মেয়াদ শেষ হয়েছে।",
+            detail="Not Found",
+            headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
         )
 
 
@@ -394,9 +395,7 @@ def verify_recipient_otp(
     otp_code = payload.otp_code or payload.otp or ""
 
     try:
-        res = brief_engine.verify_recipient_otp(
-            token=token, otp_code=otp_code, ip=client_ip
-        )
+        res = brief_engine.verify_recipient_otp(token=token, otp_code=otp_code, ip=client_ip)
         return res
     except ValueError as e:
         msg = str(e)
@@ -451,15 +450,22 @@ def download_signed_document_query(
     client_ip = request.client.host if request and request.client else "127.0.0.1"
 
     # Verify link and consent
-    token_hash = brief_engine._hash_token(token)
-    link = brief_engine.db.get_brief_link_by_token_hash(token_hash)
+    link = brief_engine.find_brief_link(token)
     now_iso = brief_engine.db.now_iso()
     if not link or link.get("revoked_at") or (now_iso >= link.get("expires_at", "")):
-        raise HTTPException(status_code=404, detail="লিংকটি অবৈধ বা মেয়াদোত্তীর্ণ।")
+        raise HTTPException(
+            status_code=404,
+            detail="Not Found",
+            headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+        )
 
     consent = brief_engine.db.get_sharing_consent(link["consent_id"])
     if not consent or consent.get("revoked_at") or (now_iso >= consent.get("expires_at", "")):
-        raise HTTPException(status_code=404, detail="সম্মতি বাতিল করা হয়েছে।")
+        raise HTTPException(
+            status_code=404,
+            detail="Not Found",
+            headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+        )
 
     perms = consent.get("permissions") or {}
     if not perms.get("allow_download", False):

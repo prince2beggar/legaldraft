@@ -134,44 +134,44 @@ def test_x001_complete_route_sweep_all_endpoints():
     (a) Asserts that static HTML shells return 200 OK without user or case data.
     (b) Asserts that unauthenticated calls to all protected /api/v1 routes receive 401 or 403.
     """
-    anon_client = TestClient(app)
     from tests.s1.test_x001_route_authorisation_sweep import (
         PUBLIC_API_WHITELIST,
         PUBLIC_SHELLS,
         get_all_routes,
     )
 
-    # (a) Assert all shells return 200 with zero user data
-    for pattern in PUBLIC_SHELLS:
-        test_url = (
-            pattern.replace("{case_id}", "test-case-id")
-            .replace("{draft_id}", "test-draft-id")
-            .replace("{step}", "1")
-            .replace("{doc_id}", "test-doc-id")
-            .replace("{token}", "test-token")
-        )
-        res = anon_client.get(test_url)
-        if pattern == "/s/{token}":
-            assert res.status_code in (200, 404)
-            continue
-        assert res.status_code == 200, f"Public shell {pattern} returned {res.status_code}"
-        assert "01755667788" not in res.text, f"User phone leaked in shell {pattern}"
-
-    # (b) Assert all non-public API routes return 401 or 403
-    all_routes = get_all_routes(app.routes)
-    for route in all_routes:
-        path = route.path
-        if not path.startswith("/api/v1"):
-            continue
-        if path in PUBLIC_API_WHITELIST:
-            continue
-        for method in route.methods or {"GET"}:
-            if method in ("HEAD", "OPTIONS"):
-                continue
-            res = anon_client.request(method, path)
-            assert res.status_code in (401, 403, 404, 422), (
-                f"Unprotected API route found: {method} {path} returned {res.status_code}"
+    with TestClient(app) as anon_client:
+        # (a) Assert all shells return 200 with zero user data
+        for pattern in PUBLIC_SHELLS:
+            test_url = (
+                pattern.replace("{case_id}", "test-case-id")
+                .replace("{draft_id}", "test-draft-id")
+                .replace("{step}", "1")
+                .replace("{doc_id}", "test-doc-id")
+                .replace("{token}", "test-token")
             )
+            res = anon_client.get(test_url)
+            if pattern == "/s/{token}":
+                assert res.status_code in (200, 404)
+                continue
+            assert res.status_code == 200, f"Public shell {pattern} returned {res.status_code}"
+            assert "01755667788" not in res.text, f"User phone leaked in shell {pattern}"
+
+        # (b) Assert all non-public API routes return 401 or 403
+        all_routes = get_all_routes(app.routes)
+        for route in all_routes:
+            path = route.path
+            if not path.startswith("/api/v1"):
+                continue
+            if path in PUBLIC_API_WHITELIST:
+                continue
+            for method in route.methods or {"GET"}:
+                if method in ("HEAD", "OPTIONS"):
+                    continue
+                res = anon_client.request(method, path)
+                assert res.status_code in (401, 403, 404, 422), (
+                    f"Unprotected API route found: {method} {path} returned {res.status_code}"
+                )
 
 
 def test_x002_audit_completeness_state_changing_routes(client_a):
@@ -716,7 +716,9 @@ def test_l4_root_and_post_login_navigation_journey(live_server):
         assert "/welcome" in page.url or "/signin" in page.url, f"Expected /welcome, got {page.url}"
 
         # 2. Sign in: simulate valid citizen login
-        valid_token = create_access_token(data={"sub": "01711223344", "phone": "01711223344", "role": "citizen"})
+        valid_token = create_access_token(
+            data={"sub": "01711223344", "phone": "01711223344", "role": "citizen"}
+        )
         page.evaluate(
             """({ token }) => {
                 localStorage.setItem('ain_token', token);
@@ -757,7 +759,9 @@ def test_l4_root_and_post_login_navigation_journey(live_server):
         )
         page.goto(f"{live_server}/")
         page.wait_for_url(lambda u: "/welcome" in u or "/signin" in u, timeout=7000)
-        assert "/welcome" in page.url or "/signin" in page.url, f"Expected /welcome after expired token, got {page.url}"
+        assert "/welcome" in page.url or "/signin" in page.url, (
+            f"Expected /welcome after expired token, got {page.url}"
+        )
 
         browser.close()
 
@@ -811,6 +815,7 @@ def test_n6c_mock_variants_unreachable_when_dev_mode_false(monkeypatch):
 
     for url in variant_urls:
         res = client.get(url)
-        assert res.status_code == 404, f"Expected 404 for {url} in production, got {res.status_code}"
+        assert res.status_code == 404, (
+            f"Expected 404 for {url} in production, got {res.status_code}"
+        )
         assert "Mock variants are disabled" in res.json().get("detail", "")
-

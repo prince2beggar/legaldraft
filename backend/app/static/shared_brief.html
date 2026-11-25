@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>আইন-AI — সংক্ষিপ্ত আইনি বিবরণী (Brief)</title>
+  <title>আইন-AI — সংক্ষিপ্ত আইনি বিবরণী</title>
   <link rel="stylesheet" href="/static/fonts.css">
   <style>
     :root {
@@ -272,7 +272,7 @@
 
   <header class="recipient-header">
     <span class="brand-title">আইন-AI</span>
-    <span class="secure-badge">নিরাপদ সংক্ষিপ্ত বিবরণী (Brief)</span>
+    <span class="secure-badge">নিরাপদ সংক্ষিপ্ত বিবরণী</span>
   </header>
 
   <main class="main-container">
@@ -290,7 +290,7 @@
       <div id="stepRequestOtp">
         <div class="form-group">
           <label class="form-label" for="recipientInput">আপনার মোবাইল নম্বর বা ইমেইল</label>
-          <input type="text" id="recipientInput" class="form-input" placeholder="01XXXXXXXXX বা email@example.com">
+          <input type="text" id="recipientInput" class="form-input" placeholder="০১XXXXXXXXX বা email@example.com">
         </div>
         <button type="button" class="btn btn-primary" id="btnSendOtp">যাচাইকরণ কোড পাঠান</button>
       </div>
@@ -320,14 +320,6 @@
         
         <div class="meta-grid">
           <div class="meta-item">
-            <div class="meta-label">মামলার ধরন</div>
-            <div class="meta-val" id="metaCaseType">-</div>
-          </div>
-          <div class="meta-item">
-            <div class="meta-label">ক্লায়েন্টের নাম</div>
-            <div class="meta-val" id="metaClientName">-</div>
-          </div>
-          <div class="meta-item">
             <div class="meta-label">তৈরির তারিখ</div>
             <div class="meta-val" id="metaCreatedDate">-</div>
           </div>
@@ -338,49 +330,60 @@
         </div>
 
         <div style="margin-top: 20px;">
-          <h2 class="section-title">প্রেক্ষাপট</h2>
-          <p id="briefBackground" style="margin-bottom: 12px; color: var(--color-text-main);">-</p>
+          <h2 class="section-title">১. ক্লায়েন্টের নাম</h2>
+          <p id="metaClientName" style="margin-bottom: 12px; color: var(--color-text-main); font-weight: 600;">-</p>
         </div>
 
         <div style="margin-top: 16px;">
-          <h2 class="section-title">ব্যবহারকারীর উদ্দেশ্য</h2>
-          <p id="briefObjective" style="color: var(--color-text-main);">-</p>
+          <h2 class="section-title">২. মামলার ধরন</h2>
+          <p id="metaCaseType" style="margin-bottom: 12px; color: var(--color-text-main); font-weight: 600;">-</p>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <h2 class="section-title">৩. প্রেক্ষাপট</h2>
+          <p id="briefBackground" style="margin-bottom: 12px; color: var(--color-text-main);">-</p>
         </div>
       </div>
 
-      <!-- Chronology & Events -->
+      <!-- 4. Chronology & Events -->
       <div class="card" id="timelineSection">
-        <h2 class="section-title">ঘটনাক্রম</h2>
+        <h2 class="section-title">৪. ঘটনাক্রম</h2>
         <div id="eventsListContainer"></div>
       </div>
 
-      <!-- Confirmed Facts -->
-      <div class="card" id="factsSection">
-        <h2 class="section-title">গুরুত্বপূর্ণ তথ্য</h2>
-        <div id="factsListContainer"></div>
-      </div>
-
-      <!-- Key Documents -->
+      <!-- 5. Key Documents -->
       <div class="card" id="docsSection">
-        <h2 class="section-title">মূল নথিপত্র</h2>
+        <h2 class="section-title">৫. মূল নথিপত্র</h2>
         <div id="docsListContainer"></div>
       </div>
 
-      <!-- Research Suggestions -->
+      <!-- 6. Confirmed Facts -->
+      <div class="card" id="factsSection">
+        <h2 class="section-title">৬. গুরুত্বপূর্ণ তথ্য</h2>
+        <div id="factsListContainer"></div>
+      </div>
+
+      <!-- 7. User Objective -->
+      <div class="card" id="objectiveSection">
+        <h2 class="section-title">৭. ব্যবহারকারীর উদ্দেশ্য</h2>
+        <p id="briefObjective" style="color: var(--color-text-main);">-</p>
+      </div>
+
+      <!-- 8. Research Suggestions -->
       <div class="card" id="researchSection">
-        <h2 class="section-title">আইনি প্রশ্ন ও গবেষণা প্রস্তাবনা</h2>
+        <h2 class="section-title">৮. আইনি প্রশ্ন ও গবেষণা প্রস্তাবনা (গবেষণার পরামর্শ — আইনজীবীর দ্বারা যাচাইকৃত নয়)</h2>
         <div id="researchListContainer"></div>
       </div>
 
-      <!-- Missing Information -->
+      <!-- 9. Missing Information -->
       <div class="card" id="missingSection">
-        <h2 class="section-title">অনুপস্থিত তথ্য</h2>
+        <h2 class="section-title">৯. অনুপস্থিত তথ্য</h2>
         <div id="missingListContainer"></div>
       </div>
 
-      <!-- Questions for Lawyer -->
+      <!-- 10. Questions for Lawyer -->
       <div class="card" id="questionsSection">
-        <h2 class="section-title">আইনজীবীর জন্য প্রশ্নাবলী</h2>
+        <h2 class="section-title">১০. আইনজীবীর জন্য প্রশ্নাবলী</h2>
         <div id="questionsListContainer"></div>
       </div>
     </div>
@@ -397,15 +400,17 @@
     }
 
     function formatDateBn(isoStr) {
-      if (!isoStr) return '-';
+      if (!isoStr) return '—';
       try {
         const d = new Date(isoStr);
-        const y = toBnNum(d.getFullYear());
-        const m = toBnNum(String(d.getMonth() + 1).padStart(2, '0'));
-        const day = toBnNum(String(d.getDate()).padStart(2, '0'));
-        return `${y}-${m}-${day}`;
+        if (isNaN(d.getTime())) return '—';
+        const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+        const day = toBnNum(d.getDate());
+        const month = months[d.getMonth()];
+        const year = toBnNum(d.getFullYear());
+        return `${day} ${month} ${year}`;
       } catch (e) {
-        return isoStr;
+        return '—';
       }
     }
 
@@ -417,7 +422,8 @@
     }
 
     function setupWatermark(recipient, expiry) {
-      const wmText = `প্রাপক: ${recipient} | মেয়াদ: ${formatDateBn(expiry)} | আইন-AI গোপনীয়`;
+      const masked = toBnNum(recipient || 'প্রাপক');
+      const wmText = `প্রাপক: ${masked} | মেয়াদ: ${formatDateBn(expiry)} | আইন-AI গোপনীয়`;
       document.getElementById('wmLine1').innerText = wmText;
       document.getElementById('wmLine2').innerText = wmText;
       document.getElementById('wmLine3').innerText = wmText;

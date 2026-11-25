@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>নোটিশ মোড বিশ্লেষণ [নমুনা - যাচাই বাকি]</title>
+  <style>
+  :root {
+    --primary: #047857;
+    --primary-light: #ecfdf5;
+    --primary-dark: #064e3b;
+    --surface: #ffffff;
+    --bg: #f8fafc;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --amber-bg: #fffbeb;
+    --amber-border: #fde68a;
+    --amber-text: #92400e;
+    --danger: #dc2626;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    font-size: 1.1rem;
+  }
+  .disclaimer-banner {
+    background: var(--amber-bg);
+    border-bottom: 1px solid var(--amber-border);
+    color: var(--amber-text);
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  main {
+    flex: 1;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .chat-bubble {
+    padding: 0.85rem 1rem;
+    border-radius: 1rem;
+    max-width: 85%;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .chat-ai {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    border-bottom-left-radius: 0.25rem;
+  }
+  .chat-user {
+    background: var(--primary);
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 0.25rem;
+  }
+  .ai-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.35rem;
+  }
+  .chips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .chip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    text-align: left;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    transition: all 0.2s;
+  }
+  .chip-card:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .chip-card span.icon { font-size: 1.5rem; }
+  .bottom-nav {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    padding: 0.5rem 0;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    gap: 0.2rem;
+  }
+  .nav-item.active {
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .btn {
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-outline { border-color: var(--border); background: var(--surface); color: var(--text); }
+  .btn-secondary { background: #e2e8f0; color: #0f172a; }
+  .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  .dual-path {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+    .deadline-badge {
+      background: #fef2f2;
+      border: 1px solid #f87171;
+      color: #991b1b;
+      padding: 0.6rem 0.85rem;
+      border-radius: 0.5rem;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">⚖️ আইন-AI</div>
+    <div style="font-size: 0.85rem;">নোটিশ বিশ্লেষণ মোড</div>
+  </header>
+  <main>
+    <div class="chat-bubble chat-user">
+      [ছবি আপলোড: আইনি_নোটিশ_চেক_ডিজঅনার.jpg]
+      আমাকে একজন উকিল চিঠি পাঠিয়েছে, এর অর্থ কী?
+    </div>
+    <div class="chat-bubble chat-ai">
+      <div class="ai-badge">🤖 আইন-AI সহকারী | নথি বিশ্লেষণ পাইপলাইন</div>
+      <p>আপনার আপলোডকৃত চিঠিটি পড়ে বিশ্লেষণ করা হয়েছে:</p>
+      
+      <div class="deadline-badge">
+        ⏰ সময়সীমা: নোটিশ প্রাপ্তির ৩০ দিনের মধ্যে জবাব বা টাকা পরিশোধ করতে বলা হয়েছে।
+      </div>
+
+      <div style="background: var(--surface); border: 1px solid var(--border); padding: 0.75rem; border-radius: 0.5rem; font-size: 0.85rem; margin: 0.5rem 0;">
+        <p><strong>দাবির বিষয়:</strong> এনআই অ্যাক্ট ১৩৮ ধারা মোতাবেক ৫,০০,০০০ টাকার চেক ডিজঅনার।</p>
+        <p style="margin-top: 0.35rem; color: var(--text-muted);">
+          সতর্কতা: এটি একটি সংবেদনশীল আইনি বিষয়। নোটিশের মেয়াদ পার হওয়ার পূর্বে জবাব দেওয়া বা আইনজীবীর শরণাপন্ন হওয়া প্রয়োজন।
+        </p>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-primary">⚖️ আইনজীবীর জন্য কেস ব্রিফ তৈরি করুন</button>
+        <button class="btn btn-outline">📝 নোটিশের জবাব খসড়া করুন</button>
+      </div>
+    </div>
+  </main>
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item active"><span>💬</span><span>সহায়িকা</span></a>
+    <a href="#" class="nav-item"><span>📁</span><span>ফোল্ডার</span></a>
+    <a href="#" class="nav-item"><span>➕</span><span>যোগ</span></a>
+    <a href="#" class="nav-item"><span>📖</span><span>সাহায্য</span></a>
+    <a href="#" class="nav-item"><span>👤</span><span>আমার</span></a>
+  </nav>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>রুলস ইঞ্জিন ও তামাদি ক্যালকুলেটর (Rules Engine) — AIN-AI</title>
+  <title>রুলস ইঞ্জিন ও তামাদি ক্যালকুলেটর — AIN-AI</title>
   <link rel="stylesheet" href="/static/fonts.css">
   <style>
     :root {
@@ -288,7 +288,7 @@
       <div class="logo-badge">আইন</div>
       <div>
         <div class="brand-title">আইন-AI</div>
-        <div class="brand-sub">প্রশাসন কনসোল (Admin)</div>
+        <div class="brand-sub">প্রশাসন কনসোল</div>
       </div>
     </div>
 
@@ -314,7 +314,7 @@
       <li>
         <a href="/admin/evals" class="nav-link">
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span class="nav-text">মূল্যায়ন (Evals)</span>
+          <span class="nav-text">মূল্যায়ন</span>
         </a>
       </li>
     </ul>
@@ -325,40 +325,40 @@
     <header class="top-header">
       <div>
         <h1 style="font-size: clamp(1.2rem, 2.5vw, 1.5rem); font-weight: 700;">আইনি রুলস ইঞ্জিন ও তামাদি গণনাকারী</h1>
-        <p style="font-size: 0.85rem; color: var(--color-text-muted);">সংবিধিবদ্ধ সময়সীমা ও নোটিশ পিরিয়ড নির্ধারণ (SRS Section 4.3 ও HR-D6)</p>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted);">আইনি সময়সীমা ও নোটিশ পিরিয়ড [নমুনা - যাচাই বাকি]</p>
       </div>
       <div>
-        <span class="badge badge-success">HR-D6 সুরক্ষিত: AI কখনো সময়সীমা উদ্ভাবন করবে না</span>
+        <span class="badge badge-success">সুরক্ষিত: AI কখনো সময়সীমা উদ্ভাবন করবে না</span>
       </div>
     </header>
 
     <div class="container">
       <div class="test-banner" role="alert">
-        <strong>সতর্কতা (FAKE_TEST_DATA):</strong> আইন-AI প্ল্যাটফর্মে ক্যালেন্ডার ও বিধিমালা পরীক্ষামূলক নমুনা হিসেবে সংরক্ষিত। সরকারি গ্যাজেটের চূড়ান্ত ছুটির তালিকা মেশিন রিডেবল আকারে এখনও প্রকাশিত না থাকায় ক্যালেন্ডারটি খালি রাখা হয়েছে।
+        <strong>সতর্কতা:</strong> আইন-AI প্ল্যাটফর্মে ক্যালেন্ডার ও বিধিমালা পরীক্ষামূলক নমুনা হিসেবে সংরক্ষিত। সরকারি গ্যাজেটের চূড়ান্ত ছুটির তালিকা মেশিন রিডেবল আকারে এখনও প্রকাশিত না থাকায় ক্যালেন্ডারটি খালি রাখা হয়েছে।
       </div>
 
       <!-- Live Rule Playground Card -->
       <section class="card" aria-label="Interactive Rule Playground">
         <div class="card-title-lg">
-          <span>ইন্টারেক্টিভ রুল টেস্ট ও ক্যালকুলেটর: relative_period.calendar_days.v1</span>
-          <span class="badge badge-success">Ver 1.0.0 সক্রিয়</span>
+          <span>ইন্টারেক্টিভ রুল টেস্ট ও ক্যালকুলেটর (ক্যালেন্ডার দিন ভিত্তিক)</span>
+          <span class="badge badge-success">সংস্করণ ১.০ সক্রিয়</span>
         </div>
 
         <form onsubmit="handleCalculate(event)">
           <div class="calc-grid">
             <div class="form-group">
-              <label for="startDate">শুরুর তারিখ (Start Date):</label>
+              <label for="startDate">শুরুর তারিখ:</label>
               <input type="date" id="startDate" class="form-input" value="2026-10-02" required>
             </div>
             <div class="form-group">
-              <label for="offsetDays">ক্যালেন্ডার দিন (Days):</label>
+              <label for="offsetDays">ক্যালেন্ডার দিন:</label>
               <input type="number" id="offsetDays" class="form-input" value="30" required>
             </div>
             <div class="form-group" style="display:flex; flex-direction:column; justify-content:center;">
               <label style="margin-bottom:8px;">ঘটনার দিন গণনা:</label>
               <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.9rem; font-weight:normal; color:var(--color-text-main);">
                 <input type="checkbox" id="includeTriggerDay" style="width:18px; height:18px;">
-                <span>শুরুর দিন অন্তর্ভুক্ত করুন (Trigger Day = Day 1)</span>
+                <span>শুরুর দিন অন্তর্ভুক্ত করুন</span>
               </label>
             </div>
           </div>
@@ -372,24 +372,21 @@
         <!-- Result Box -->
         <div class="result-box" id="resultBox">
           <div style="font-size:0.85rem; color:var(--color-text-muted); font-weight:600;">গণনাকৃত চূড়ান্ত সময়সীমা:</div>
-          <div class="result-date-highlight" id="resultDate">২০২৬-১১-০১</div>
-          <p id="resultExplanation" style="font-size:0.9rem; line-height:1.5;">শুরুর তারিখ 2026-10-02 থেকে ঘটনার দিন ব্যতিরেকে 30 ক্যালেন্ডার দিন গণনা করে নির্ধারিত সময়সীমা: 2026-11-01।</p>
-          <div style="margin-top:10px; font-size:0.78rem; color:#64748B;">
-            <strong>রিসনিং ইনপুট:</strong> <code id="resultInputs" style="background:#E2E8F0; padding:2px 6px; border-radius:4px;">{"start_date":"2026-10-02", "days":30, "include_trigger_day":false}</code>
-          </div>
+          <div class="result-date-highlight" id="resultDate">১ নভেম্বর ২০২৬</div>
+          <p id="resultExplanation" style="font-size:0.9rem; line-height:1.5;">শুরুর তারিখ ২ অক্টোবর ২০২৬ থেকে ঘটনার দিন ব্যতিরেকে ৩০ ক্যালেন্ডার দিন গণনা করে নির্ধারিত সময়সীমা: ১ নভেম্বর ২০২৬।</p>
         </div>
       </section>
 
       <!-- Registered Rules List -->
       <section class="card" aria-label="Registered Rules">
         <div class="card-title-lg">
-          <span>নিবন্ধিত বিধিমালার তালিকা (Rules Registry)</span>
+          <span>নিবন্ধিত বিধিমালার তালিকা</span>
         </div>
 
         <table class="rules-table" id="rulesTable">
           <thead>
             <tr>
-              <th>রুল আইডি ও নাম</th>
+              <th>রুল বিবরণ ও নাম</th>
               <th>শ্রেণী</th>
               <th>সংস্করণ</th>
               <th>স্ট্যাটাস</th>
@@ -399,11 +396,11 @@
           <tbody>
             <tr>
               <td data-label="আইডি ও নাম">
-                <strong>relative_period.calendar_days.v1</strong><br>
+                <strong>ক্যালেন্ডার দিন ভিত্তিক তামাদি</strong><br>
                 <span style="font-size:0.8rem; color:var(--color-text-muted);">ক্যালেন্ডার দিন ভিত্তিক আপেক্ষিক সময়সীমা</span>
               </td>
-              <td data-label="শ্রেণী">তামাদি (Limitation)</td>
-              <td data-label="সংস্করণ">1.0.0</td>
+              <td data-label="শ্রেণী">তামাদি</td>
+              <td data-label="সংস্করণ">১.০</td>
               <td data-label="স্ট্যাটাস"><span class="badge badge-success">সক্রিয়</span></td>
               <td data-label="টেস্ট"><span class="badge badge-success">৩/৩ পাস</span></td>
             </tr>

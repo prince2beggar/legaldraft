@@ -100,10 +100,16 @@ class RealSmsAdapterSlot(SmsProvider):
         api_url: str | None = None,
     ):
         self._api_key = (
-            api_key or os.getenv("SMS_GATEWAY_API_KEY") or os.getenv("SSL_WIRELESS_API_KEY") or os.getenv("REAL_SMS_API_KEY")
+            api_key
+            or os.getenv("SMS_GATEWAY_API_KEY")
+            or os.getenv("SSL_WIRELESS_API_KEY")
+            or os.getenv("REAL_SMS_API_KEY")
         )
         self._sender_id = (
-            sender_id or os.getenv("SMS_GATEWAY_SENDER_ID") or os.getenv("SSL_WIRELESS_SID") or os.getenv("REAL_SMS_SENDER_ID")
+            sender_id
+            or os.getenv("SMS_GATEWAY_SENDER_ID")
+            or os.getenv("SSL_WIRELESS_SID")
+            or os.getenv("REAL_SMS_SENDER_ID")
         )
         self.api_url = api_url or os.getenv(
             "SMS_GATEWAY_URL", "https://api.sms-gateway.local/v1/send"
@@ -111,11 +117,21 @@ class RealSmsAdapterSlot(SmsProvider):
 
     @property
     def api_key(self) -> str | None:
-        return self._api_key or os.getenv("SMS_GATEWAY_API_KEY") or os.getenv("SSL_WIRELESS_API_KEY") or os.getenv("REAL_SMS_API_KEY")
+        return (
+            self._api_key
+            or os.getenv("SMS_GATEWAY_API_KEY")
+            or os.getenv("SSL_WIRELESS_API_KEY")
+            or os.getenv("REAL_SMS_API_KEY")
+        )
 
     @property
     def sender_id(self) -> str | None:
-        return self._sender_id or os.getenv("SMS_GATEWAY_SENDER_ID") or os.getenv("SSL_WIRELESS_SID") or os.getenv("REAL_SMS_SENDER_ID")
+        return (
+            self._sender_id
+            or os.getenv("SMS_GATEWAY_SENDER_ID")
+            or os.getenv("SSL_WIRELESS_SID")
+            or os.getenv("REAL_SMS_SENDER_ID")
+        )
 
     @property
     def is_configured(self) -> bool:
@@ -152,9 +168,8 @@ _real_slot_instance = RealSmsAdapterSlot()
 def get_sms_provider() -> SmsProvider:
     """Factory selecting provider based on SMS_PROVIDER env variable. Fails closed in production (DEV_MODE=false)."""
     provider_type = os.getenv("SMS_PROVIDER", "").lower()
-    if (
-        provider_type in ("real", "adapter", "production", "sslwireless")
-        or (not is_dev_mode() and _real_slot_instance.is_configured and provider_type != "mock")
+    if provider_type in ("real", "adapter", "production", "sslwireless") or (
+        not is_dev_mode() and _real_slot_instance.is_configured and provider_type != "mock"
     ):
         if _real_slot_instance.is_configured:
             return _real_slot_instance
@@ -163,4 +178,3 @@ def get_sms_provider() -> SmsProvider:
             "CRITICAL SECURITY: In production (DEV_MODE=false), a valid real SMS provider must be configured. MockSmsProvider is refused."
         )
     return _mock_instance
-

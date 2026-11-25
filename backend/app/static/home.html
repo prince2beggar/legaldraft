@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>আইন-AI — হোম ও পরবর্তী পদক্ষেপ</title>
   <link rel="stylesheet" href="/static/fonts.css">
+  <script src="/static/formatters.js"></script>
+  <script src="/static/icons.js"></script>
+  <script>
+    if (typeof formatEnum === 'undefined') {
+      document.write('<script src="./formatters.js"><\/script>');
+    }
+    if (typeof renderIcons === 'undefined') {
+      document.write('<script src="./icons.js"><\/script>');
+    }
+  </script>
   <script>
     (function() {
       if ((window.location.search && window.location.search.includes('variant=')) || window.location.protocol === 'file:') {
@@ -58,9 +68,18 @@
       background-color: var(--color-bg);
       color: var(--color-text-main);
       display: flex;
+      flex-direction: column;
       min-height: 100vh;
       font-size: 16px;
       line-height: 1.6;
+    }
+
+    .app-layout {
+      display: flex;
+      flex: 1;
+      flex-direction: row;
+      min-height: 0;
+      width: 100%;
     }
 
     /* Sidebar (Desktop) */
@@ -143,10 +162,10 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 1040px;
       margin: 0 auto;
       width: 100%;
-      padding: 24px 16px;
+      padding: 24px 20px;
       display: flex;
       flex-direction: column;
       gap: 24px;
@@ -194,11 +213,12 @@
     }
     .problem-input-field {
       flex: 1;
+      min-width: 0;
       padding: 12px 16px;
       border: 1px solid var(--color-border);
       border-radius: 8px;
       font-family: inherit;
-      font-size: 15px;
+      font-size: 14px;
       outline: none;
       transition: border-color 0.15s ease;
     }
@@ -576,176 +596,181 @@
 </head>
 <body>
 
-  <!-- Desktop Sidebar -->
-  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
-    <a href="/home" class="logo">
-      <span aria-hidden="true">⚖️</span>
-      <span>আইন-AI</span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="/home" class="nav-link active">🏠 হোম</a></li>
-      <li><a href="/cases" class="nav-link">📁 মামলা ফোল্ডার</a></li>
-      <li><a href="/intake" class="nav-link">⚖️ আইনি মূল্যায়ন</a></li>
-      <li><a href="/draft" class="nav-link">📝 আইনি খসড়া</a></li>
-      <li><a href="/documents/upload" class="nav-link">📄 নোটিশ স্ক্যান</a></li>
-      <li><a href="/notifications" class="nav-link">🔔 বিজ্ঞপ্তি</a></li>
-      <li><a href="/library" class="nav-link">📚 আইন পাঠাগার</a></li>
-      <li><a href="/me/sharing" class="nav-link">🔗 ব্রিফ শেয়ারিং</a></li>
-      <li><a href="/notification-settings" class="nav-link">⚙️ সেটিংস</a></li>
-      <li id="adminNavLink" style="display:none;"><a href="/admin" class="nav-link">🔒 অ্যাডমিন</a></li>
-    </ul>
-  </aside>
+  <div class="app-layout">
+    <!-- Desktop Sidebar -->
+    <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+      <a href="/home" class="logo">
+        <span aria-hidden="true" data-icon="scale"></span>
+        <span>আইন-AI</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/home" class="nav-link active"><span data-icon="home"></span> <span>হোম</span></a></li>
+        <li><a href="/cases" class="nav-link"><span data-icon="folder"></span> <span>মামলা ফোল্ডার</span></a></li>
+        <li><a href="/intake" class="nav-link"><span data-icon="intake"></span> <span>আইনি মূল্যায়ন</span></a></li>
+        <li><a href="/draft" class="nav-link"><span data-icon="draft"></span> <span>আইনি খসড়া</span></a></li>
+        <li><a href="/tax" class="nav-link"><span data-icon="tax"></span> <span>কর ও ভ্যাট</span></a></li>
+        <li><a href="/documents/upload" class="nav-link"><span data-icon="upload"></span> <span>নোটিশ স্ক্যান</span></a></li>
+        <li><a href="/notifications" class="nav-link"><span data-icon="bell"></span> <span>বিজ্ঞপ্তি</span></a></li>
+        <li><a href="/library" class="nav-link"><span data-icon="book"></span> <span>আইন পাঠাগার</span></a></li>
+        <li><a href="/me/sharing" class="nav-link"><span data-icon="share"></span> <span>ব্রিফ শেয়ারিং</span></a></li>
+        <li><a href="/notification-settings" class="nav-link"><span data-icon="settings"></span> <span>সেটিংস</span></a></li>
+        <li id="adminNavLink" style="display:none;"><a href="/admin" class="nav-link"><span data-icon="lock"></span> <span>অ্যাডমিন</span></a></li>
+      </ul>
+    </aside>
 
-  <!-- Mobile Bottom Nav (M4) -->
-  <nav class="mobile-bottom-nav" aria-label="মোবাইল নেভিগেশন">
-    <a href="/home" class="bottom-tab active"><span>🏠</span><span>হোম</span></a>
-    <a href="/cases" class="bottom-tab"><span>📁</span><span>মামলা</span></a>
-    <a href="/intake" class="bottom-tab"><span>⚖️</span><span>সমস্যা</span></a>
-    <a href="/draft" class="bottom-tab"><span>📝</span><span>খসড়া</span></a>
-    <a href="/documents/upload" class="bottom-tab"><span>📄</span><span>আপলোড</span></a>
-    <a href="/library" class="bottom-tab"><span>📚</span><span>পাঠাগার</span></a>
-    <a href="/notifications" class="bottom-tab"><span>🔔</span><span>বিজ্ঞপ্তি</span></a>
-    <a href="/me/sharing" class="bottom-tab"><span>🔗</span><span>শেয়ার</span></a>
-    <a href="/notification-settings" class="bottom-tab"><span>⚙️</span><span>সেটিংস</span></a>
-  </nav>
+    <!-- Mobile Bottom Nav (M4) -->
+    <nav class="mobile-bottom-nav" aria-label="মোবাইল নেভিগেশন">
+      <a href="/home" class="bottom-tab active"><span data-icon="home"></span><span>হোম</span></a>
+      <a href="/cases" class="bottom-tab"><span data-icon="folder"></span><span>মামলা</span></a>
+      <a href="/intake" class="bottom-tab"><span data-icon="intake"></span><span>সমস্যা</span></a>
+      <a href="/draft" class="bottom-tab"><span data-icon="draft"></span><span>খসড়া</span></a>
+      <a href="/tax" class="bottom-tab"><span data-icon="tax"></span><span>কর/ভ্যাট</span></a>
+      <a href="/documents/upload" class="bottom-tab"><span data-icon="upload"></span><span>আপলোড</span></a>
+      <a href="/library" class="bottom-tab"><span data-icon="book"></span><span>পাঠাগার</span></a>
+      <a href="/notifications" class="bottom-tab"><span data-icon="bell"></span><span>বিজ্ঞপ্তি</span></a>
+      <a href="/me/sharing" class="bottom-tab"><span data-icon="share"></span><span>শেয়ার</span></a>
+      <a href="/notification-settings" class="bottom-tab"><span data-icon="settings"></span><span>সেটিংস</span></a>
+    </nav>
 
-  <!-- Main Area -->
-  <main class="app-main">
-    <header class="top-bar">
-      <div class="top-bar-title" id="pageTitle">আইন-AI ড্যাশবোর্ড</div>
-      <div class="user-pill" id="userPill">নাগরিক হিসাব</div>
-    </header>
+    <!-- Main Area -->
+    <main class="app-main">
+      <header class="top-bar">
+        <h1 class="top-bar-title" id="pageTitle" style="margin:0; font-size: 16px; font-weight: 700;">নাগরিক আইনি ড্যাশবোর্ড</h1>
+        <div class="user-pill" id="userPill">নাগরিক হিসাব</div>
+      </header>
 
-    <div class="container">
+      <div class="container">
 
-      <!-- 1. Time-aware Greeting -->
-      <section class="greeting-card" id="greetingSection">
-        <div class="greeting-text" id="greetingText">শুভ দিন, নাগরিক!</div>
-        <div class="greeting-subtext">আপনার আইন-AI সুরক্ষিত ব্যক্তিগত ড্যাশবোর্ডে স্বাগতম।</div>
-      </section>
+        <!-- 1. Time-aware Greeting -->
+        <section class="greeting-card" id="greetingSection">
+          <div class="greeting-text" id="greetingText">শুভ দিন, নাগরিক!</div>
+          <div class="greeting-subtext">আপনার আইন-AI সুরক্ষিত ব্যক্তিগত ড্যাশবোর্ডে স্বাগতম।</div>
+        </section>
 
-      <!-- 2. Problem Input Box (SRS M02) -->
-      <section class="problem-input-card" aria-labelledby="problemInputHeading">
-        <div class="problem-input-label" id="problemInputHeading">
-          <span>🔍</span> আপনার আইনি সমস্যা বা প্রশ্ন লিখুন
-        </div>
-        <form class="problem-input-row" id="problemForm" onsubmit="handleProblemSubmit(event)">
-          <input
-            type="text"
-            id="problemInputField"
-            class="problem-input-field"
-            placeholder="যেমন: জমি খারিজ সংক্রান্ত নোটিশ পেয়েছি, কী করণীয়?"
-            aria-label="আইনি সমস্যা লিখুন"
-          />
-          <button
-            type="button"
-            class="btn-mic"
-            id="btnMic"
-            title="ভয়েস ইনপুট শীঘ্রই আসছে"
-            aria-label="ভয়েস ইনপুট শীঘ্রই আসছে"
-            disabled
-          >
-            🎤
-          </button>
-          <button type="submit" class="btn-submit-problem">পরামর্শ নিন</button>
-        </form>
-      </section>
-
-      <!-- 3. Next Action Card (SRS M02 p. 21) -->
-      <section id="nextActionSection">
-        <!-- Rendered dynamically -->
-        <div class="next-action-card" id="nextActionCard">
-          <div class="next-action-badge-row">
-            <span class="next-action-header-badge">⭐ পরবর্তী শীর্ষ পদক্ষেপ</span>
-            <span class="urgency-badge urgency-urgent" id="nextActionUrgency">জরুরি</span>
+        <!-- 2. Problem Input Box (SRS M02) -->
+        <section class="problem-input-card" aria-labelledby="problemInputHeading">
+          <div class="problem-input-label" id="problemInputHeading">
+            <span data-icon="search"></span> <span>আপনার আইনি সমস্যা বা প্রশ্ন লিখুন</span>
           </div>
-          <h2 class="next-action-title" id="nextActionTitle">আসন্ন সময়সীমা: নোটিশের জবাব দাখিল</h2>
-          <p class="next-action-desc" id="nextActionDesc">
-            আপনার প্রাপ্ত আইনি নোটিশের নির্ধারিত ১৫ দিনের জবাব দাখিলের আর ৩ দিন বাকি রয়েছে।
-          </p>
-          <div class="next-action-footer">
-            <button type="button" class="btn-why" id="btnWhyNextAction" onclick="openWhyModal()">
-              কেন এটি দেখছি? (Why am I seeing this?)
+          <form class="problem-input-row" id="problemForm" onsubmit="handleProblemSubmit(event)">
+            <input
+              type="text"
+              id="problemInputField"
+              class="problem-input-field"
+              placeholder="আইনি সমস্যা বা প্রশ্ন লিখুন (যেমন: জমি বা নোটিশ)"
+              aria-label="আইনি সমস্যা লিখুন"
+            />
+            <button
+              type="button"
+              class="btn-mic"
+              id="btnMic"
+              title="ভয়েস ইনপুট শীঘ্রই আসছে"
+              aria-label="ভয়েস ইনপুট শীঘ্রই আসছে"
+              disabled
+            >
+              <span data-icon="mic"></span>
             </button>
-            <a href="/cases" class="btn-action-primary" id="btnNextActionCTA">
-              পদক্ষেপ নিন →
+            <button type="submit" class="btn-submit-problem" id="btnSubmitProblem">সমস্যা জানান</button>
+          </form>
+        </section>
+
+        <!-- 3. Next Action Card (SRS M02 p. 21) -->
+        <section id="nextActionSection">
+          <!-- Rendered dynamically -->
+          <div class="next-action-card" id="nextActionCard">
+            <div class="next-action-badge-row">
+              <span class="next-action-header-badge"><span data-icon="star"></span> পরবর্তী শীর্ষ পদক্ষেপ</span>
+              <span class="urgency-badge urgency-urgent" id="nextActionUrgency">জরুরি</span>
+            </div>
+            <h2 class="next-action-title" id="nextActionTitle">আসন্ন সময়সীমা: নোটিশের জবাব দাখিল</h2>
+            <p class="next-action-desc" id="nextActionDesc">
+              আপনার প্রাপ্ত আইনি নোটিশের নমুনা সময়সীমা (১০ দিন) এর জবাব দাখিলের আর ২ দিন বাকি রয়েছে।
+            </p>
+            <div class="next-action-footer">
+              <button type="button" class="btn-why" id="btnWhyNextAction" onclick="openWhyModal()">
+                কেন এটি দেখানো হচ্ছে?
+              </button>
+              <a href="/cases" class="btn-action-primary" id="btnNextActionCTA">
+                পদক্ষেপ নিন →
+              </a>
+            </div>
+          </div>
+
+          <!-- Empty state fallback -->
+          <div class="empty-next-action" id="emptyNextAction" style="display:none;">
+            <h3>বর্তমানে কোনো জরুরি আইনি পদক্ষেপ বাকি নেই</h3>
+            <p>আপনার সমস্ত সময়সীমা ও নথিপত্র হালনাগাদ রয়েছে। নতুন নোটিশ বিশ্লেষণ করতে নিচের বোতামে চাপুন।</p>
+            <div style="margin-top: 14px;">
+              <a href="/documents/upload" class="btn-action-primary">নতুন নোটিশ স্ক্যান করুন</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. Quick Actions -->
+        <section aria-labelledby="quickActionsHeading">
+          <h3 class="section-title" id="quickActionsHeading">দ্রুত পদক্ষেপ</h3>
+          <div class="quick-actions-grid">
+            <a href="/documents/upload" class="quick-card">
+              <div class="quick-card-icon"><span data-icon="upload"></span></div>
+              <div class="quick-card-title">আইনি নোটিশ স্ক্যান</div>
+              <div class="quick-card-desc">নোটিশ আপলোড করে সময়সীমা ও করণীয় জানুন</div>
+            </a>
+            <a href="/cases?new=true" class="quick-card">
+              <div class="quick-card-icon"><span data-icon="folder"></span></div>
+              <div class="quick-card-title">নতুন মামলা তৈরি</div>
+              <div class="quick-card-desc">নতুন আইনি নথিপত্র ও বিষয় এক ফোল্ডারে রাখুন</div>
+            </a>
+            <a href="/library" class="quick-card">
+              <div class="quick-card-icon"><span data-icon="book"></span></div>
+              <div class="quick-card-title">আইন পাঠাগার</div>
+              <div class="quick-card-desc">বাংলাদেশের আইন ও অধিকারের ব্যাখ্যা পড়ুন</div>
+            </a>
+            <a href="/me/sharing" class="quick-card">
+              <div class="quick-card-icon"><span data-icon="lawyer"></span></div>
+              <div class="quick-card-title">আইনজীবীর পরামর্শ</div>
+              <div class="quick-card-desc">অনলাইন ব্রিফ প্রস্তুত করে আইনজীবীর সাথে শেয়ার করুন</div>
             </a>
           </div>
-        </div>
+        </section>
 
-        <!-- Empty state fallback -->
-        <div class="empty-next-action" id="emptyNextAction" style="display:none;">
-          <h3>বর্তমানে কোনো জরুরি আইনি পদক্ষেপ বাকি নেই</h3>
-          <p>আপনার সমস্ত সময়সীমা ও নথিপত্র হালনাগাদ রয়েছে। নতুন নোটিশ বিশ্লেষণ করতে নিচের বোতামে চাপুন।</p>
-          <div style="margin-top: 14px;">
-            <a href="/documents/upload" class="btn-action-primary">নতুন নোটিশ স্ক্যান করুন</a>
+        <!-- 5. My Cases -->
+        <section aria-labelledby="myCasesHeading">
+          <div class="section-title">
+            <span id="myCasesHeading">আমার মামলাসমূহ</span>
+            <a href="/cases" style="font-size: 14px; color: var(--color-primary); text-decoration: none;">সকল দেখুন →</a>
           </div>
-        </div>
-      </section>
+          <div class="cards-list" id="myCasesList">
+            <!-- Rendered dynamically -->
+          </div>
+        </section>
 
-      <!-- 4. Quick Actions -->
-      <section aria-labelledby="quickActionsHeading">
-        <h3 class="section-title" id="quickActionsHeading">দ্রুত পদক্ষেপ</h3>
-        <div class="quick-actions-grid">
-          <a href="/documents/upload" class="quick-card">
-            <div class="quick-card-icon">📄</div>
-            <div class="quick-card-title">আইনি নোটিশ স্ক্যান</div>
-            <div class="quick-card-desc">নোটিশ আপলোড করে সময়সীমা ও করণীয় জানুন</div>
-          </a>
-          <a href="/cases?new=true" class="quick-card">
-            <div class="quick-card-icon">📁</div>
-            <div class="quick-card-title">নতুন মামলা তৈরি</div>
-            <div class="quick-card-desc">নতুন আইনি নথিপত্র ও বিষয় এক ফোল্ডারে রাখুন</div>
-          </a>
-          <a href="/library" class="quick-card">
-            <div class="quick-card-icon">📚</div>
-            <div class="quick-card-title">আইন পাঠাগার</div>
-            <div class="quick-card-desc">বাংলাদেশের আইন ও অধিকারের ব্যাখ্যা পড়ুন</div>
-          </a>
-          <a href="/me/sharing" class="quick-card">
-            <div class="quick-card-icon">👨‍⚖️</div>
-            <div class="quick-card-title">আইনজীবীর পরামর্শ</div>
-            <div class="quick-card-desc">অনলাইন ব্রিফ প্রস্তুত করে আইনজীবীর সাথে শেয়ার করুন</div>
-          </a>
-        </div>
-      </section>
+        <!-- 6. Upcoming Events / Deadlines -->
+        <section aria-labelledby="upcomingHeading">
+          <h3 class="section-title" id="upcomingHeading">আসন্ন সময়সীমা ও গুরুত্বপূর্ণ তারিখ</h3>
+          <div class="cards-list" id="upcomingList">
+            <!-- Rendered dynamically -->
+          </div>
+        </section>
 
-      <!-- 5. My Cases -->
-      <section aria-labelledby="myCasesHeading">
-        <div class="section-title">
-          <span id="myCasesHeading">আমার মামলাসমূহ</span>
-          <a href="/cases" style="font-size: 14px; color: var(--color-primary); text-decoration: none;">সকল দেখুন →</a>
-        </div>
-        <div class="cards-list" id="myCasesList">
-          <!-- Rendered dynamically -->
-        </div>
-      </section>
+        <!-- Footer Disclaimer -->
+        <footer class="footer-disclaimer">
+          আইন-AI একটি প্রযুক্তিগত সহায়ক প্ল্যাটফর্ম, সরাসরি আইনি পরামর্শ নয়। প্রয়োজনীয় ক্ষেত্রে নিবন্ধিত আইনজীবীর পরামর্শ নিন।
+          <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+        </footer>
 
-      <!-- 6. Upcoming Events / Deadlines -->
-      <section aria-labelledby="upcomingHeading">
-        <h3 class="section-title" id="upcomingHeading">আসন্ন সময়সীমা ও গুরুত্বপূর্ণ তারিখ</h3>
-        <div class="cards-list" id="upcomingList">
-          <!-- Rendered dynamically -->
-        </div>
-      </section>
-
-      <!-- Footer Disclaimer -->
-      <footer class="footer-disclaimer">
-        আইন-AI একটি প্রযুক্তিগত সহায়ক প্ল্যাটফর্ম, সরাসরি আইনি পরামর্শ নয়। প্রয়োজনীয় ক্ষেত্রে নিবন্ধিত আইনজীবীর পরামর্শ নিন।
-      </footer>
-
-    </div>
-  </main>
+      </div>
+    </main>
+  </div>
 
   <!-- Modal: Why am I seeing this? -->
   <div class="modal-overlay" id="whyModal" role="dialog" aria-modal="true" aria-labelledby="whyModalTitle">
     <div class="modal-box">
-      <h3 class="modal-title" id="whyModalTitle">কেন এই পদক্ষেপটি শীর্ষ তালিকায় রয়েছে?</h3>
+      <h3 class="modal-title" id="whyModalTitle">কেন এটি দেখানো হচ্ছে?</h3>
       <div class="modal-body" id="whyModalBody">
-        আইন-AI এর ট্রাস্ট কার্নেল নির্ধারিত ১০-ধাপের অগ্রাধিকার নীতিমালা (SRS Section 5.2, M02) অনুযায়ী আপনার সক্রিয় মামলার তারিখ ও নোটিশ বিশ্লেষণ পর্যালোচনা করে এই সুপারিশ তৈরি করা হয়েছে।
+        আইন-AI এর ট্রাস্ট কার্নেল নির্ধারিত ১০-ধাপের অগ্রাধিকার নীতিমালা অনুযায়ী আপনার সক্রিয় মামলার তারিখ ও নোটিশ বিশ্লেষণ পর্যালোচনা করে এই সুপারিশ তৈরি করা হয়েছে।
       </div>
       <div class="reason-refs-box" id="whyReasonRefs">
-        কারণ রেফারেন্স: [deadline_priority_tier_1]
+        ভিত্তি: আইনি সময়সীমা ও নথিপত্র পর্যালোচনা
       </div>
       <button type="button" class="modal-btn-close" onclick="closeWhyModal()">বুঝেছি</button>
     </div>
@@ -787,7 +812,7 @@
         next_action: {
           priority_tier: 1,
           title: 'আসন্ন সময়সীমা: নোটিশের জবাব দাখিল',
-          explanation: 'আপনার প্রাপ্ত আইনি নোটিশের নির্ধারিত ১৫ দিনের জবাব দাখিলের আর ৩ দিন বাকি রয়েছে। দ্রুত পদক্ষেপ না নিলে আইনি অধিকার ক্ষুণ্ন হতে পারে।',
+          explanation: 'আপনার প্রাপ্ত আইনি নোটিশের নমুনা সময়সীমা (১০ দিন) এর জবাব দাখিলের আর ২ দিন বাকি রয়েছে। দ্রুত পদক্ষেপ না নিলে আইনি অধিকার ক্ষুণ্ন হতে পারে।',
           urgency: 'urgent',
           action_url: '/cases/case-mock-01',
           action_cta: 'মামলা ফোল্ডারে যান',
@@ -796,12 +821,12 @@
         my_cases: [
           {
             id: 'case-mock-01',
-            title: 'আইনি নোটিশ বিষয়: এনআই অ্যাক্ট ১৩৮ চেক ডিজঅনার',
+            title: 'নমুনা মামলা: চেক ডিজঅনার নোটিশ',
             status: 'action_required',
             urgency: 'urgent',
             case_type: 'notice_response',
             parties_count: 2,
-            updated_at: '২০২৬-১০-০৩'
+            updated_at: '2026-10-03'
           },
           {
             id: 'case-mock-02',
@@ -810,7 +835,7 @@
             urgency: 'normal',
             case_type: 'land_dispute',
             parties_count: 3,
-            updated_at: '২০২৬-০৯-২৮'
+            updated_at: '2026-09-28'
           }
         ],
         upcoming: [
@@ -818,7 +843,7 @@
             title: 'আইনি নোটিশের জবাব প্রেরণের শেষ তারিখ',
             due_date: '2026-10-08',
             days_left: 3,
-            case_title: 'আইনি নোটিশ বিষয়: এনআই অ্যাক্ট ১৩৮ চেক ডিজঅনার'
+            case_title: 'নমুনা মামলা: চেক ডিজঅনার নোটিশ'
           },
           {
             title: 'জমির মূল দলিল উত্তোলন ও সত্যায়িত কপি সংগ্রহ',
@@ -887,12 +912,14 @@
         document.getElementById('nextActionDesc').innerText = na.explanation || '';
         
         const urgencyEl = document.getElementById('nextActionUrgency');
-        urgencyEl.innerText = na.urgency === 'urgent' ? 'জরুরি' : (na.urgency === 'action_required' ? 'পদক্ষেপ প্রয়োজন' : 'নিয়মিত');
-        urgencyEl.className = 'urgency-badge ' + (na.urgency === 'urgent' ? 'urgency-urgent' : 'urgency-normal');
+        const isUrgent = na.urgency === 'urgent' || (na.priority_tier && na.priority_tier <= 3) || na.action_type === 'overdue_deadline';
+        const isOverdue = na.action_type === 'overdue_deadline' || (na.title && na.title.includes('অতিবাহিত'));
+        urgencyEl.innerText = isOverdue ? 'অতিবাহিত' : (isUrgent ? 'জরুরি' : (na.urgency === 'action_required' ? 'পদক্ষেপ প্রয়োজন' : 'নিয়মিত'));
+        urgencyEl.className = 'urgency-badge ' + (isUrgent ? 'urgency-urgent' : 'urgency-normal');
 
         const ctaBtn = document.getElementById('btnNextActionCTA');
-        if (na.action_url) {
-          ctaBtn.href = na.action_url;
+        if (na.target_url || na.action_url) {
+          ctaBtn.href = na.target_url || na.action_url;
         }
         if (na.action_cta) {
           ctaBtn.innerText = na.action_cta + ' →';
@@ -917,17 +944,22 @@
           const item = document.createElement('a');
           item.href = `/cases/${c.id}`;
           item.className = 'item-card';
+          const caseTypeLabel = formatEnum('case_type', c.case_type || 'general');
+          const updatedDate = formatBanglaDate(c.updated_at);
+          const statusLabel = formatEnum('status', c.status || 'active');
+          const isUrgent = c.urgency === 'urgent' || c.status === 'action_required';
+
           item.innerHTML = `
             <div class="item-card-left">
               <div class="item-card-title">${c.title}</div>
               <div class="item-card-meta">
-                <span>ধরন: ${c.case_type || 'সাধারণ'}</span>
-                <span>হালনাগাদ: ${c.updated_at || 'সম্প্রতি'}</span>
+                <span>ধরন: ${caseTypeLabel}</span>
+                <span>হালনাগাদ: ${updatedDate}</span>
               </div>
             </div>
             <div>
-              <span class="item-badge ${c.urgency === 'urgent' ? 'urgency-urgent' : 'urgency-normal'}">
-                ${c.status === 'action_required' ? 'পদক্ষেপ প্রয়োজন' : 'সক্রিয়'}
+              <span class="item-badge ${isUrgent ? 'urgency-urgent' : 'urgency-normal'}">
+                ${statusLabel}
               </span>
             </div>
           `;
@@ -945,23 +977,39 @@
         upcoming.slice(0, 5).forEach(u => {
           const item = document.createElement('div');
           item.className = 'item-card';
+          const dueFormatted = formatBanglaDate(u.due_date);
+          const daysFormatted = u.days_left_bn || formatDaysLeft(u.days_left);
+          const basisLabel = formatDeadlineProvenance(u.calculation_basis, u.rule_key);
+          const stateLabel = formatDeadlineState(u.confirmed_by_user);
+          const isOverdue = u.days_left !== undefined && u.days_left < 0;
+
           item.innerHTML = `
             <div class="item-card-left">
               <div class="item-card-title">${u.title}</div>
               <div class="item-card-meta">
                 <span>মামলা: ${u.case_title || 'সাধারণ'}</span>
-                <span>তারিখ: ${u.due_date}</span>
+                <span>তারিখ: ${dueFormatted}</span>
+                <span style="display:block; font-size:12px; color:var(--color-text-muted); margin-top:2px;">ভিত্তি: ${basisLabel} | অবস্থা: ${stateLabel}</span>
               </div>
             </div>
             <div>
-              <span class="item-badge badge-days-left">
-                ${toBanglaDigits(u.days_left)} দিন বাকি
+              <span class="item-badge ${isOverdue ? 'urgency-urgent' : 'badge-days-left'}">
+                ${daysFormatted}
               </span>
             </div>
           `;
           upcomingContainer.appendChild(item);
         });
       }
+      renderIcons();
+    }
+
+    function renderIcons() {
+      if (typeof getIcon !== 'function') return;
+      document.querySelectorAll('[data-icon]').forEach(el => {
+        const iconName = el.getAttribute('data-icon');
+        el.innerHTML = getIcon(iconName);
+      });
     }
 
     function openWhyModal() {
@@ -973,9 +1021,9 @@
         body.innerText = window._currentExplanation;
       }
       if (window._currentReasonRefs && window._currentReasonRefs.length > 0) {
-        refs.innerText = 'কারণ রেফারেন্স: [' + window._currentReasonRefs.join(', ') + ']';
+        refs.innerText = 'ভিত্তি: আইনি সময়সীমা ও নথিপত্র পর্যালোচনা';
       } else {
-        refs.innerText = 'কারণ রেফারেন্স: [prioritized_by_deadline_engine]';
+        refs.innerText = 'ভিত্তি: আইনি সময়সীমা অগ্রাধিকার';
       }
       modal.classList.add('open');
     }
@@ -991,9 +1039,11 @@
       window.location.href = `/intake?q=${encodeURIComponent(val)}`;
     }
 
-    window.addEventListener('DOMContentLoaded', loadHome);
+    window.addEventListener('DOMContentLoaded', () => {
+      renderIcons();
+      loadHome();
+    });
   </script>
-  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
   <script src="/static/sw-register.js"></script>
 </body>
 </html>

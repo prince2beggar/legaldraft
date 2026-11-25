@@ -470,6 +470,7 @@ def test_e5_dev_mode_sign_in_security():
     os.environ["SMS_PROVIDER"] = "real"
     os.environ["REAL_SMS_API_KEY"] = "configured_prod_key"
     os.environ["REAL_SMS_SENDER_ID"] = "configured_prod_sender"
+    os.environ["OTP_PEPPER"] = "configured_prod_otp_pepper_1234567890"
     try:
         # request_otp does NOT return dev_otp
         res_otp = client.post("/auth/otp/request", json={"phone": "01711223388"})
@@ -489,6 +490,7 @@ def test_e5_dev_mode_sign_in_security():
         os.environ.pop("SMS_PROVIDER", None)
         os.environ.pop("REAL_SMS_API_KEY", None)
         os.environ.pop("REAL_SMS_SENDER_ID", None)
+        os.environ.pop("OTP_PEPPER", None)
 
     # 2. Test DEV_MODE=true
     res_otp_dev = client.post("/auth/otp/request", json={"phone": "01711223399"})

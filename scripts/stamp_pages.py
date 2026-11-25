@@ -9,6 +9,7 @@ STATIC_DIR = Path("backend/app/static")
 BUILD_STAMP_HTML = '<div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: truthful-id</div>'
 SW_SCRIPT_HTML = '<script src="/static/sw-register.js"></script>'
 
+
 def stamp_pages():
     updated = []
     skipped = []
@@ -18,7 +19,7 @@ def stamp_pages():
         if 'id="buildStamp"' not in content and "</body>" in content:
             content = content.replace("</body>", f"  {BUILD_STAMP_HTML}\n</body>")
             dirty = True
-        if 'sw-register.js' not in content and "</body>" in content:
+        if "sw-register.js" not in content and "</body>" in content:
             content = content.replace("</body>", f"  {SW_SCRIPT_HTML}\n</body>")
             dirty = True
 
@@ -34,6 +35,7 @@ def stamp_pages():
     print(f"Already stamped {len(skipped)} files:")
     for f in skipped:
         print(f"  - {f}")
+
 
 if __name__ == "__main__":
     stamp_pages()

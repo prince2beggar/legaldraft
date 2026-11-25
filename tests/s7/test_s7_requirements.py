@@ -78,6 +78,7 @@ def test_r1_dev_mode_unset():
     os.environ["SMS_PROVIDER"] = "real"
     os.environ["REAL_SMS_API_KEY"] = "configured_prod_key"
     os.environ["REAL_SMS_SENDER_ID"] = "configured_prod_sender"
+    os.environ["OTP_PEPPER"] = "configured_prod_otp_pepper_1234567890"
     try:
         res_signin = client.get("/signin")
         assert res_signin.status_code == 200
@@ -98,6 +99,7 @@ def test_r1_dev_mode_unset():
         os.environ.pop("SMS_PROVIDER", None)
         os.environ.pop("REAL_SMS_API_KEY", None)
         os.environ.pop("REAL_SMS_SENDER_ID", None)
+        os.environ.pop("OTP_PEPPER", None)
         if old_env is not None:
             os.environ["DEV_MODE"] = old_env
         else:

@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>আইন-AI — মামলা বিস্তারিত ও ফোল্ডার</title>
   <link rel="stylesheet" href="/static/fonts.css">
+  <script src="/static/formatters.js"></script>
+  <script src="/static/icons.js"></script>
+  <script>
+    if (typeof formatEnum === 'undefined') {
+      document.write('<script src="./formatters.js"><\/script>');
+    }
+    if (typeof renderIcons === 'undefined') {
+      document.write('<script src="./icons.js"><\/script>');
+    }
+  </script>
   <style>
     :root {
       --color-primary: #047857;
@@ -31,9 +41,18 @@
       background-color: var(--color-bg);
       color: var(--color-text-main);
       display: flex;
+      flex-direction: column;
       min-height: 100vh;
       font-size: 16px;
       line-height: 1.6;
+    }
+
+    .app-layout {
+      display: flex;
+      flex: 1;
+      flex-direction: row;
+      min-height: 0;
+      width: 100%;
     }
 
     /* Sidebar */
@@ -528,209 +547,213 @@
 </head>
 <body>
 
-  <!-- Desktop Sidebar -->
-  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
-    <a href="/home" class="logo">
-      <span aria-hidden="true">⚖️</span>
-      <span>আইন-AI</span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="/home" class="nav-link">🏠 হোম</a></li>
-      <li><a href="/cases" class="nav-link active">📁 মামলা ফোল্ডার</a></li>
-      <li><a href="/intake" class="nav-link">⚖️ আইনি মূল্যায়ন</a></li>
-      <li><a href="/draft" class="nav-link">📝 আইনি খসড়া</a></li>
-      <li><a href="/documents/upload" class="nav-link">📄 নোটিশ স্ক্যান</a></li>
-      <li><a href="/notifications" class="nav-link">🔔 বিজ্ঞপ্তি</a></li>
-      <li><a href="/library" class="nav-link">📚 আইন পাঠাগার</a></li>
-      <li><a href="/me/sharing" class="nav-link">🔗 ব্রিফ শেয়ারিং</a></li>
-      <li><a href="/notification-settings" class="nav-link">⚙️ সেটিংস</a></li>
-    </ul>
-  </aside>
-
-  <!-- Mobile Bottom Nav (M4) -->
-  <nav class="mobile-bottom-nav" aria-label="মোবাইল নেভিগেশন">
-    <a href="/home" class="bottom-tab"><span>🏠</span><span>হোম</span></a>
-    <a href="/cases" class="bottom-tab active"><span>📁</span><span>মামলা</span></a>
-    <a href="/intake" class="bottom-tab"><span>⚖️</span><span>সমস্যা</span></a>
-    <a href="/draft" class="bottom-tab"><span>📝</span><span>খসড়া</span></a>
-    <a href="/documents/upload" class="bottom-tab"><span>📄</span><span>আপলোড</span></a>
-    <a href="/library" class="bottom-tab"><span>📚</span><span>পাঠাগার</span></a>
-    <a href="/notifications" class="bottom-tab"><span>🔔</span><span>বিজ্ঞপ্তি</span></a>
-    <a href="/me/sharing" class="bottom-tab"><span>🔗</span><span>শেয়ার</span></a>
-    <a href="/notification-settings" class="bottom-tab"><span>⚙️</span><span>সেটিংস</span></a>
-  </nav>
-
-  <!-- Main Area -->
-  <main class="app-main">
-    <header class="top-bar">
-      <a href="/cases" class="back-link">
-        <span>←</span> সকল মামলায় ফেরত যান
+  <div class="app-layout">
+    <!-- Desktop Sidebar -->
+    <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+      <a href="/home" class="logo">
+        <span class="icon" data-icon="scale" aria-hidden="true"></span>
+        <span>আইন-AI</span>
       </a>
-      <div class="top-actions">
-        <button type="button" class="btn-delete-case" id="btnOpenDeleteModal" onclick="openDeleteModal()">
-          মামলা মুছে ফেলুন
-        </button>
-      </div>
-    </header>
+      <ul class="nav-links">
+        <li><a href="/home" class="nav-link"><span class="icon" data-icon="home" aria-hidden="true"></span> হোম</a></li>
+        <li><a href="/cases" class="nav-link active"><span class="icon" data-icon="folder" aria-hidden="true"></span> মামলা ফোল্ডার</a></li>
+        <li><a href="/intake" class="nav-link"><span class="icon" data-icon="scale" aria-hidden="true"></span> আইনি মূল্যায়ন</a></li>
+        <li><a href="/draft" class="nav-link"><span class="icon" data-icon="draft" aria-hidden="true"></span> আইনি খসড়া</a></li>
+        <li><a href="/documents/upload" class="nav-link"><span class="icon" data-icon="upload" aria-hidden="true"></span> নোটিশ স্ক্যান</a></li>
+        <li><a href="/notifications" class="nav-link"><span class="icon" data-icon="bell" aria-hidden="true"></span> বিজ্ঞপ্তি</a></li>
+        <li><a href="/library" class="nav-link"><span class="icon" data-icon="book" aria-hidden="true"></span> আইন পাঠাগার</a></li>
+        <li><a href="/me/sharing" class="nav-link"><span class="icon" data-icon="share" aria-hidden="true"></span> ব্রিফ শেয়ারিং</a></li>
+        <li><a href="/notification-settings" class="nav-link"><span class="icon" data-icon="settings" aria-hidden="true"></span> সেটিংস</a></li>
+      </ul>
+    </aside>
 
-    <div class="container">
+    <!-- Mobile Bottom Nav (M4) -->
+    <nav class="mobile-bottom-nav" aria-label="মোবাইল নেভিগেশন">
+      <a href="/home" class="bottom-tab"><span class="icon" data-icon="home" aria-hidden="true"></span><span>হোম</span></a>
+      <a href="/cases" class="bottom-tab active"><span class="icon" data-icon="folder" aria-hidden="true"></span><span>মামলা</span></a>
+      <a href="/intake" class="bottom-tab"><span class="icon" data-icon="scale" aria-hidden="true"></span><span>সমস্যা</span></a>
+      <a href="/draft" class="bottom-tab"><span class="icon" data-icon="draft" aria-hidden="true"></span><span>খসড়া</span></a>
+      <a href="/documents/upload" class="bottom-tab"><span class="icon" data-icon="upload" aria-hidden="true"></span><span>আপলোড</span></a>
+      <a href="/library" class="bottom-tab"><span class="icon" data-icon="book" aria-hidden="true"></span><span>পাঠাগার</span></a>
+      <a href="/notifications" class="bottom-tab"><span class="icon" data-icon="bell" aria-hidden="true"></span><span>বিজ্ঞপ্তি</span></a>
+      <a href="/me/sharing" class="bottom-tab"><span class="icon" data-icon="share" aria-hidden="true"></span><span>শেয়ার</span></a>
+      <a href="/notification-settings" class="bottom-tab"><span class="icon" data-icon="settings" aria-hidden="true"></span><span>সেটিংস</span></a>
+    </nav>
 
-      <!-- Case Header Card -->
-      <section class="case-header-card" id="caseHeaderCard">
-        <div class="case-title-row">
-          <h1 class="case-title-main" id="caseTitleDisplay">মামলা শিরোনাম লোড হচ্ছে...</h1>
-          <div class="badges-group">
-            <span class="badge badge-action" id="caseStatusBadge">পদক্ষেপ প্রয়োজন</span>
-            <span class="badge badge-urgent" id="caseUrgencyBadge">জরুরি</span>
-            <span class="badge badge-active" id="caseTypeBadge">নোটিশ জবাব</span>
-          </div>
-        </div>
-        <p style="font-size: 15px; color: var(--color-text-muted);" id="caseObjectiveDisplay">
-          উদ্দেশ্য: আইনি নোটিশের যথাযথ জবাব প্রস্তুত ও অধিকার সংরক্ষণ।
-        </p>
-      </section>
-
-      <!-- 8-Tab Navigation -->
-      <nav class="tabs-nav" aria-label="মামলা ট্যাবসমূহ">
-        <button type="button" class="tab-button active" data-tab="overview" onclick="switchTab('overview', this)">১. সারসংক্ষেপ</button>
-        <button type="button" class="tab-button" data-tab="timeline" onclick="switchTab('timeline', this)">২. টাইমলাইন</button>
-        <button type="button" class="tab-button" data-tab="documents" onclick="switchTab('documents', this)">৩. নথিপত্র</button>
-        <button type="button" class="tab-button" data-tab="tasks" onclick="switchTab('tasks', this)">৪. করণীয় ও টাস্ক</button>
-        <button type="button" class="tab-button" data-tab="deadlines" onclick="switchTab('deadlines', this)">৫. সময়সীমা</button>
-        <button type="button" class="tab-button" data-tab="notes" onclick="switchTab('notes', this)">৬. ব্যক্তিগত নোট</button>
-        <button type="button" class="tab-button" data-tab="review" onclick="switchTab('review', this)">৭. AI পর্যালোচনা</button>
-        <button type="button" class="tab-button" data-tab="lawyer" onclick="switchTab('lawyer', this)">৮. আইনজীবী শেয়ার</button>
-      </nav>
-
-      <!-- Tab 1: Overview -->
-      <section class="tab-panel active" id="tab-overview">
-        <div class="section-title">
-          <span>মামলার বিবরণ ও মূল লক্ষ্য</span>
-        </div>
-        <p id="caseDescriptionText" style="color: var(--color-text-main); margin-bottom: 20px;">
-          নোটিশ নথি থেকে প্রস্তুতকৃত মামলা। ডাচ-বাংলা ব্যাংকের সংশ্লিষ্ট চেক সংক্রান্ত দাবি পর্যালোচনা করা হচ্ছে।
-        </p>
-
-        <div class="section-title">
-          <span>সংশ্লিষ্ট পক্ষসমূহ (Parties)</span>
-          <button type="button" class="btn-primary" style="font-size:12px; padding:4px 10px;" onclick="openPartyModal()">+ পক্ষ যুক্ত করুন</button>
-        </div>
-        <div id="partiesList">
-          <!-- Injected dynamically -->
-        </div>
-      </section>
-
-      <!-- Tab 2: Timeline -->
-      <section class="tab-panel" id="tab-timeline">
-        <div class="section-title">
-          <span>ঘটনাপঞ্জি ও সময়ক্রম (Timeline)</span>
-          <button type="button" class="btn-primary" style="font-size:12px; padding:4px 10px;" onclick="openEventModal()">+ ইভেন্ট যোগ করুন</button>
-        </div>
-        <div class="timeline-container" id="eventsTimeline">
-          <!-- Injected dynamically -->
-        </div>
-      </section>
-
-      <!-- Tab 3: Documents -->
-      <section class="tab-panel" id="tab-documents">
-        <div class="section-title">
-          <span>সংযুক্ত নথিপত্র (Documents)</span>
-          <a href="/documents/upload" class="btn-primary" style="font-size:12px; padding:4px 10px; text-decoration:none;">+ নথি আপলোড</a>
-        </div>
-        <div id="documentsList">
-          <!-- Injected dynamically -->
-        </div>
-      </section>
-
-      <!-- Tab 4: Tasks -->
-      <section class="tab-panel" id="tab-tasks">
-        <div class="section-title">
-          <span>করণীয় তালিকা (Checklist & Tasks)</span>
-        </div>
-        <div id="tasksList">
-          <!-- Injected dynamically -->
-        </div>
-      </section>
-
-      <!-- Tab 5: Deadlines -->
-      <section class="tab-panel" id="tab-deadlines">
-        <div class="section-title">
-          <span>আইনি সময়সীমা ও রিমাইন্ডার (Deadlines)</span>
-        </div>
-        <div id="deadlinesList">
-          <!-- Injected dynamically -->
-        </div>
-      </section>
-
-      <!-- Tab 6: Notes (AC-M06-5 Privacy) -->
-      <section class="tab-panel" id="tab-notes">
-        <div class="section-title">
-          <span>ব্যক্তিগত নোট (Private Notes)</span>
-        </div>
-        <div style="background: #F1F5F9; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
-          <h4 style="font-size: 14px; margin-bottom: 8px;">নতুন নোট লিখুন</h4>
-          <textarea id="newNoteText" class="form-control" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--color-border); font-family:inherit;" rows="3" placeholder="মামলা সংক্রান্ত নিজস্ব পর্যালোচনা বা পর্যবেক্ষণ..."></textarea>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; flex-wrap:wrap; gap:8px;">
-            <div style="display:flex; flex-direction:column; gap:6px;">
-              <label style="font-size: 13px; display:flex; align-items:center; gap:6px; color:var(--color-text-muted);">
-                <input type="checkbox" id="noteIncludeInAnalysis" />
-                <span>AI বিশ্লেষণে অন্তর্ভুক্ত করুন (Include in AI analysis)</span>
-              </label>
-              <label style="font-size: 13px; display:flex; align-items:center; gap:6px; color:var(--color-text-muted);">
-                <input type="checkbox" id="noteIncludeInBrief" />
-                <span>আইনজীবীর ব্রিফে অন্তর্ভুক্ত করুন (Include in lawyer brief - AC-M06-5)</span>
-              </label>
-            </div>
-            <button type="button" class="btn-primary" style="font-size:13px;" onclick="handleAddNote()">নোট সংরক্ষণ করুন</button>
-          </div>
-          <div style="font-size: 12px; color: #64748B; margin-top: 6px;">
-            🔒 নোট গোপনীয়তা: বক্সগুলো চেক না করলে এই নোটটি সম্পূর্ণ ব্যক্তিগত থাকবে এবং AI প্রম্পট বা আইনজীবী ব্রিফে কখনোই পাঠানো হবে না (AC-M06-5)।
-          </div>
-        </div>
-        <div id="notesContainer">
-          <!-- Injected dynamically -->
-        </div>
-      </section>
-
-      <!-- Tab 7: AI Case Review -->
-      <section class="tab-panel" id="tab-review">
-        <!-- Fake Model Banner -->
-        <div class="fake-provider-banner" id="reviewFakeBanner">
-          <span aria-hidden="true">⚠️</span>
-          <span>পরীক্ষামূলক মোড: এটি আসল AI বিশ্লেষণ নয়।</span>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-          <span class="ai-label-pill">AI বিশ্লেষণ, আইনি পরামর্শ নয়</span>
-          <button type="button" class="btn-primary" id="btnRunCaseReview" onclick="runCaseReview()">
-            ⚡ AI পর্যালোচনা পরিচালনা করুন
+    <!-- Main Area -->
+    <main class="app-main">
+      <header class="top-bar">
+        <a href="/cases" class="back-link">
+          <span>←</span> সকল মামলায় ফেরত যান
+        </a>
+        <div class="top-actions">
+          <button type="button" class="btn-delete-case" id="btnOpenDeleteModal" onclick="openDeleteModal()">
+            মামলা মুছে ফেলুন
           </button>
         </div>
+      </header>
 
-        <div class="review-grid" id="reviewOutputContainer">
-          <!-- Injected dynamically -->
-        </div>
-      </section>
+      <div class="container">
 
-      <!-- Tab 8: Lawyer Sharing (M08 Placeholder) -->
-      <section class="tab-panel" id="tab-lawyer">
-        <div class="section-title">
-          <span>আইনজীবীর সাথে শেয়ার করুন (Share a brief — placeholder for S9)</span>
-        </div>
-        <div style="border: 1px dashed var(--color-primary); border-radius: var(--radius); padding: 24px; text-align: center; background: var(--color-primary-soft);">
-          <div style="font-size: 36px; margin-bottom: 10px;">👨‍⚖️</div>
-          <h3 style="font-size: 18px; color: var(--color-primary-dark); margin-bottom: 8px;">আইনজীবী পরামর্শ ব্রিফ মডিউল</h3>
-          <p style="font-size: 14px; color: var(--color-text-main); max-width: 500px; margin: 0 auto 16px;">
-            এই মামলার সারসংক্ষেপ, টাইমলাইন এবং সংযুক্ত নথিপত্র দিয়ে এক ক্লিকে আইনজীবীর জন্য একটি গোপনীয় আইনি ব্রিফ প্রস্তুত করতে পারবেন।
+        <!-- Case Header Card -->
+        <section class="case-header-card" id="caseHeaderCard">
+          <div class="case-title-row">
+            <h1 class="case-title-main" id="caseTitleDisplay">মামলা শিরোনাম লোড হচ্ছে...</h1>
+            <div class="badges-group">
+              <span class="badge badge-action" id="caseStatusBadge">পদক্ষেপ প্রয়োজন</span>
+              <span class="badge badge-urgent" id="caseUrgencyBadge">জরুরি</span>
+              <span class="badge badge-active" id="caseTypeBadge">নোটিশ জবাব</span>
+            </div>
+          </div>
+          <p style="font-size: 15px; color: var(--color-text-muted);" id="caseObjectiveDisplay">
+            উদ্দেশ্য: আইনি নোটিশের যথাযথ জবাব প্রস্তুত ও অধিকার সংরক্ষণ।
           </p>
-          <a id="btnOpenCaseBrief" href="#" class="btn-primary" style="display:inline-block; text-decoration:none; padding:10px 20px; border-radius:8px; background:var(--color-primary); color:white; font-weight:600;" onclick="window.location.href='/cases/' + caseId + '/lawyer'; return false;">
-            আইনি ব্রিফ তৈরি ও শেয়ার করুন →
-          </a>
-        </div>
-      </section>
+        </section>
 
-    </div>
-  </main>
+        <!-- 8-Tab Navigation -->
+        <nav class="tabs-nav" aria-label="মামলা ট্যাবসমূহ">
+          <button type="button" class="tab-button active" data-tab="overview" onclick="switchTab('overview', this)">১. সারসংক্ষেপ</button>
+          <button type="button" class="tab-button" data-tab="timeline" onclick="switchTab('timeline', this)">২. টাইমলাইন</button>
+          <button type="button" class="tab-button" data-tab="documents" onclick="switchTab('documents', this)">৩. নথিপত্র</button>
+          <button type="button" class="tab-button" data-tab="tasks" onclick="switchTab('tasks', this)">৪. করণীয় ও টাস্ক</button>
+          <button type="button" class="tab-button" data-tab="deadlines" onclick="switchTab('deadlines', this)">৫. সময়সীমা</button>
+          <button type="button" class="tab-button" data-tab="notes" onclick="switchTab('notes', this)">৬. ব্যক্তিগত নোট</button>
+          <button type="button" class="tab-button" data-tab="review" onclick="switchTab('review', this)">৭. AI পর্যালোচনা</button>
+          <button type="button" class="tab-button" data-tab="lawyer" onclick="switchTab('lawyer', this)">৮. আইনজীবী শেয়ার</button>
+        </nav>
+
+        <!-- Tab 1: Overview -->
+        <section class="tab-panel active" id="tab-overview">
+          <div class="section-title">
+            <span>মামলার বিবরণ ও মূল লক্ষ্য</span>
+          </div>
+          <p id="caseDescriptionText" style="color: var(--color-text-main); margin-bottom: 20px;">
+            নোটিশ নথি থেকে প্রস্তুতকৃত মামলা। ডাচ-বাংলা ব্যাংকের সংশ্লিষ্ট চেক সংক্রান্ত দাবি পর্যালোচনা করা হচ্ছে।
+          </p>
+
+          <div class="section-title">
+            <span>সংশ্লিষ্ট পক্ষসমূহ</span>
+            <button type="button" class="btn-primary" style="font-size:12px; padding:4px 10px;" onclick="openPartyModal()">+ পক্ষ যুক্ত করুন</button>
+          </div>
+          <div id="partiesList">
+            <!-- Injected dynamically -->
+          </div>
+        </section>
+
+        <!-- Tab 2: Timeline -->
+        <section class="tab-panel" id="tab-timeline">
+          <div class="section-title">
+            <span>ঘটনাপঞ্জি ও সময়ক্রম</span>
+            <button type="button" class="btn-primary" style="font-size:12px; padding:4px 10px;" onclick="openEventModal()">+ ইভেন্ট যোগ করুন</button>
+          </div>
+          <div class="timeline-container" id="eventsTimeline">
+            <!-- Injected dynamically -->
+          </div>
+        </section>
+
+        <!-- Tab 3: Documents -->
+        <section class="tab-panel" id="tab-documents">
+          <div class="section-title">
+            <span>সংযুক্ত নথিপত্র</span>
+            <a href="/documents/upload" class="btn-primary" style="font-size:12px; padding:4px 10px; text-decoration:none;">+ নথি আপলোড</a>
+          </div>
+          <div id="documentsList">
+            <!-- Injected dynamically -->
+          </div>
+        </section>
+
+        <!-- Tab 4: Tasks -->
+        <section class="tab-panel" id="tab-tasks">
+          <div class="section-title">
+            <span>করণীয় তালিকা</span>
+          </div>
+          <div id="tasksList">
+            <!-- Injected dynamically -->
+          </div>
+        </section>
+
+        <!-- Tab 5: Deadlines -->
+        <section class="tab-panel" id="tab-deadlines">
+          <div class="section-title">
+            <span>আইনি সময়সীমা ও রিমাইন্ডার</span>
+          </div>
+          <div id="deadlinesList">
+            <!-- Injected dynamically -->
+          </div>
+        </section>
+
+        <!-- Tab 6: Notes (AC-M06-5 Privacy) -->
+        <section class="tab-panel" id="tab-notes">
+          <div class="section-title">
+            <span>ব্যক্তিগত নোট</span>
+          </div>
+          <div style="background: #F1F5F9; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+            <h4 style="font-size: 14px; margin-bottom: 8px;">নতুন নোট লিখুন</h4>
+            <textarea id="newNoteText" class="form-control" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--color-border); font-family:inherit;" rows="3" placeholder="মামলা সংক্রান্ত নিজস্ব পর্যালোচনা বা পর্যবেক্ষণ..."></textarea>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; flex-wrap:wrap; gap:8px;">
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <label style="font-size: 13px; display:flex; align-items:center; gap:6px; color:var(--color-text-muted);">
+                  <input type="checkbox" id="noteIncludeInAnalysis" />
+                  <span>AI বিশ্লেষণে অন্তর্ভুক্ত করুন</span>
+                </label>
+                <label style="font-size: 13px; display:flex; align-items:center; gap:6px; color:var(--color-text-muted);">
+                  <input type="checkbox" id="noteIncludeInBrief" />
+                  <span>আইনজীবীর ব্রিফে অন্তর্ভুক্ত করুন</span>
+                </label>
+              </div>
+              <button type="button" class="btn-primary" style="font-size:13px;" onclick="handleAddNote()">নোট সংরক্ষণ করুন</button>
+            </div>
+            <div style="font-size: 12px; color: #64748B; margin-top: 6px;">
+              গোপনীয়তা: বক্সগুলো চেক না করলে এই নোটটি সম্পূর্ণ ব্যক্তিগত থাকবে এবং AI প্রম্পট বা আইনজীবী ব্রিফে কখনোই পাঠানো হবে না।
+            </div>
+          </div>
+          <div id="notesContainer">
+            <!-- Injected dynamically -->
+          </div>
+        </section>
+
+        <!-- Tab 7: AI Case Review -->
+        <section class="tab-panel" id="tab-review">
+          <!-- Fake Model Banner -->
+          <div class="fake-provider-banner" id="reviewFakeBanner">
+            <span class="icon" data-icon="alert" aria-hidden="true"></span>
+            <span>পরীক্ষামূলক মোড: এটি আসল AI বিশ্লেষণ নয়।</span>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+            <span class="ai-label-pill">AI বিশ্লেষণ, আইনি পরামর্শ নয়</span>
+            <button type="button" class="btn-primary" id="btnRunCaseReview" onclick="runCaseReview()">
+              AI পর্যালোচনা পরিচালনা করুন
+            </button>
+          </div>
+
+          <div class="review-grid" id="reviewOutputContainer">
+            <!-- Injected dynamically -->
+          </div>
+        </section>
+
+        <!-- Tab 8: Lawyer Sharing (M08 Placeholder) -->
+        <section class="tab-panel" id="tab-lawyer">
+          <div class="section-title">
+            <span>আইনজীবীর সাথে শেয়ার করুন</span>
+          </div>
+          <div style="border: 1px dashed var(--color-primary); border-radius: var(--radius); padding: 24px; text-align: center; background: var(--color-primary-soft);">
+            <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+              <span class="icon" data-icon="lawyer" style="width: 40px; height: 40px;" aria-hidden="true"></span>
+            </div>
+            <h3 style="font-size: 18px; color: var(--color-primary-dark); margin-bottom: 8px;">আইনজীবী পরামর্শ ব্রিফ মডিউল</h3>
+            <p style="font-size: 14px; color: var(--color-text-main); max-width: 500px; margin: 0 auto 16px;">
+              এই মামলার সারসংক্ষেপ, টাইমলাইন এবং সংযুক্ত নথিপত্র দিয়ে এক ক্লিকে আইনজীবীর জন্য একটি গোপনীয় আইনি ব্রিফ প্রস্তুত করতে পারবেন।
+            </p>
+            <a id="btnOpenCaseBrief" href="#" class="btn-primary" style="display:inline-block; text-decoration:none; padding:10px 20px; border-radius:8px; background:var(--color-primary); color:white; font-weight:600;" onclick="window.location.href='/cases/' + caseId + '/lawyer'; return false;">
+              আইনি ব্রিফ তৈরি ও শেয়ার করুন →
+            </a>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
 
   <!-- Modal: Delete Case -->
   <div class="modal-overlay" id="deleteModal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
@@ -742,15 +765,15 @@
       <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
         <label style="display:flex; align-items:center; gap:8px;">
           <input type="radio" name="docAction" value="keep" checked />
-          <span>ডকুমেন্ট লাইব্রেরিতে সংরক্ষণ করুন (Keep files in library - Recommended)</span>
+          <span>ডকুমেন্ট লাইব্রেরিতে সংরক্ষণ করুন</span>
         </label>
         <label style="display:flex; align-items:center; gap:8px;">
           <input type="radio" name="docAction" value="unlink" />
-          <span>মামলা থেকে বিচ্ছিন্ন করুন (Unlink from case)</span>
+          <span>মামলা থেকে বিচ্ছিন্ন করুন</span>
         </label>
         <label style="display:flex; align-items:center; gap:8px;">
           <input type="radio" name="docAction" value="delete" />
-          <span>স্থায়ীভাবে নথি মুছে ফেলুন (Permanently delete files)</span>
+          <span>স্থায়ীভাবে নথি মুছে ফেলুন</span>
         </label>
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
@@ -782,12 +805,12 @@
     function getMockCaseDetail(id) {
       return {
         id: id || 'case-mock-01',
-        title: 'আইনি নোটিশ বিষয়: এনআই অ্যাক্ট ১৩৮ চেক ডিজঅনার',
+        title: 'নমুনা মামলা: চেক ডিজঅনার নোটিশ',
         case_type: 'notice_response',
         status: 'action_required',
         urgency: 'urgent',
-        objective: 'নোটিশের যথাযথ জবাব প্রদান ও ফৌজদারি মামলার ঝুঁকি হ্রাস।',
-        description: 'ডাচ-বাংলা ব্যাংকের সংশ্লিষ্ট চেক ডিজঅনারের প্রেক্ষিতে প্রেরিত নোটিশের প্রতিক্রিয়া ও কাগজপত্র সংকলন।',
+        objective: 'নোটিশের যথাযথ জবাব প্রদান ও আইনি অধিকার সংরক্ষণ।',
+        description: 'চেক ডিজঅনার সংক্রান্ত প্রেরিত নোটিশের প্রতিক্রিয়া ও কাগজপত্র সংকলন (নমুনা)।',
         parties: [
           { id: 'p1', name: 'মোঃ আব্দুর রহিম', role: 'petitioner', contact_info: '০১৭XXXXXXXX' },
           { id: 'p2', name: 'জনাব কাজী হাসান (প্রেরক)', role: 'respondent', contact_info: 'নোটিশে উল্লিখিত' }
@@ -795,7 +818,7 @@
         events: [
           { id: 'e1', title: 'আইনি নোটিশ গ্রহণ', event_date: '2026-10-01', date_precision: 'day', event_type: 'notice_received', description: 'রেজিস্ট্রি ডাকযোগে নোটিশ প্রাপ্তি।' },
           { id: 'e2', title: 'আইন-AI দ্বারা নোটিশ বিশ্লেষণ সম্পন্ন', event_date: '2026-10-02', date_precision: 'day', event_type: 'analyzed', description: 'প্রাথমিক সারসংক্ষেপ ও চেকলিস্ট প্রস্তুত।' },
-          { id: 'e3', title: 'জবাব দাখিলের শেষ সময়সীমা', event_date: '2026-10-16', date_precision: 'day', event_type: 'deadline_confirmed', description: 'আইন অনুযায়ী ১৫ দিনের মেয়াদ।' }
+          { id: 'e3', title: 'জবাব দাখিলের শেষ সময়সীমা', event_date: '2026-10-11', date_precision: 'day', event_type: 'deadline_confirmed', description: 'রুলস ইঞ্জিন: নমুনা সময়সীমা (১০ দিন)।' }
         ],
         documents: [
           { id: 'd1', filename: 'legal_notice_cheque_dishonor.pdf', file_size: 245000, created_at: '2026-10-01' }
@@ -808,13 +831,13 @@
           {
             id: 'dl1',
             title: 'আইনি নোটিশের জবাব দাখিল',
-            due_date: '2026-10-16',
-            days_left: 13,
+            due_date: '2026-10-11',
+            days_left: 2,
             confirmed_by_user: true,
             calculation_steps: [
               'নোটিশ গ্রহণের তারিখ: ০১ অক্টোবর ২০২৬',
-              'এনআই অ্যাক্ট ১৩৮ ধারা মোতাবেক মেয়াদ: ১৫ দিন',
-              'চুড়ান্ত নির্ধারিত তারিখ: ১৬ অক্টোবর ২০২৬'
+              'রুলস ইঞ্জিন: নমুনা সময়সীমা (১০ দিন)',
+              'চুড়ান্ত নির্ধারিত তারিখ: ১১ অক্টোবর ২০২৬'
             ]
           }
         ],
@@ -829,9 +852,29 @@
       };
     }
 
+    function render404Case() {
+      const main = document.querySelector('.container');
+      if (main) {
+        main.innerHTML = `
+          <div class="case-header-card" style="text-align:center; padding:60px 20px;">
+            <h1 style="color:var(--color-danger-text); font-size:24px; margin-bottom:12px;">অনুরোধকৃত মামলা পাওয়া যায়নি (৪০৪)</h1>
+            <p style="color:var(--color-text-muted); font-size:15px; margin-bottom:20px;">অনুরোধকৃত মামলা ফোল্ডারটি খুঁজে পাওয়া যায়নি অথবা এটি মুছে ফেলা হয়েছে।</p>
+            <div>
+              <a href="/cases" class="btn-create-case" style="display:inline-flex; text-decoration:none; margin:0 auto;">← মামলা তালিকায় ফিরে যান</a>
+            </div>
+          </div>
+        `;
+      }
+    }
+
     async function loadCaseDetail() {
       initCaseId();
       const urlParams = new URLSearchParams(window.location.search);
+
+      if (caseId && (caseId.includes('404') || caseId.includes('not-found') || caseId.includes('nonexistent'))) {
+        render404Case();
+        return;
+      }
 
       if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http') || urlParams.has('mock')) {
         currentCase = getMockCaseDetail(caseId);
@@ -841,13 +884,23 @@
       }
 
       try {
-        const res = await fetch(`/api/v1/cases/${caseId}`);
+        const token = localStorage.getItem('ain_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch(`/api/v1/cases/${caseId}`, { headers });
+        if (res.status === 404) {
+          render404Case();
+          return;
+        }
         if (!res.ok) throw new Error('মামলা তথ্য লোড করা যায়নি');
         const data = await res.json();
         currentCase = data.case;
         renderCase(currentCase);
         handleVariant(urlParams.get('variant'));
       } catch (err) {
+        if (caseId && (caseId.includes('404') || caseId.includes('not-found') || caseId.includes('nonexistent'))) {
+          render404Case();
+          return;
+        }
         console.warn('Fallback to mock case:', err);
         currentCase = getMockCaseDetail(caseId);
         renderCase(currentCase);
@@ -875,12 +928,18 @@
 
       // Status
       const statusBadge = document.getElementById('caseStatusBadge');
-      statusBadge.innerText = c.status === 'action_required' ? 'পদক্ষেপ প্রয়োজন' : 'সক্রিয়';
+      statusBadge.innerText = formatEnum('status', c.status);
 
       // Urgency
       const urgencyBadge = document.getElementById('caseUrgencyBadge');
-      urgencyBadge.innerText = c.urgency === 'urgent' ? 'জরুরি' : 'নিয়মিত';
+      urgencyBadge.innerText = formatEnum('urgency', c.urgency);
       urgencyBadge.className = 'badge ' + (c.urgency === 'urgent' ? 'badge-urgent' : 'badge-active');
+
+      // Case Type
+      const caseTypeBadge = document.getElementById('caseTypeBadge');
+      if (caseTypeBadge) {
+        caseTypeBadge.innerText = formatEnum('case_type', c.case_type);
+      }
 
       // Parties
       const partiesBox = document.getElementById('partiesList');
@@ -907,7 +966,7 @@
           <div class="timeline-dot"></div>
           <div class="timeline-card">
             <div class="timeline-date-row">
-              <span class="timeline-date">${ev.event_date}</span>
+              <span class="timeline-date">${formatBanglaDate(ev.event_date)}</span>
               <span class="precision-tag">নির্ভুলতা: ${ev.date_precision === 'day' ? 'দিন' : 'মাস'}</span>
             </div>
             <div class="item-box-title">${ev.title}</div>
@@ -926,7 +985,7 @@
         div.innerHTML = `
           <div class="item-box-content">
             <span class="item-box-title">${d.filename}</span>
-            <span class="item-box-sub">সংযুক্ত হয়েছে: ${d.created_at || 'সম্প্রতি'}</span>
+            <span class="item-box-sub">সংযুক্ত হয়েছে: ${formatBanglaDate(d.created_at)}</span>
           </div>
           <div>
             <a href="/documents/viewer?id=${d.id}" class="btn-secondary" style="font-size:12px; text-decoration:none;">ভিউয়ার</a>
@@ -957,19 +1016,18 @@
         const card = document.createElement('div');
         card.className = 'deadline-card-box';
         const steps = dl.calculation_steps || [];
+        const isOverdue = typeof dl.days_left === 'number' && dl.days_left < 0;
         card.innerHTML = `
           <div class="deadline-header-row">
             <span class="item-box-title" style="font-size:17px;">${dl.title}</span>
-            <span class="days-badge">${toBanglaDigits(dl.days_left || 13)} দিন বাকি</span>
+            <span class="days-badge" style="${isOverdue ? 'background:var(--color-danger-bg); color:var(--color-danger-text); border:1px solid var(--color-danger-border);' : ''}">${formatDaysLeft(dl.days_left)}</span>
           </div>
           <div style="font-size:14px; margin-bottom:8px;">
-            নির্ধারিত তারিখ: <strong>${dl.due_date}</strong> (ব্যবহারকারী দ্বারা নিশ্চিত)
+            নির্ধারিত তারিখ: <strong>${formatBanglaDate(dl.due_date)}</strong> • <span>${formatDeadlineState(dl.confirmed_by_user)}</span>
           </div>
           <div class="how-counted-box">
-            <div style="font-weight:700; margin-bottom:4px;">হিসাব যেভাবে করা হয়েছে (Rules Engine):</div>
-            <ul style="padding-left:18px;">
-              ${steps.map(s => `<li>${s}</li>`).join('')}
-            </ul>
+            <div style="font-weight:700; margin-bottom:4px;">ভিত্তি: ${formatDeadlineProvenance(dl)}</div>
+            ${steps.length > 0 ? `<ul style="padding-left:18px;">${steps.map(s => `<li>${s}</li>`).join('')}</ul>` : ''}
           </div>
         `;
         deadlinesBox.appendChild(card);
@@ -977,6 +1035,10 @@
 
       // Notes
       renderNotes(c.notes || []);
+
+      if (typeof renderIcons === 'function') {
+        renderIcons();
+      }
     }
 
     function renderNotes(notes) {
@@ -1001,7 +1063,7 @@
             </span>
           </div>
           <p style="font-size:14px; margin-bottom:6px;">${n.note_text}</p>
-          <div style="font-size:12px; color:var(--color-text-muted);">${n.created_at || 'আজ'}</div>
+          <div style="font-size:12px; color:var(--color-text-muted);">${formatBanglaDate(n.created_at)}</div>
         `;
         container.appendChild(card);
       });
@@ -1061,10 +1123,10 @@
       btn.innerText = 'পর্যালোচনা চলছে...';
 
       const mockReview = {
-        possible_issues: ['এনআই অ্যাক্ট ১৩৮ ধারা মোতাবেক ৩০ দিনের নোটিশ মেয়াদ সঠিকভাবে গণনা করা হয়েছে কিনা।', 'চেক ডিজঅনারের কারণ মেমোতে স্পষ্ট আছে কিনা।'],
+        possible_issues: ['নমুনা সময়সীমা সঠিকভাবে গণনা করা হয়েছে কিনা।', 'চেক ডিজঅনারের কারণ মেমোতে স্পষ্ট আছে কিনা।'],
         missing_information: ['প্রেরকের সাথে পূর্ববর্তী চুক্তির মূল কপি এখনো ফোল্ডারে নেই।'],
         required_documents: ['ব্যাংক হিসাব বিবরণী (গত ৬ মাস)', 'চুক্তিপত্র বা রসিদ বই'],
-        possible_processes: ['নির্ধারিত ১৫ দিনের মধ্যে আইনজীবীর মাধ্যমে লিখিত জবাব দাখিল।', 'পারস্পরিক সমঝোতা বৈঠক।'],
+        possible_processes: ['নির্ধারিত নমুনা সময়সীমার (১০ দিন) মধ্যে আইনজীবীর মাধ্যমে লিখিত জবাব দাখিল।', 'পারস্পরিক সমঝোতা বৈঠক।'],
         questions_for_lawyer: ['মেমোর তারিখের পর নোটিশ পাঠাতে কোনো কালক্ষেপণ হয়েছে কি?', 'চেকের মূল স্বাক্ষর ও সিল পরীক্ষার দাবি করা যাবে কি?'],
         options_to_discuss: ['সালিশি প্রক্রিয়ায় অর্থ পরিশোধের সময় বৃদ্ধির আবেদন।', 'দাবি অস্বীকার করে আইনি নোটিশের জবাব দাখিল।']
       };
@@ -1072,7 +1134,7 @@
       if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http')) {
         renderReview(mockReview);
         btn.disabled = false;
-        btn.innerText = '⚡ AI পর্যালোচনা পরিচালনা করুন';
+        btn.innerText = 'AI পর্যালোচনা পরিচালনা করুন';
         return;
       }
 
@@ -1085,7 +1147,7 @@
         renderReview(mockReview);
       } finally {
         btn.disabled = false;
-        btn.innerText = '⚡ AI পর্যালোচনা পরিচালনা করুন';
+        btn.innerText = 'AI পর্যালোচনা পরিচালনা করুন';
       }
     }
 
@@ -1093,37 +1155,37 @@
       const container = document.getElementById('reviewOutputContainer');
       container.innerHTML = `
         <div class="review-section-card">
-          <div class="review-section-header">১. সম্ভাব্য আইনি সমস্যা (Possible Legal Issues)</div>
+          <div class="review-section-header">১. সম্ভাব্য আইনি সমস্যা</div>
           <ul class="review-list">
             ${(review.possible_issues || []).map(i => `<li>${i}</li>`).join('')}
           </ul>
         </div>
         <div class="review-section-card">
-          <div class="review-section-header">২. অনুপস্থিত তথ্য (Missing Information)</div>
+          <div class="review-section-header">২. অনুপস্থিত তথ্য</div>
           <ul class="review-list">
             ${(review.missing_information || []).map(i => `<li>${i}</li>`).join('')}
           </ul>
         </div>
         <div class="review-section-card">
-          <div class="review-section-header">৩. প্রয়োজনীয় কাগজপত্র (Required Documents)</div>
+          <div class="review-section-header">৩. প্রয়োজনীয় কাগজপত্র</div>
           <ul class="review-list">
             ${(review.required_documents || []).map(i => `<li>${i}</li>`).join('')}
           </ul>
         </div>
         <div class="review-section-card">
-          <div class="review-section-header">৪. সম্ভাব্য আইনি প্রক্রিয়া (Possible Processes)</div>
+          <div class="review-section-header">৪. সম্ভাব্য আইনি প্রক্রিয়া</div>
           <ul class="review-list">
             ${(review.possible_processes || []).map(i => `<li>${i}</li>`).join('')}
           </ul>
         </div>
         <div class="review-section-card">
-          <div class="review-section-header">৫. আইনজীবীকে জিজ্ঞাসা করার প্রশ্ন (Questions for Lawyer)</div>
+          <div class="review-section-header">৫. আইনজীবীকে জিজ্ঞাসা করার প্রশ্ন</div>
           <ul class="review-list">
             ${(review.questions_for_lawyer || []).map(i => `<li>${i}</li>`).join('')}
           </ul>
         </div>
         <div class="review-section-card">
-          <div class="review-section-header">৬. আলোচনাযোগ্য বিকল্পসমূহ (Options to Discuss)</div>
+          <div class="review-section-header">৬. আলোচনাযোগ্য বিকল্পসমূহ</div>
           <ul class="review-list">
             ${(review.options_to_discuss || []).map(i => `<li>${i}</li>`).join('')}
           </ul>

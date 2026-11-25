@@ -109,9 +109,24 @@ def main():
                     "--junitxml=reports/junit_latest.xml",
                 ],
             ),
+            (
+                "4. Rendered Text & Bangla Digit Compliance Lint",
+                [sys.executable, "scripts/lint_rendered_text.py"],
+            ),
+            (
+                "5. Screenshot Uniqueness & Route Integrity Verification",
+                [sys.executable, "scripts/verify_screenshots.py", "storage/screenshots/visible_fix"],
+            ),
         ]
 
         for stage_name, cmd in stages:
+            if "5. Screenshot" in stage_name:
+                visible_fix_dir = Path("storage/screenshots/visible_fix")
+                if not visible_fix_dir.exists() or len(list(visible_fix_dir.glob("*.png"))) < 10:
+                    print("\n[CI Stage 5 Pre-requisite] storage/screenshots/visible_fix missing or empty.")
+                    print("Generating screenshots via scripts/capture_visible_fix_screenshots.py...")
+                    subprocess.run([sys.executable, "scripts/capture_visible_fix_screenshots.py"], check=True)
+
             success = run_stage(stage_name, cmd)
             if not success:
                 print("\n" + "!" * 65)

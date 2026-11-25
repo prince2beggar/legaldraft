@@ -34,11 +34,20 @@
       background-color: var(--color-bg);
       color: var(--color-text-main);
       display: flex;
+      flex-direction: column;
       min-height: 100vh;
       font-size: 15px;
       line-height: 1.6;
       overflow-x: hidden;
       max-width: 100vw;
+    }
+
+    .app-layout {
+      display: flex;
+      flex: 1;
+      flex-direction: row;
+      min-height: 0;
+      width: 100%;
     }
 
     /* -----------------------------------------------------------------------
@@ -534,109 +543,111 @@
 </head>
 <body>
 
-  <!-- Desktop / Tablet Navigation Shell -->
-  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
-    <a href="/home" class="brand-title">
-      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      <span>আইন-AI</span>
-    </a>
-    <ul class="nav-list">
-      <li>
-        <a href="/home" class="nav-link">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-          <span>হোম</span>
-        </a>
-      </li>
-      <li>
-        <a href="/cases" class="nav-link">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-          <span>মামলা</span>
-        </a>
-      </li>
-      <li>
-        <a href="/intake" class="nav-link active">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-          <span>ইনটেক</span>
-        </a>
-      </li>
-      <li>
-        <a href="/documents/upload" class="nav-link">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          <span>নথি</span>
-        </a>
-      </li>
-      <li>
-        <a href="/notifications" class="nav-link">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          <span>বিজ্ঞপ্তি</span>
-        </a>
-      </li>
-    </ul>
-  </aside>
+  <div class="app-layout">
+    <!-- Desktop / Tablet Navigation Shell -->
+    <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+      <a href="/home" class="brand-title">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <span>আইন-AI</span>
+      </a>
+      <ul class="nav-list">
+        <li>
+          <a href="/home" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>হোম</span>
+          </a>
+        </li>
+        <li>
+          <a href="/cases" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            <span>মামলা</span>
+          </a>
+        </li>
+        <li>
+          <a href="/intake" class="nav-link active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+            <span>ইনটেক</span>
+          </a>
+        </li>
+        <li>
+          <a href="/documents/upload" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span>নথি</span>
+          </a>
+        </li>
+        <li>
+          <a href="/notifications" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span>বিজ্ঞপ্তি</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
 
-  <!-- Main Area -->
-  <div class="main-wrapper">
-    <header class="app-header">
-      <div style="font-weight: 700; font-size: 16px; color: var(--color-text-main);">
-        সহজ আইনি ইনটেক ও ট্রায়াজ
-      </div>
-      <div class="header-actions">
-        <button id="abandonResumeBtn" class="btn-secondary" onclick="handleAbandonResume()">সংরক্ষণ ও প্রস্থান</button>
-      </div>
-    </header>
-
-    <main class="container">
-
-      <!-- UrgentBanner (Triggered immediately on urgent triage chip) -->
-      <div id="urgentBanner" class="urgent-banner">
-        <div class="urgent-banner-title">
-          <span>🚨</span> জরুরি সতর্কতা: তাত্ক্ষণিক সহায়তা নির্দেশিকা
+    <!-- Main Area -->
+    <div class="main-wrapper">
+      <header class="app-header">
+        <h1 style="font-weight: 700; font-size: 16px; color: var(--color-text-main); margin: 0;">
+          সহজ আইনি ইনটেক ও ট্রায়াজ
+        </h1>
+        <div class="header-actions">
+          <button id="abandonResumeBtn" class="btn-secondary" onclick="handleAbandonResume()">সংরক্ষণ ও প্রস্থান</button>
         </div>
-        <p style="font-size: 14px; margin-bottom: 8px;">
-          আপনার নিরাপত্তা সবার আগে। এই পরিস্থিতিতে আপনি নিচের জরুরি সেবা বা লিগ্যাল এইড হটলাইনে সরাসরি যোগাযোগ করতে পারেন:
-        </p>
-        <ul class="urgent-steps-list">
-          <li>প্রয়োজনে অবিলম্বে সংশ্লিষ্ট হেল্পলাইনে ফোন করুন।</li>
-          <li>সব প্রমাণ ও প্রাসঙ্গিক কাগজপত্র নিরাপদে কাছে রাখুন।</li>
-          <li>কোনো দলিলে জোরপূর্বক স্বাক্ষর করবেন না।</li>
-        </ul>
+      </header>
 
-        <div id="emergencyContactsList" class="emergency-contacts-grid">
-          <!-- Dynamically populated from /emergency-contacts -->
-        </div>
+      <main class="container">
 
-        <div class="urgent-actions">
-          <a href="about:blank" target="_blank" id="quickExitBtn" class="btn-quick-exit">নিরাপদে প্রস্থান</a>
-          <button id="continueAnywayBtn" class="btn-continue-anyway" onclick="dismissUrgentBanner()">জরুরি সহায়তা পেয়েছি, ইনটেকে এগিয়ে যান</button>
-        </div>
-      </div>
+        <!-- UrgentBanner (Triggered immediately on urgent triage chip) -->
+        <div id="urgentBanner" class="urgent-banner">
+          <div class="urgent-banner-title">
+            <span>🚨</span> জরুরি সতর্কতা: তাত্ক্ষণিক সহায়তা নির্দেশিকা
+          </div>
+          <p style="font-size: 14px; margin-bottom: 8px;">
+            আপনার নিরাপত্তা সবার আগে। এই পরিস্থিতিতে আপনি নিচের জরুরি সেবা বা লিগ্যাল এইড হটলাইনে সরাসরি যোগাযোগ করতে পারেন:
+          </p>
+          <ul class="urgent-steps-list">
+            <li>প্রয়োজনে অবিলম্বে সংশ্লিষ্ট হেল্পলাইনে ফোন করুন।</li>
+            <li>সব প্রমাণ ও প্রাসঙ্গিক কাগজপত্র নিরাপদে কাছে রাখুন।</li>
+            <li>কোনো দলিলে জোরপূর্বক স্বাক্ষর করবেন না।</li>
+          </ul>
 
-      <!-- Wizard Card -->
-      <div class="wizard-card">
-        <div class="step-indicator">
-          <span id="stepCounter">ধাপ ১ / ১০</span>
-          <span id="sessionStatusBadge" style="font-size: 12px; color: var(--color-primary); font-weight: 600;">অটোসেভ সক্রিয়</span>
-        </div>
-        <div class="progress-bar-bg">
-          <div id="progressBarFill" class="progress-bar-fill"></div>
-        </div>
+          <div id="emergencyContactsList" class="emergency-contacts-grid">
+            <!-- Dynamically populated from /emergency-contacts -->
+          </div>
 
-        <!-- Dynamic Screen Content -->
-        <div id="screenContainer">
-          <!-- Populated by JavaScript renderCurrentStep -->
-        </div>
-
-        <!-- Wizard Navigation Actions -->
-        <div class="wizard-actions">
-          <button id="prevBtn" class="btn-secondary" onclick="goPrev()" style="display: none;">পূর্ববর্তী</button>
-          <div style="display: flex; gap: 8px; margin-left: auto;">
-            <button id="skipBtn" class="btn-text" onclick="skipStep()">এড়িয়ে যান</button>
-            <button id="nextBtn" class="btn-primary" onclick="goNext()">পরবর্তী</button>
+          <div class="urgent-actions">
+            <a href="about:blank" target="_blank" id="quickExitBtn" class="btn-quick-exit">নিরাপদে প্রস্থান</a>
+            <button id="continueAnywayBtn" class="btn-continue-anyway" onclick="dismissUrgentBanner()">জরুরি সহায়তা পেয়েছি, ইনটেকে এগিয়ে যান</button>
           </div>
         </div>
-      </div>
 
-    </main>
+        <!-- Wizard Card -->
+        <div class="wizard-card">
+          <div class="step-indicator">
+            <span id="stepCounter">ধাপ ১ / ১০</span>
+            <span id="sessionStatusBadge" style="font-size: 12px; color: var(--color-primary); font-weight: 600;">অটোসেভ সক্রিয়</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="progressBarFill" class="progress-bar-fill"></div>
+          </div>
+
+          <!-- Dynamic Screen Content -->
+          <div id="screenContainer">
+            <!-- Populated by JavaScript renderCurrentStep -->
+          </div>
+
+          <!-- Wizard Navigation Actions -->
+          <div class="wizard-actions">
+            <button id="prevBtn" class="btn-secondary" onclick="goPrev()" style="display: none;">পূর্ববর্তী</button>
+            <div style="display: flex; gap: 8px; margin-left: auto;">
+              <button id="skipBtn" class="btn-text" onclick="skipStep()">এড়িয়ে যান</button>
+              <button id="nextBtn" class="btn-primary" onclick="goNext()">পরবর্তী</button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
   </div>
 
   <!-- Mobile Bottom Tab Bar (360px viewport) -->
@@ -739,6 +750,8 @@
         await createNewSession();
         if (prepopText) {
           sessionData.answers['what_happened'] = prepopText;
+          currentStep = 2;
+          autosaveAnswer('what_happened', prepopText);
         }
       }
       renderCurrentStep();
@@ -753,14 +766,14 @@
         } else {
           emergencyContacts = [
             { id: "1", title: "জাতীয় জরুরি সেবা (পুলিশ, অ্যাম্বুলেন্স, ফায়ার সার্ভিস)", phone: "999", is_verified: false },
-            { id: "2", title: "জাতীয় আইনগত সহায়তা সংস্থা (NLASO)", phone: "16430", is_verified: false },
+            { id: "2", title: "জাতীয় আইনগত সহায়তা সংস্থা", phone: "16430", is_verified: false },
             { id: "3", title: "নারী ও শিশু নির্যাতন প্রতিরোধ হেল্পলাইন", phone: "109", is_verified: false }
           ];
         }
       } catch (err) {
         emergencyContacts = [
           { id: "1", title: "জাতীয় জরুরি সেবা (পুলিশ, অ্যাম্বুলেন্স, ফায়ার সার্ভিস)", phone: "999", is_verified: false },
-          { id: "2", title: "জাতীয় আইনগত সহায়তা সংস্থা (NLASO)", phone: "16430", is_verified: false },
+          { id: "2", title: "জাতীয় আইনগত সহায়তা সংস্থা", phone: "16430", is_verified: false },
           { id: "3", title: "নারী ও শিশু নির্যাতন প্রতিরোধ হেল্পলাইন", phone: "109", is_verified: false }
         ];
       }

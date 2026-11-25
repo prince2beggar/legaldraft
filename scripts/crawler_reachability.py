@@ -147,7 +147,12 @@ def main():
                     if parsed.netloc and parsed.netloc != f"127.0.0.1:{port}":
                         continue
                     path = parsed.path
-                    if path and path.startswith("/") and not path.startswith("/static") and not path.startswith("/api/"):
+                    if (
+                        path
+                        and path.startswith("/")
+                        and not path.startswith("/static")
+                        and not path.startswith("/api/")
+                    ):
                         discovered_paths.add(path)
                         if path not in visited_cit and path not in cit_queue:
                             cit_queue.append(path)
@@ -158,10 +163,14 @@ def main():
             for btn in page_cit.locator("button, [data-href], [data-route]").all():
                 try:
                     onclick = btn.get_attribute("onclick") or ""
-                    data_route = btn.get_attribute("data-href") or btn.get_attribute("data-route") or ""
+                    data_route = (
+                        btn.get_attribute("data-href") or btn.get_attribute("data-route") or ""
+                    )
                     target_str = onclick + " " + data_route
                     for token_str in re.findall(r"['\"](/[a-zA-Z0-9_\-\./]+)['\"]", target_str):
-                        if not token_str.startswith("/static") and not token_str.startswith("/api/"):
+                        if not token_str.startswith("/static") and not token_str.startswith(
+                            "/api/"
+                        ):
                             discovered_paths.add(token_str)
                             if token_str not in visited_cit and token_str not in cit_queue:
                                 cit_queue.append(token_str)
@@ -210,7 +219,12 @@ def main():
                     if parsed.netloc and parsed.netloc != f"127.0.0.1:{port}":
                         continue
                     path = parsed.path
-                    if path and path.startswith("/") and not path.startswith("/static") and not path.startswith("/api/"):
+                    if (
+                        path
+                        and path.startswith("/")
+                        and not path.startswith("/static")
+                        and not path.startswith("/api/")
+                    ):
                         discovered_paths.add(path)
                         if path not in visited_adm and path not in adm_queue:
                             adm_queue.append(path)
@@ -220,10 +234,14 @@ def main():
             for btn in page_adm.locator("button, [data-href], [data-route]").all():
                 try:
                     onclick = btn.get_attribute("onclick") or ""
-                    data_route = btn.get_attribute("data-href") or btn.get_attribute("data-route") or ""
+                    data_route = (
+                        btn.get_attribute("data-href") or btn.get_attribute("data-route") or ""
+                    )
                     target_str = onclick + " " + data_route
                     for token_str in re.findall(r"['\"](/[a-zA-Z0-9_\-\./]+)['\"]", target_str):
-                        if not token_str.startswith("/static") and not token_str.startswith("/api/"):
+                        if not token_str.startswith("/static") and not token_str.startswith(
+                            "/api/"
+                        ):
                             discovered_paths.add(token_str)
                             if token_str not in visited_adm and token_str not in adm_queue:
                                 adm_queue.append(token_str)
@@ -252,7 +270,9 @@ def main():
             # Special entry points (e.g. initial onboarding/signin or external recipient link)
             if route in ("/welcome", "/signin", "/otp", "/onboarding"):
                 status = "REACHABLE (AUTH)"
-                note = "Auth entrypoint: reachable via unauthenticated redirect or header sign-in link"
+                note = (
+                    "Auth entrypoint: reachable via unauthenticated redirect or header sign-in link"
+                )
                 reachable_count += 1
             elif route == "/":
                 status = "REACHABLE (ROOT)"
@@ -274,7 +294,9 @@ def main():
         print(f"{route:<38} | {status:<12} | {note}")
 
     print("--------------------------------------------------------------------------------")
-    print(f"Audit Summary: {reachable_count}/{len(shipped_routes)} routes reachable ({len(unreachable_list)} contextual/sub-step).")
+    print(
+        f"Audit Summary: {reachable_count}/{len(shipped_routes)} routes reachable ({len(unreachable_list)} contextual/sub-step)."
+    )
     print("================================================================================\n")
 
     if CANDIDATE_DB.exists():

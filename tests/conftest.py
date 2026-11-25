@@ -191,4 +191,3 @@ def live_server():
 
     server.should_exit = True
     thread.join(timeout=3.0)
-

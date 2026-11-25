@@ -117,20 +117,21 @@
       <div class="w-12 h-12 rounded-xl bg-emerald-600 mx-auto flex items-center justify-center text-2xl shadow-md mb-2">
         ⚖️
       </div>
-      <h1 class="text-xl font-bold tracking-tight">আইন-AI (Ain-AI)</h1>
+      <div class="text-xl font-bold tracking-tight text-white">আইন-AI (Ain-AI)</div>
       <p class="text-xs text-emerald-400 font-medium">বাংলাদেশ লিগ্যাল ইন্টেলিজেন্স ও ড্রাফটিং ওএস</p>
     </header>
 
     <div class="p-6">
+      <h1 id="signinPageTitle" class="text-base font-bold text-slate-900 text-center mb-3">নাগরিক ও আইনজীবী সাইন-ইন</h1>
       <!-- Step 1: Welcome & Language -->
       <section id="stepWelcome" class="space-y-4">
-        <h2 class="text-base font-bold text-slate-900 text-center">ভাষা নির্বাচন করুন / Select Language</h2>
+        <h2 class="text-base font-bold text-slate-900 text-center">ভাষা নির্বাচন করুন</h2>
         <div class="grid grid-cols-2 gap-3 pt-2">
           <button type="button" onclick="setLang('bn')" id="btnLangBn" class="p-3.5 border-2 border-emerald-600 bg-emerald-50 rounded-xl font-bold text-emerald-900 text-center shadow-sm">
             বাংলা (ডিফল্ট)
           </button>
           <button type="button" onclick="setLang('en')" id="btnLangEn" class="p-3.5 border border-slate-200 rounded-xl font-semibold text-slate-700 text-center hover:bg-slate-50">
-            English
+            ইংরেজি
           </button>
         </div>
 
@@ -182,9 +183,9 @@
           <label for="phoneInput" class="block text-xs font-semibold text-slate-700">মোবাইল নম্বর:</label>
           <div class="flex">
             <span class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-300 bg-slate-100 text-slate-600 text-sm font-semibold">
-              +880
+              +৮৮০
             </span>
-            <input type="tel" id="phoneInput" placeholder="01711000000" maxlength="11" class="flex-1 rounded-r-xl border border-slate-300 p-2.5 text-sm focus:border-emerald-600 focus:outline-hidden" />
+            <input type="tel" id="phoneInput" placeholder="০১৭১১০০০০০০" maxlength="11" class="flex-1 rounded-r-xl border border-slate-300 p-2.5 text-sm focus:border-emerald-600 focus:outline-hidden" />
           </div>
           <p id="phoneError" class="text-xs text-rose-600 hidden font-medium"></p>
         </div>
@@ -227,7 +228,7 @@
       <!-- Step 4: Onboarding & Consents -->
       <section id="stepOnboarding" class="hidden space-y-4">
         <div>
-          <h2 class="text-base font-bold text-slate-900">প্রাথমিক তথ্য ও সম্মতি (Onboarding)</h2>
+          <h2 class="text-base font-bold text-slate-900">প্রাথমিক তথ্য ও সম্মতি</h2>
           <p class="text-xs text-slate-500 mt-0.5">আইনি সেবার জন্য আপনার তথ্য এবং সম্মতি প্রদান করুন।</p>
         </div>
 
@@ -242,14 +243,14 @@
               <label for="userLangSelect" class="block text-xs font-semibold text-slate-700">ভাষা:</label>
               <select id="userLangSelect" class="w-full rounded-xl border border-slate-300 p-2 text-xs bg-white">
                 <option value="bn" selected>বাংলা</option>
-                <option value="en">English</option>
+                <option value="en">ইংরেজি</option>
               </select>
             </div>
             <div>
               <label for="userNumeralSelect" class="block text-xs font-semibold text-slate-700">সংখ্যার রূপ:</label>
               <select id="userNumeralSelect" class="w-full rounded-xl border border-slate-300 p-2 text-xs bg-white">
                 <option value="bn" selected>বাংলা সংখ্যা (১২৩৪)</option>
-                <option value="en">English (1234)</option>
+                <option value="en">ইংরেজি সংখ্যা</option>
               </select>
             </div>
           </div>
@@ -260,17 +261,17 @@
             
             <label class="flex items-start space-x-2 cursor-pointer">
               <input type="checkbox" id="consentTerms" class="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500" />
-              <span>আমি আইন-AI এর <strong>ব্যবহারের সাধারণ শর্তাবলী (Terms of Service v1.0)</strong> পড়েছি এবং সম্মতি দিচ্ছি।</span>
+              <span>আমি আইন-AI এর <strong>ব্যবহারের সাধারণ শর্তাবলী</strong> পড়েছি এবং সম্মতি দিচ্ছি।</span>
             </label>
 
             <label class="flex items-start space-x-2 cursor-pointer">
               <input type="checkbox" id="consentPrivacy" class="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500" />
-              <span>আমি <strong>ব্যক্তিগত উপাত্ত সুরক্ষা ও গোপনীয়তা নীতিমালা (PDPO Notice v1.0)</strong> গ্রহণ করছি।</span>
+              <span>আমি <strong>ব্যক্তিগত উপাত্ত সুরক্ষা ও গোপনীয়তা নীতিমালা</strong> গ্রহণ করছি।</span>
             </label>
 
             <label class="flex items-start space-x-2 cursor-pointer">
               <input type="checkbox" id="consentAiDisclaimer" class="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500" />
-              <span>আমি অবগত যে, <strong>এই সিস্টেম কৃত্রিম বুদ্ধিমত্তা চালিত সহায়তা ব্যবস্থা, এটি কোনো আইনজীবী বা আদালতের বিকল্প নয় (v1.0)।</strong></span>
+              <span>আমি অবগত যে, <strong>এই সিস্টেম কৃত্রিম বুদ্ধিমত্তা চালিত সহায়তা ব্যবস্থা, এটি কোনো আইনজীবী বা আদালতের বিকল্প নয়।</strong></span>
             </label>
           </div>
           <p id="onboardingError" class="text-xs text-rose-600 hidden font-medium"></p>

@@ -294,9 +294,27 @@
         justify-content: center;
       }
     }
+
+    .watermark-overlay {
+      position: fixed;
+      top: 40%;
+      left: 5%;
+      right: 5%;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      color: rgba(220, 38, 38, 0.22);
+      transform: rotate(-30deg);
+      pointer-events: none;
+      border: 2px dashed rgba(220, 38, 38, 0.25);
+      padding: 16px;
+      border-radius: 8px;
+      z-index: 999;
+    }
   </style>
 </head>
 <body>
+  <div id="watermarkOverlay" class="watermark-overlay" style="display:none;"></div>
 
   <!-- Sidebar -->
   <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
@@ -316,7 +334,7 @@
   <!-- Main Content -->
   <div class="main-wrapper">
     <header class="app-header">
-      <h1 style="font-size: 18px; font-weight: 700;">আইনজীবীর জন্য কেস ব্রিফ (Brief Builder)</h1>
+      <h1 style="font-size: 18px; font-weight: 700;">আইনজীবীর জন্য কেস ব্রিফ</h1>
       <button class="btn-primary" onclick="openConsentSheet()">
         <span>🔗</span>
         <span>আইনজীবীকে শেয়ার করুন</span>
@@ -333,63 +351,72 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
           <div>
             <h2 id="briefTitle" style="font-size: 20px; font-weight: 700; color: var(--color-primary);">আইনি সংক্ষিপ্ত বিবরণী</h2>
-            <div style="font-size: 12px; color: var(--color-text-muted);" id="briefDate">তারিখ: ২০২৬-১০-০১</div>
+            <div style="font-size: 12px; color: var(--color-text-muted);" id="briefDate">তারিখ: ১ অক্টোবর ২০২৬</div>
           </div>
           <span style="font-size: 11px; background: #FEF3C7; color: #92400E; padding: 4px 8px; border-radius: 4px; font-weight: 700;">
             AI ব্যাখ্যা — আইনজীবীর দ্বারা যাচাইকৃত নয়
           </span>
         </div>
 
-        <div class="section-title">১. ক্লায়েন্টের নাম ও মামলার ধরন</div>
+        <div class="section-title">১. ক্লায়েন্টের নাম</div>
         <div class="brief-row">
-          <span class="brief-label">ক্লায়েন্টের নাম:</span> <span id="clientName">আবুল কাশেম</span> |
-          <span class="brief-label">মামলার ধরন:</span> <span id="caseType">বাড়ি বা ফ্ল্যাট ভাড়ার চুক্তি লঙ্ঘন</span>
+          <span id="clientName">আবুল কাশেম</span>
         </div>
 
-        <div class="section-title">২. প্রেক্ষাপট</div>
+        <div class="section-title">২. মামলার ধরন</div>
+        <div class="brief-row">
+          <span id="caseType">বাড়ি বা ফ্ল্যাট ভাড়ার চুক্তি লঙ্ঘন</span>
+        </div>
+
+        <div class="section-title">৩. প্রেক্ষাপট</div>
         <div class="brief-row">
           <span id="caseBackground">ভাড়া চুক্তির শর্ত ভঙ্গ ও বকেয়া ভাড়া সংক্রান্ত বিরোধ।</span>
         </div>
 
-        <div class="section-title">৩. ঘটনাক্রম</div>
+        <div class="section-title">৪. ঘটনাক্রম</div>
         <ul id="timelineList" style="padding-left: 20px; font-size: 14px; margin-bottom: 16px;">
-          <li><strong>২০২৬-০৮-১৫:</strong> ভাড়ার চুক্তিপত্র সম্পাদন।</li>
-          <li><strong>২০২৬-০৯-০১:</strong> ১ম নোটিশ প্রদান।</li>
+          <li><strong>১৫ আগস্ট ২০২৬:</strong> ভাড়ার চুক্তিপত্র সম্পাদন।</li>
+          <li><strong>১ সেপ্টেম্বর ২০২৬:</strong> ১ম নোটিশ প্রদান।</li>
         </ul>
 
-        <div class="section-title">৪. মূল নথিপত্র</div>
+        <div class="section-title">৫. মূল নথিপত্র</div>
         <ul id="docsList" style="padding-left: 20px; font-size: 14px; margin-bottom: 16px;">
           <li>মূল ভাড়ার চুক্তিপত্র (যাচাইকৃত)</li>
           <li>ব্যাংক জমা রসিদ (যাচাইকৃত)</li>
         </ul>
 
-        <div class="section-title">৫. গুরুত্বপূর্ণ তথ্য</div>
+        <div class="section-title">৬. গুরুত্বপূর্ণ তথ্য</div>
         <ul id="factsList" style="padding-left: 20px; font-size: 14px; margin-bottom: 16px;">
           <li>চুক্তি অনুযায়ী মাসিক ভাড়া ৩৫,০০০ টাকা।</li>
           <li>বিবাদী বিগত ২ মাস যাবৎ ভাড়া অপরিশোধিত রাখিয়াছেন।</li>
         </ul>
 
-        <div class="section-title">৬. ব্যবহারকারীর উদ্দেশ্য</div>
+        <div class="section-title">৭. ব্যবহারকারীর উদ্দেশ্য</div>
         <div class="brief-row">
           <span id="userObjective">বকেয়া ভাড়া আদায় ও আইনি প্রতিকার গ্রহণ।</span>
         </div>
 
-        <div class="section-title">৭. আইনি প্রশ্ন ও গবেষণা প্রস্তাবনা</div>
+        <div class="section-title">৮. আইনি প্রশ্ন ও গবেষণা প্রস্তাবনা (গবেষণার পরামর্শ — আইনজীবীর দ্বারা যাচাইকৃত নয়)</div>
         <div class="brief-row" style="background: #F1F5F9; padding: 12px; border-radius: 6px;">
-          <div style="font-weight: 600; font-size: 13px; color: #1E293B; margin-bottom: 4px;">গবেষণা প্রস্তাবনা:</div>
+          <div style="font-weight: 600; font-size: 13px; color: #1E293B; margin-bottom: 4px;">গবেষণার পরামর্শ — আইনজীবীর দ্বারা যাচাইকৃত নয়:</div>
           <p style="font-size: 13px; color: #475569;">বাড়ি ভাড়া নিয়ন্ত্রণ আইন, ১৯৯১ এবং তামাদি আইনের সংশ্লিষ্ট বিধান প্রযোজ্য হতে পারে।</p>
         </div>
 
-        <div class="section-title">৮. অনুপস্থিত তথ্য</div>
+        <div class="section-title">৯. অনুপস্থিত তথ্য</div>
         <ul id="missingInfoList" style="padding-left: 20px; font-size: 14px; margin-bottom: 16px;">
           <li>মূল চুক্তিপত্র ও ভাড়ার রসিদের মূল কপি সংরক্ষণ প্রয়োজন।</li>
         </ul>
 
-        <div class="section-title">৯. আইনজীবীর জন্য প্রশ্নাবলী</div>
+        <div class="section-title">১০. আইনজীবীর জন্য প্রশ্নাবলী</div>
         <ul id="lawyerQuestionsList" style="padding-left: 20px; font-size: 14px; margin-top: 10px;">
           <li>উক্ত বিরোধে দেওয়ানি আদালতে উচ্ছেদ মামলা দায়েরের পূর্বশর্ত কী?</li>
           <li>বকেয়া ভাড়া আদায়ের ক্ষেত্রে নোটিশের তামাদি কতদিন?</li>
         </ul>
+
+        <div class="brief-footer" id="briefFooter" style="margin-top: 24px; border-top: 1px solid #CBD5E1; padding-top: 8px; font-size: 11px; color: #64748B; display: flex; justify-content: space-between;">
+          <span>AIN-AI বাংলাদেশ লিগ্যাল প্ল্যাটফর্ম দ্বারা প্রস্তুতকৃত</span>
+          <span>গোপনীয় ও আইনগত বিশেষ সুবিধাপ্রাপ্ত</span>
+        </div>
       </div>
 
       <div style="display: flex; gap: 12px; flex-wrap: wrap;">
@@ -410,11 +437,11 @@
         <label class="form-label">কী শেয়ার করতে চান (সুনির্দিষ্ট বিষয়বস্তু):</label>
         <div class="checkbox-row">
           <input type="checkbox" id="chkScopeBrief" checked>
-          <label for="chkScopeBrief">আইনি ব্রিফ (Brief Summary)</label>
+          <label for="chkScopeBrief">আইনি ব্রিফ</label>
         </div>
         <div class="checkbox-row">
           <input type="checkbox" id="chkScopeDocs" checked>
-          <label for="chkScopeDocs">মামলার পর্যালোচিত নথিপত্র (Documents)</label>
+          <label for="chkScopeDocs">মামলার পর্যালোচিত নথিপত্র</label>
         </div>
         <div class="checkbox-row">
           <input type="checkbox" id="chkScopeNotes">
@@ -425,7 +452,7 @@
       <!-- Step 2: Recipient contact -->
       <div class="form-group">
         <label class="form-label">প্রাপক আইনজীবী বা পরামর্শকের নম্বর বা ইমেইল:</label>
-        <input type="text" class="input-field" id="recipientContact" placeholder="উদা: 01711000000 বা advocate@example.com" value="01711000999">
+        <input type="text" class="input-field" id="recipientContact" placeholder="উদা: ০১৭১১০০০০০০ বা advocate@example.com" value="০১৭১১০০০৯৯৯">
       </div>
 
       <!-- Step 3: Duration -->
@@ -445,7 +472,7 @@
         <label class="form-label">অনুমতি ও অধিকার:</label>
         <div class="checkbox-row">
           <input type="checkbox" id="permView" checked disabled>
-          <label for="permView">দেখার অধিকার (View-only)</label>
+          <label for="permView">শুধুমাত্র দেখার অধিকার</label>
         </div>
         <div class="checkbox-row">
           <input type="checkbox" id="permDownload">
@@ -469,6 +496,16 @@
 
   <script>
     const caseId = window.location.pathname.split('/')[2] || 'case-test-01';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const wmParam = urlParams.get('watermark');
+    if (wmParam) {
+      const wmEl = document.getElementById('watermarkOverlay');
+      if (wmEl) {
+        wmEl.textContent = wmParam;
+        wmEl.style.display = 'block';
+      }
+    }
 
     function openConsentSheet() {
       document.getElementById('consentModal').style.display = 'flex';

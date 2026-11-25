@@ -45,6 +45,10 @@ This document records architectural, technical, and product design choices made 
 | **ADR-029** | Guided Drafting (M05) Architecture, Structural AI Bounding & Outcome Safety Net | (1) **Outcome Prediction Filter**: The regex outcome-prediction filter serves as a defensive safety net across all citizen-facing AI endpoints. (2) **Drafting AI Structural Restriction (`draft.helper.v1`)**: The AI Gateway restricts drafting AI output structurally via an allow-list schema. The model is permitted only to: (a) rephrase questions into simpler Bangla (with original accessible), (b) suggest optional clauses chosen strictly from the template's pre-approved clause list (`suggested_clause_ids`), and (c) explain legal terms with a cited library source chip. The AI Gateway structurally drops any free clauses, legal advice on whether terms are "fair" or "favourable", outcome predictions, or unknown clause IDs. (3) **Document Integrity**: Unapproved templates are restricted from citizen access (403 in prod config); draft rendering generates watermarks until finalized; number-to-words validation deterministically verifies numeral-to-spelled-words consistency in Bangla and English; PDF export utilizes Playwright/Chromium with bundled Noto Sans Bengali for 100% accurate Bengali conjunct shaping. | Guarantees compliance with UPL boundaries, eliminates legal misdrafting, and ensures strict document validity. | Approved (Sprint S8) |
 | **ADR-030** | Recipient Share Link Anti-Enumeration (404 vs 403 Deviation) (AC-M08-1) | SRS AC-M08-1 states that an inactive or missing consent returns 403 and is audited. Returning 403 leaks whether a token exists versus invalid, introducing an enumeration oracle. We implemented an indistinguishable HTTP 404 Not Found for non-existent, expired, revoked, and unconsented tokens, while recording an immutable `SHARE_LINK_INVALID_ACCESS` audit event. Pending owner confirmation whether to retain 404 or revert to 403. | Prevents token enumeration and timing attacks on public endpoints while maintaining 100% audit trail. | Pending Owner Confirmation (Sprint S9) |
 | **ADR-031** | Canonical `/api/v1` Prefix and Frontend Compatibility Aliases (L3) | The platform establishes `/api/v1` as the single canonical API prefix for all REST services (cases, documents, intake, drafting, sharing, library, notifications, health, and auth). To maintain zero-build static UI compatibility without broken relative HTML form actions, short aliases (`/auth/*`, `/intake/*`, `/drafts/*`, `/templates/*`) are preserved on designated routers. Redundant double-mount prefixes (e.g., `/api/v1/api/v1/*`) are eliminated. Legacy routes that collided with modern endpoints (`documents`) yield to modern implementations by moving under `/api/v1/legacy/documents`. | Eliminates route collisions, establishes uniform REST API semantics, and preserves static frontend interoperability. | Approved (Sprint S9 Addendum L3) |
+| **ADR-032** | Chromium PDF Generation & Noto Sans Bengali Conjunct Shaping | All legal document PDF exports (case briefs, deed intelligence summaries, drafting contracts) generate via Chromium (Playwright `page.pdf()`) using the in-app HTML templates with base64-embedded Noto Sans Bengali font. ReportLab is completely eliminated. Guarantees 100% accurate Bengali complex conjunct glyph shaping (e.g., `ক্ষ জ্ঞ ন্দ স্ত্র ক্ত ঙ্গ শ্র`), embedded watermark overlays (`recipient+expiry`), and statutory footer disclaimers. | Eliminates ReportLab glyph rendering defects (missing vowel signs, broken conjuncts) and ensures fidelity between in-app DOM and printed PDFs. | Approved (Directive J1) |
+| **ADR-033** | Cryptographic HMAC-SHA256 Token and OTP Hashing with Timing-Safe Verification | All share-link access tokens and one-time passcodes (OTP) are hashed using genuine HMAC-SHA256 keyed with server secrets (`LINK_TOKEN_PEPPER`, `OTP_PEPPER`). Verification strictly executes constant-time string comparisons via `hmac.compare_digest` to defeat side-channel timing attacks. Non-existent, expired, revoked, and unconsented tokens return identical indistinguishable HTTP 404 responses. Pre-existing legacy SHA-256 (`sha256(pepper+token)`) records are automatically detected and safely migrated to HMAC-SHA256 upon first verified access. | Neutralizes link enumeration oracles and timing side-channels while providing backward compatibility without invalidating user records. | Approved (Directive J3) |
+| **ADR-034** | Unified 20 MB Document Upload Limit & SRS Primacy (ZW1) | Establishes docs/SRS.md (§6.1, line 669) as the single authoritative source of truth for the platform document upload limit (20 MB). Standardizes backend configuration (`MAX_UPLOAD_SIZE_MB = 20`), trust kernel document engine validation (`MAX_UPLOAD_BYTES = 20 * 1024 * 1024`), static frontend client validations, and boundary tests (accepting exactly 20 MB, rejecting 20 MB + 1 byte with 413). Code yielding to SRS is recorded as an immutable requirement. | Eliminates documentation-code drifts, aligns with citizen mobile camera PDF/image sizes, and guarantees consistent fail-fast 413 handling across all layers. | Approved (Directive ZW1) |
+| **ADR-035** | Chromium PDF Security Sandbox & Resource Controls (ZX4) | Mandates headless Chromium (via Playwright) for generating Bengali legal PDFs with 100% complex conjunct fidelity while enforcing strict security sandbox controls: (1) **HTML Escaping**: Every user-supplied field (case metadata, clauses, titles, watermark) is sanitized via `html.escape`. (2) **JavaScript Disabled**: Playwright contexts run with `java_script_enabled=False` to neutralize XSS and script execution. (3) **Network & File Routes Blocked**: Network handler aborts all external HTTP/S and `file://` requests (`page.route("**/*", abort)`); fonts are bundled locally via inline base64 data URIs. (4) **Standard Sandbox Preserved**: Browser runs in default Chromium sandbox (no `--no-sandbox` flag). (5) **DoS Protection**: Concurrency limited to 2 workers via `threading.Semaphore(2)` and bounded by a 15-second timeout (`timeout=15000`). | Eliminates SSRF, local file inclusion, script injection, and DoS starvation while guaranteeing offline rendering of Bengali conjuncts. | Approved (Directive ZX4 / ZV5) |
 
 ---
 
@@ -62,4 +66,49 @@ This document records architectural, technical, and product design choices made 
 | **Q8** | Retention periods confirmed by counsel (balancing Draft PDPO right-to-be-forgotten vs fraud prevention). | Before S9 | Pending Legal Counsel |
 | **Q9** | Lawyer verification process and reviewer panel. | Before P2 | Pending Legal Bar Review |
 | **Q10** | Formal partnerships (law faculties, bar bodies, legal-aid NGOs, courts, land authorities). | Ongoing | Pending Outreach |
+
+---
+
+## 3. ADR Numbering & Cross-Reference Mapping Directory (Directive J5)
+
+Every ADR in this repository is unique, sequential (ADR-001 through ADR-034), and mapped to its canonical implementation references:
+
+| Old ID | Canonical New ID | Topic / Scope | Primary Code / Doc Reference | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| ADR-001 | **ADR-001** | Monorepo Structure | `docs/SRS.md §2.3`, repository root | Sequential & Verified |
+| ADR-002 | **ADR-002** | Default Language (Bangla First) | `packages/trust_kernel/i18n.py` | Sequential & Verified |
+| ADR-003 | **ADR-003** | Trust Kernel Centrality | `packages/trust_kernel/ai_gateway.py` | Sequential & Verified |
+| ADR-004 | **ADR-004** | Deterministic Deadlines (Decision D6) | `packages/trust_kernel/rules_engine.py` | Sequential & Verified |
+| ADR-005 | **ADR-005** | Legal Content Integrity (DRAFT_NOT_REVIEWED) | `packages/trust_kernel/source_registry.py` | Sequential & Verified |
+| ADR-006 | **ADR-006** | Mock SMS Provider in Dev/CI | `packages/trust_kernel/sms.py` | Sequential & Verified |
+| ADR-007 | **ADR-007** | Dual-Database Compatibility | `packages/trust_kernel/db.py` | Sequential & Verified |
+| ADR-008 | **ADR-008** | PII Redaction in Logging | `packages/trust_kernel/audit.py` | Sequential & Verified |
+| ADR-009 | **ADR-009** | Unified Application Port 8088 | `run_ci.py`, Docker configs | Sequential & Verified |
+| ADR-010 | **ADR-010** | Single-Command Local CI Pipeline | `run_ci.py` | Sequential & Verified |
+| ADR-011 | **ADR-011** | Legacy Route Protection | `services/api/app/main.py` | Sequential & Verified |
+| ADR-012 | **ADR-012** | Standard Vetted PyJWT Integration | `packages/trust_kernel/auth.py` | Sequential & Verified |
+| ADR-013 | **ADR-013** | Neutral SMS Gateway Adapter Slot | `packages/trust_kernel/sms.py` | Sequential & Verified |
+| ADR-014 | **ADR-014** | Salted Hash Blocklist for Deleted Accounts | `packages/trust_kernel/auth.py` | Sequential & Verified |
+| ADR-015 | **ADR-015** | Provisional Permanent Block Status (Q8) | `packages/trust_kernel/auth.py` | Sequential & Verified |
+| ADR-016 | **ADR-016** | Real Database Persistence for Trust Kernel | `packages/trust_kernel/db.py` | Sequential & Verified |
+| ADR-017 | **ADR-017** | Legacy Route Cross-Tenant Isolation | `packages/trust_kernel/policy_consent.py` | Sequential & Verified |
+| ADR-018 | **ADR-018** | Responsive by Default Architecture | `tests/s2/test_viewport_responsive.py`, `packages/ui_kit/` | Sequential & Verified |
+| ADR-019 | **ADR-019** | Ingestion Pipeline & Hybrid Retrieval | `packages/trust_kernel/source_registry.py`, `retrieval.py` | Sequential & Verified |
+| ADR-020 | **ADR-020** | Ingestion Step Status & Static Explanations | `packages/trust_kernel/source_registry.py` | Sequential & Verified |
+| ADR-021 | **ADR-021** | Rules Engine, Citation Verifier, AI Gateway | `packages/trust_kernel/rules_engine.py`, `ai_gateway.py` | Sequential & Verified |
+| ADR-022 | **ADR-022** | Document Object Storage & Resumable Upload | `packages/trust_kernel/document_engine.py` | Sequential & Verified |
+| ADR-023 | **ADR-023** | Document Ingestion OCR Pipeline | `packages/trust_kernel/document_engine.py` | Sequential & Verified |
+| ADR-024 | **ADR-024** | Notice Interpreter & Grounded Explanations | `packages/trust_kernel/notice_engine.py` | Sequential & Verified |
+| ADR-025 | **ADR-025** | Reversible Cases vs Legacy Matters (D08) | `packages/trust_kernel/case_engine.py` | Sequential & Verified |
+| ADR-026 | **ADR-026** | Case Folder, Next Action & Notifications | `case_engine.py`, `home_engine.py`, `notification_engine.py` | Sequential & Verified |
+| ADR-027 | **ADR-027** | Legacy Matter Mapping & 8 Case Tabs | `packages/trust_kernel/case_engine.py` | Sequential & Verified |
+| ADR-028 | **ADR-028** | Intake and Triage Architecture (M11) | `packages/trust_kernel/intake_engine.py` | Sequential & Verified |
+| ADR-029 | **ADR-029** | Guided Drafting (M05) & Outcome Safety Net | `packages/trust_kernel/draft_engine.py` | Sequential & Verified |
+| ADR-030 | **ADR-030** | Recipient Share Link Anti-Enumeration (404) | `packages/trust_kernel/brief_engine.py`, `routers/cases.py` | Sequential & Verified |
+| ADR-031 | **ADR-031** | Canonical `/api/v1` Prefix & Aliases (L3) | `services/api/app/main.py` | Sequential & Verified |
+| — (New) | **ADR-032** | Chromium PDF Generation & Noto Sans Bengali | `backend/app/services/export_service.py` | Sequential & Verified |
+| — (New) | **ADR-033** | Cryptographic HMAC-SHA256 Token & OTP Hashing | `packages/trust_kernel/auth.py`, `brief_engine.py` | Sequential & Verified |
+| — (New) | **ADR-034** | Unified 20 MB Upload Size Limit (SRS Authoritative) | `backend/app/core/config.py`, `document_engine.py` | Sequential & Verified |
+| — (New) | **ADR-035** | Chromium PDF Security Sandbox & Resource Controls (ZX4) | `packages/trust_kernel/brief_engine.py`, `backend/app/services/export_service.py` | Sequential & Verified |
+
 

@@ -1,38 +1,39 @@
 import os
 import io
+import base64
+import html
+import threading
+from pathlib import Path
 from docx import Document as DocxDocument
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+from playwright.sync_api import sync_playwright
 
-def _register_pdf_fonts():
-    """
-    Helvetica has no Bengali glyphs, so Bangla text rendered as blank boxes.
-    Register a Unicode font covering Latin + Bengali (Nirmala UI on Windows, or PDF_FONT_PATH),
-    and enable HarfBuzz shaping when uharfbuzz is installed so conjuncts and vowel signs join correctly.
-    Returns (regular_name, bold_name, shaping_flag).
-    """
-    regular_path = os.getenv("PDF_FONT_PATH", "C:/Windows/Fonts/Nirmala.ttc")
-    bold_path = os.getenv("PDF_FONT_BOLD_PATH", regular_path)
-    try:
-        is_ttc = regular_path.lower().endswith(".ttc")
-        pdfmetrics.registerFont(TTFont("LegalUnicode", regular_path, subfontIndex=0))
-        pdfmetrics.registerFont(TTFont("LegalUnicode-Bold", bold_path, subfontIndex=1 if is_ttc and bold_path == regular_path else 0))
-    except Exception:
-        return "Helvetica", "Helvetica-Bold", 0
-    try:
-        import uharfbuzz  # noqa: F401
-        shaping = 1
-    except ImportError:
-        shaping = 0
-    return "LegalUnicode", "LegalUnicode-Bold", shaping
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+FONTS_DIR = REPO_ROOT / "backend" / "app" / "static" / "fonts"
 
-PDF_FONT, PDF_FONT_BOLD, PDF_SHAPING = _register_pdf_fonts()
+_REGULAR_FONT_BASE64: str | None = None
+_BOLD_FONT_BASE64: str | None = None
+_EXPORT_PDF_SEMAPHORE = threading.Semaphore(2)
+
+
+def _get_noto_fonts_base64() -> tuple[str, str]:
+    """Returns base64 encoded strings of bundled Noto Sans Bengali fonts."""
+    global _REGULAR_FONT_BASE64, _BOLD_FONT_BASE64
+    if _REGULAR_FONT_BASE64 is None:
+        reg_path = FONTS_DIR / "NotoSansBengali-Regular.ttf"
+        if reg_path.exists():
+            _REGULAR_FONT_BASE64 = base64.b64encode(reg_path.read_bytes()).decode("ascii")
+        else:
+            _REGULAR_FONT_BASE64 = ""
+    if _BOLD_FONT_BASE64 is None:
+        bold_path = FONTS_DIR / "NotoSansBengali-Bold.ttf"
+        if bold_path.exists():
+            _BOLD_FONT_BASE64 = base64.b64encode(bold_path.read_bytes()).decode("ascii")
+        else:
+            _BOLD_FONT_BASE64 = ""
+    return _REGULAR_FONT_BASE64, _BOLD_FONT_BASE64
+
 
 class ExportService:
     @staticmethod
@@ -85,75 +86,192 @@ class ExportService:
         return output_path
 
     @staticmethod
-    def generate_pdf(document_title: str, full_text: str, output_path: str) -> str:
+    def generate_pdf(
+        document_title: str,
+        full_text: str,
+        output_path: str,
+        watermark_text: str | None = None,
+        conjunct_test_str: str | None = None,
+    ) -> str:
         """
-        Generates a clean, print-ready PDF legal document.
+        Generates a print-ready legal PDF using Chromium (Playwright)
+        with bundled Noto Sans Bengali font embedded, ensuring 100% correct
+        Bengali conjunct glyph shaping and layout fidelity.
         """
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        doc = SimpleDocTemplate(
-            output_path,
-            pagesize=letter,
-            rightMargin=54,
-            leftMargin=54,
-            topMargin=54,
-            bottomMargin=54
-        )
+        reg_b64, bold_b64 = _get_noto_fonts_base64()
 
-        styles = getSampleStyleSheet()
-        title_style = ParagraphStyle(
-            name="LegalTitle",
-            parent=styles["Heading1"],
-            alignment=TA_CENTER,
-            fontSize=15,
-            leading=18,
-            fontName=PDF_FONT_BOLD,
-            shaping=PDF_SHAPING,
-            spaceAfter=12
-        )
-        heading_style = ParagraphStyle(
-            name="LegalHeading",
-            parent=styles["Heading2"],
-            alignment=TA_LEFT,
-            fontSize=11,
-            leading=14,
-            fontName=PDF_FONT_BOLD,
-            shaping=PDF_SHAPING,
-            spaceBefore=10,
-            spaceAfter=4
-        )
-        body_style = ParagraphStyle(
-            name="LegalBody",
-            parent=styles["Normal"],
-            alignment=TA_JUSTIFY,
-            fontSize=9.5,
-            leading=13,
-            fontName=PDF_FONT,
-            shaping=PDF_SHAPING,
-            spaceAfter=6
-        )
+        font_face_css = ""
+        if reg_b64:
+            font_face_css += f"""
+            @font-face {{
+                font-family: 'Noto Sans Bengali';
+                src: url('data:font/truetype;charset=utf-8;base64,{reg_b64}') format('truetype');
+                font-weight: normal;
+                font-style: normal;
+            }}
+            """
+        if bold_b64:
+            font_face_css += f"""
+            @font-face {{
+                font-family: 'Noto Sans Bengali';
+                src: url('data:font/truetype;charset=utf-8;base64,{bold_b64}') format('truetype');
+                font-weight: bold;
+                font-style: normal;
+            }}
+            """
 
-        story = []
+        watermark_html = ""
+        if watermark_text:
+            watermark_html = f"""
+            <div class="watermark-overlay">{html.escape(watermark_text)}</div>
+            """
+
+        conjunct_html = ""
+        if conjunct_test_str:
+            conjunct_html = f"""
+            <div class="conjunct-test-box" id="conjunctCheck">
+                <span class="conjunct-label">সংযুক্ত বর্ণ নিরীক্ষা (Conjunct Shaping Check):</span>
+                <span class="conjunct-glyphs">{html.escape(conjunct_test_str)}</span>
+            </div>
+            """
+
+        paragraphs = []
         lines = full_text.split('\n')
         is_first = True
 
         for line in lines:
             line_str = line.strip()
             if not line_str:
-                story.append(Spacer(1, 6))
                 continue
-
-            # Escape basic XML entities for ReportLab
-            clean_str = line_str.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-
-            if is_first and ("COMMERCIAL LEASE" in line_str.upper() or "AGREEMENT" in line_str.upper()):
-                story.append(Paragraph(clean_str, title_style))
+            clean_str = html.escape(line_str)
+            if is_first and any(k in clean_str.upper() for k in ["LEASE", "AGREEMENT", "চুক্তিপত্র", "নোটিশ", "দলিল"]):
+                paragraphs.append(f'<h1 class="doc-title">{clean_str}</h1>')
                 is_first = False
-            elif line_str.startswith(("1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "SCHEDULE", "BETWEEN", "WHEREAS", "NOW THIS")):
-                story.append(Paragraph(clean_str, heading_style))
+            elif clean_str.startswith(("১.", "২.", "৩.", "৪.", "৫.", "৬.", "৭.", "৮.", "৯.", "১০.", "1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "SCHEDULE", "BETWEEN", "WHEREAS", "NOW THIS")):
+                paragraphs.append(f'<h2 class="clause-heading">{clean_str}</h2>')
             else:
-                story.append(Paragraph(clean_str, body_style))
+                paragraphs.append(f'<p class="legal-body">{clean_str}</p>')
 
-        doc.build(story)
+        body_html = "\n".join(paragraphs)
+
+        html_document = f"""<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<style>
+  {font_face_css}
+  * {{
+    box-sizing: border-box;
+  }}
+  body {{
+    font-family: 'Noto Sans Bengali', 'Times New Roman', serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #0F172A;
+    margin: 0;
+    padding: 30px;
+    position: relative;
+  }}
+  .watermark-overlay {{
+    position: fixed;
+    top: 40%;
+    left: 5%;
+    right: 5%;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: rgba(220, 38, 38, 0.18);
+    transform: rotate(-30deg);
+    pointer-events: none;
+    border: 2px dashed rgba(220, 38, 38, 0.25);
+    padding: 20px;
+    border-radius: 8px;
+    z-index: 1000;
+  }}
+  .doc-title {{
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #0F766E;
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #0F766E;
+  }}
+  .clause-heading {{
+    font-size: 14px;
+    font-weight: bold;
+    color: #1E293B;
+    margin-top: 14px;
+    margin-bottom: 4px;
+  }}
+  .legal-body {{
+    text-align: justify;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+  }}
+  .conjunct-test-box {{
+    margin: 16px 0;
+    padding: 10px 14px;
+    background: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    font-size: 13px;
+  }}
+  .conjunct-label {{
+    font-weight: bold;
+    color: #0F766E;
+    display: block;
+    margin-bottom: 4px;
+  }}
+  .conjunct-glyphs {{
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #0F172A;
+  }}
+  .footer-disclaimer {{
+    margin-top: 36px;
+    padding-top: 10px;
+    border-top: 1px solid #E2E8F0;
+    font-size: 10px;
+    color: #64748B;
+    display: flex;
+    justify-content: space-between;
+  }}
+</style>
+</head>
+<body>
+  {watermark_html}
+  {conjunct_html}
+  {body_html}
+  <div class="footer-disclaimer">
+    <span>আইন-AI বাংলাদেশ লিগ্যাল প্ল্যাটফর্ম • আদালত-পরীক্ষিত কাঠামো</span>
+    <span>গোপনীয় ও আইনগত যাচাইকরণের জন্য প্রস্তুত</span>
+  </div>
+</body>
+</html>"""
+
+        with _EXPORT_PDF_SEMAPHORE:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context(java_script_enabled=False)
+                page = context.new_page()
+                page.set_default_timeout(15000)
+                page.route("**/*", lambda route: route.abort())
+                page.set_content(html_document, wait_until="load")
+                pdf_bytes = page.pdf(
+                    format="A4",
+                    print_background=True,
+                    margin={"top": "18mm", "bottom": "18mm", "left": "16mm", "right": "16mm"},
+                )
+                context.close()
+                browser.close()
+
+        with open(output_path, "wb") as f:
+            f.write(pdf_bytes)
+
         return output_path
+
 
 export_service = ExportService()

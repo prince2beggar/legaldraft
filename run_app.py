@@ -24,7 +24,9 @@ if str(REPO_ROOT) not in sys.path:
 
 def get_git_commit() -> str:
     try:
-        res = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True)
+        res = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True
+        )
         if res.returncode == 0 and res.stdout.strip():
             return res.stdout.strip()
     except Exception:
@@ -34,8 +36,12 @@ def get_git_commit() -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="AIN-AI Application Server Runner")
-    parser.add_argument("--demo", action="store_true", help="Run with demo.db and display demo data banner")
-    parser.add_argument("--reseed", action="store_true", help="Force re-seed demo database (idempotent)")
+    parser.add_argument(
+        "--demo", action="store_true", help="Run with demo.db and display demo data banner"
+    )
+    parser.add_argument(
+        "--reseed", action="store_true", help="Force re-seed demo database (idempotent)"
+    )
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=8000, help="Port to bind (default: 8000)")
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload")
@@ -47,7 +53,9 @@ def main():
     if is_demo:
         current_db_url = os.getenv("DATABASE_URL", "")
         if "legal_saas.db" in current_db_url.lower():
-            print("\n❌ ERROR: Refusing to start demo mode on legal_saas.db! Demo mode requires isolated demo.db.\n")
+            print(
+                "\n❌ ERROR: Refusing to start demo mode on legal_saas.db! Demo mode requires isolated demo.db.\n"
+            )
             sys.exit(1)
 
         os.environ["DATABASE_URL"] = "sqlite:///./demo.db"
@@ -58,9 +66,12 @@ def main():
         if args.reseed or not demo_db_path.exists():
             print("Seeding demo database demo.db with synthetic sample data...")
             from scripts.seed_demo import build_and_seed_demo_db
+
             build_and_seed_demo_db()
     else:
-        db_file = os.path.basename(os.getenv("DATABASE_URL", "sqlite:///./ain_ai.db").replace("sqlite:///", ""))
+        db_file = os.path.basename(
+            os.getenv("DATABASE_URL", "sqlite:///./ain_ai.db").replace("sqlite:///", "")
+        )
 
     dev_mode = os.getenv("DEV_MODE", "true").lower() in ("true", "1")
 
@@ -91,6 +102,7 @@ def main():
     print("Starting Uvicorn server...\n")
 
     import uvicorn
+
     uvicorn.run("services.api.app.main:app", host=args.host, port=args.port, reload=args.reload)
 
 

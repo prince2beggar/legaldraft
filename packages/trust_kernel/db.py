@@ -643,7 +643,9 @@ class BriefDB(Base):
     __tablename__ = "briefs"
 
     id = Column(String(64), primary_key=True)
-    case_id = Column(String(64), ForeignKey("cases.id", ondelete="CASCADE"), index=True, nullable=False)
+    case_id = Column(
+        String(64), ForeignKey("cases.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     owner_id = Column(String(64), ForeignKey("trust_users.id"), index=True, nullable=False)
     title = Column(String(255), nullable=False)
     sections_json = Column(Text, nullable=False)
@@ -656,8 +658,12 @@ class BriefLinkDB(Base):
     __tablename__ = "brief_links"
 
     id = Column(String(64), primary_key=True)
-    consent_id = Column(String(64), ForeignKey("trust_consents.id", ondelete="CASCADE"), index=True, nullable=False)
-    case_id = Column(String(64), ForeignKey("cases.id", ondelete="CASCADE"), index=True, nullable=False)
+    consent_id = Column(
+        String(64), ForeignKey("trust_consents.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    case_id = Column(
+        String(64), ForeignKey("cases.id", ondelete="CASCADE"), index=True, nullable=False
+    )
     token_hash = Column(String(64), index=True, unique=True, nullable=False)
     recipient_contact = Column(String(128), nullable=False)
     otp_hash = Column(String(64), nullable=True)
@@ -670,6 +676,24 @@ class BriefLinkDB(Base):
     expires_at = Column(String(64), nullable=False)
     revoked_at = Column(String(64), nullable=True)
     created_at = Column(String(64), nullable=False)
+
+
+class TaxReturnDB(Base):
+    __tablename__ = "tax_returns"
+
+    id = Column(String(64), primary_key=True)
+    user_id = Column(String(64), ForeignKey("trust_users.id"), index=True, nullable=False)
+    case_id = Column(String(64), ForeignKey("cases.id", ondelete="SET NULL"), nullable=True)
+    return_type = Column(String(32), default="income_tax", nullable=False)  # 'income_tax' | 'vat'
+    tax_period = Column(String(32), nullable=False)  # '2024-2025' or '2026-10'
+    taxpayer_name = Column(String(255), nullable=False)
+    taxpayer_tin = Column(String(64), nullable=True)
+    status = Column(String(32), default="draft", nullable=False)  # 'draft' | 'reviewed' | 'finalized'
+    inputs_json = Column(Text, default="{}", nullable=False)
+    calculation_json = Column(Text, default="{}", nullable=False)
+    statement_json = Column(Text, default="{}", nullable=False)
+    created_at = Column(String(64), nullable=False)
+    updated_at = Column(String(64), nullable=False)
 
 
 class DatabaseManager:
@@ -4955,9 +4979,107 @@ class DatabaseManager:
             "created_at": obj.created_at,
         }
 
+    def create_tax_return(
+        self,
+        user_id: str,
+        return_type: str = "income_tax",
+        tax_period: str = "2024-2025",
+        taxpayer_name: str = "করদাতার নাম",
+        taxpayer_tin: str | None = None,
+        case_id: str | None = None,
+        inputs: dict[str, Any] | None = None,
+        calculation: dict[str, Any] | None = None,
+        statement: dict[str, Any] | None = None,
+        status: str = "draft",
+    ) -> dict[str, Any]:
+        rid = f"txr-{uuid.uuid4().hex[:12]}"
+        now = self.now_iso()
+        with self.get_session() as session:
+            obj = TaxReturnDB(
+                id=rid,
+                user_id=user_id,
+                case_id=case_id,
+                return_type=return_type,
+                tax_period=tax_period,
+                taxpayer_name=taxpayer_name,
+                taxpayer_tin=taxpayer_tin,
+                status=status,
+                inputs_json=json.dumps(inputs or {}, ensure_ascii=False),
+                calculation_json=json.dumps(calculation or {}, ensure_ascii=False),
+                statement_json=json.dumps(statement or {}, ensure_ascii=False),
+                created_at=now,
+                updated_at=now,
+            )
+            session.add(obj)
+            session.commit()
+            return self._tax_return_to_dict(obj)
+
+    def get_tax_return(self, return_id: str) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(TaxReturnDB).filter(TaxReturnDB.id == return_id).first()
+            if not obj:
+                return None
+            return self._tax_return_to_dict(obj)
+
+    def list_tax_returns(
+        self, user_id: str | None = None, return_type: str | None = None
+    ) -> list[dict[str, Any]]:
+        with self.get_session() as session:
+            q = session.query(TaxReturnDB)
+            if user_id:
+                q = q.filter(TaxReturnDB.user_id == user_id)
+            if return_type:
+                q = q.filter(TaxReturnDB.return_type == return_type)
+            rows = q.order_by(TaxReturnDB.created_at.desc()).all()
+            return [self._tax_return_to_dict(r) for r in rows]
+
+    def update_tax_return(self, return_id: str, **kwargs: Any) -> dict[str, Any] | None:
+        with self.get_session() as session:
+            obj = session.query(TaxReturnDB).filter(TaxReturnDB.id == return_id).first()
+            if not obj:
+                return None
+            for k, v in kwargs.items():
+                if k in ("inputs", "calculation", "statement"):
+                    setattr(obj, f"{k}_json", json.dumps(v, ensure_ascii=False))
+                elif hasattr(obj, k):
+                    setattr(obj, k, v)
+            obj.updated_at = self.now_iso()
+            session.commit()
+            return self._tax_return_to_dict(obj)
+
+    def delete_tax_return(self, return_id: str, user_id: str | None = None) -> bool:
+        with self.get_session() as session:
+            q = session.query(TaxReturnDB).filter(TaxReturnDB.id == return_id)
+            if user_id:
+                q = q.filter(TaxReturnDB.user_id == user_id)
+            obj = q.first()
+            if not obj:
+                return False
+            session.delete(obj)
+            session.commit()
+            return True
+
+    def _tax_return_to_dict(self, obj: TaxReturnDB) -> dict[str, Any]:
+        return {
+            "id": obj.id,
+            "user_id": obj.user_id,
+            "case_id": obj.case_id,
+            "return_type": obj.return_type,
+            "tax_period": obj.tax_period,
+            "taxpayer_name": obj.taxpayer_name,
+            "taxpayer_tin": obj.taxpayer_tin,
+            "status": obj.status,
+            "inputs": json.loads(str(obj.inputs_json or "{}")),
+            "calculation": json.loads(str(obj.calculation_json or "{}")),
+            "statement": json.loads(str(obj.statement_json or "{}")),
+            "created_at": obj.created_at,
+            "updated_at": obj.updated_at,
+        }
+
     def clear_all_data(self):
         """Used in test fixtures to cleanly wipe test databases."""
         with self.get_session() as session:
+            session.query(TaxReturnDB).delete()
             session.query(BriefLinkDB).delete()
             session.query(BriefDB).delete()
             session.query(DraftExportDB).delete()

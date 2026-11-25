@@ -208,6 +208,11 @@ def test_ac_m02_4_home_first_useful_content_simulated_slow_3g():
     static_dir = Path(__file__).resolve().parent.parent.parent / "backend" / "app" / "static"
 
     class QuietHandler(http.server.SimpleHTTPRequestHandler):
+        def translate_path(self, path):
+            if path.startswith("/static/"):
+                path = path[7:]
+            return super().translate_path(path)
+
         def log_message(self, format, *args):
             pass
 
@@ -691,3 +696,66 @@ def test_home_ownership_isolation(home_eng, case_eng, user_a, user_b):
     home_b = home_eng.get_home_data(user_b["id"])
     assert home_b["next_action"]["action_type"] == "next.none"
     assert len(home_b["my_cases"]) == 0
+
+
+def test_zx3_no_llm_deadlines_and_confirmed_gating(home_eng, case_eng, user_a):
+    """
+    Directive ZX3: Confirm no deadline is computed by an LLM and none is displayed
+    as confirmed unless the user pressed Confirm.
+    """
+    import inspect
+
+    import packages.trust_kernel.home_engine as he
+
+    # 1. Verify code has ZERO LLM dependencies for deadline computation
+    home_source = inspect.getsource(he)
+    assert "ai_gateway" not in home_source
+    assert "llm" not in home_source.lower()
+    assert "openai" not in home_source.lower()
+    assert "gemini" not in home_source.lower()
+
+    case = case_eng.create_case(user_id=user_a["id"], title="সময়সীমা যাচাই কেস")
+    today = datetime.now(timezone.utc).date()
+    due = (today + timedelta(days=2)).isoformat()
+
+    # 2. Create unconfirmed statutory deadline
+    dl = case_eng.db.create_deadline(
+        case_id=case["id"],
+        title="আইনি নোটিশের জবাব দাখিল",
+        due_date=due,
+        user_id=user_a["id"],
+        confirmed_by_user=False,
+        is_user_set=False,
+        rule_key="ni_act_notice_138",
+        calculation_basis="rule_based",
+    )
+
+    data1 = home_eng.get_home_data(user_a["id"])
+    upcoming = data1.get("upcoming", [])
+    matching = [u for u in upcoming if u["id"] == dl["id"]]
+    assert len(matching) == 1
+    dl_item = matching[0]
+
+    # Must NOT be displayed as confirmed
+    assert dl_item["confirmed_by_user"] is False
+    assert dl_item["rule_key"] == "ni_act_notice_138"
+    assert dl_item["calculation_basis"] == "rule_based"
+    assert "source_ref" in dl_item
+
+    # Next Action must require confirmation
+    next_action = data1.get("next_action", {})
+    assert next_action.get("action_type") == "confirm_deadline"
+    assert next_action.get("deadline_id") == dl["id"]
+
+    # 3. Simulate user confirmation (e.g. user pressed Confirm)
+    case_eng.db.confirm_deadline(dl["id"], user_id=user_a["id"])
+
+    data2 = home_eng.get_home_data(user_a["id"])
+    matching_after = [u for u in data2.get("upcoming", []) if u["id"] == dl["id"]]
+    assert len(matching_after) == 1
+    # ONLY now is displayed as confirmed
+    assert matching_after[0]["confirmed_by_user"] is True
+
+    # Next action is no longer confirm_deadline
+    next_action_after = data2.get("next_action", {})
+    assert next_action_after.get("action_type") != "confirm_deadline"

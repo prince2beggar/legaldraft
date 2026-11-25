@@ -110,6 +110,13 @@ async def upload_document(
     if not content:
         raise HTTPException(status_code=400, detail="Empty file upload.")
 
+    from backend.app.core.config import settings
+    if len(content) > settings.MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File size exceeds limit of {settings.MAX_UPLOAD_SIZE_MB}MB.",
+        )
+
     try:
         doc = document_service.upload_document(
             owner_id=user["id"],
@@ -200,7 +207,9 @@ def update_document(
     db_session = SessionLocal()
     try:
         data = DocumentUpdateRequest(**payload)
-        return legacy_update_document(document_id=doc_id, data=data, db=db_session, current_user=user)
+        return legacy_update_document(
+            document_id=doc_id, data=data, db=db_session, current_user=user
+        )
     finally:
         db_session.close()
 
@@ -546,7 +555,20 @@ def get_documents_upload_page():
     html_file = STATIC_DIR / "documents_upload.html"
     if not html_file.exists():
         raise HTTPException(status_code=404, detail="documents_upload.html not found")
-    return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
+    content = html_file.read_text(encoding="utf-8")
+    from backend.app.core.config import settings
+
+    injected_script = (
+        f"<script>\n"
+        f"  window.MAX_UPLOAD_SIZE_MB = {settings.MAX_UPLOAD_SIZE_MB};\n"
+        f"  window.MAX_UPLOAD_SIZE_BYTES = {settings.MAX_UPLOAD_SIZE_BYTES};\n"
+        f"</script>\n"
+    )
+    if "</head>" in content:
+        content = content.replace("</head>", f"{injected_script}</head>", 1)
+    else:
+        content = injected_script + content
+    return HTMLResponse(content=content)
 
 
 @router.get("/documents/intent", response_class=HTMLResponse)

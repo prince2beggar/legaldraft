@@ -61,7 +61,9 @@ def seed_test_data_for_benchmark(client: TestClient):
 def benchmark_read_endpoints(iterations: int = 30) -> dict:
     client = TestClient(app)
     auth_headers, case_id, share_url = seed_test_data_for_benchmark(client)
-    admin_token = create_access_token(data={"sub": "01700000000", "phone": "01700000000", "role": "admin"})
+    admin_token = create_access_token(
+        data={"sub": "01700000000", "phone": "01700000000", "role": "admin"}
+    )
     admin_headers = {"Authorization": f"Bearer {admin_token}", "Accept": "application/json"}
 
     # The 10 most-used GET endpoints

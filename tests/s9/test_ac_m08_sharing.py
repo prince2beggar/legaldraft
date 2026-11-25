@@ -191,9 +191,9 @@ def test_ac_m08_1_recipient_link_without_active_consent_returns_anti_enumeration
 
     # Request without valid consent
     resp = client.get(f"/api/v1/s/{fake_token}")
-    # Indistinguishable 404 to avoid link oracle / enumeration (ADR-030)
+    # Indistinguishable 404 to avoid link oracle / enumeration (ADR-030 / ADR-033)
     assert resp.status_code == 404
-    assert "লিংকটি পাওয়া যায়নি" in resp.json()["detail"]
+    assert resp.json()["detail"] == "Not Found"
 
     # Verify audit trail logs the failed attempt
     audit_entries = audit_service.get_entries(limit=100)
@@ -792,3 +792,197 @@ def test_c1_no_external_host_dependencies_sharing():
         content = Path(page_rel).read_text(encoding="utf-8")
         matches = ext_pattern.findall(content)
         assert len(matches) == 0, f"External host references found in {page_rel}: {matches}"
+
+
+def test_j3_hmac_sha256_token_otp_security_and_migration(auth_headers_user_a, test_case_with_facts):
+    """
+    Directive J3: Token & OTP HMAC-SHA256 Cryptographic Hardening & Migration.
+    Verifies:
+    1. Real HMAC-SHA256 generation using LINK_TOKEN_PEPPER and OTP_PEPPER.
+    2. Timing-safe constant-time comparison via hmac.compare_digest.
+    3. Indistinguishable responses for wrong token, expired link, and revoked link.
+    4. Documented backward-compatible migration for legacy sha256(pepper + token) hashes.
+    """
+    import hashlib
+    import hmac
+
+    from packages.trust_kernel.auth import get_link_token_pepper
+    from packages.trust_kernel.brief_engine import brief_engine
+
+    client = TestClient(app)
+    cid = test_case_with_facts if isinstance(test_case_with_facts, str) else test_case_with_facts["id"]
+
+    # 1. Create share link
+    resp = client.post(
+        "/api/v1/consents",
+        headers=auth_headers_user_a,
+        json={
+            "case_id": cid,
+            "shared_with": "01811999999",
+            "duration_days": 15,
+            "permissions": {"view": True, "download": True},
+            "scopes": ["case_brief"],
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    token = data["share_url"].split("/")[-1]
+    consent_id = data["consent_id"]
+
+    # Verify HMAC-SHA256 hash was stored
+    expected_hmac = hmac.new(
+        get_link_token_pepper().encode("utf-8"),
+        token.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    found_link = brief_engine.find_brief_link(token)
+    assert found_link is not None
+    assert found_link["token_hash"] == expected_hmac
+
+    # 2. Indistinguishable responses (wrong token vs revoked vs expired)
+    # A. Wrong token
+    res_wrong = client.post(
+        "/api/v1/s/invalid_wrong_token_xyz_999/request-otp",
+        json={"recipient": "01811999999"},
+    )
+    assert res_wrong.status_code == 200
+    wrong_json = res_wrong.json()
+    assert wrong_json["status"] == "ok"
+    assert "যদি লিংকটি সক্রিয় থাকে" in wrong_json["message"]
+
+    # B. Valid token requests OTP
+    res_valid = client.post(
+        f"/api/v1/s/{token}/request-otp",
+        json={"recipient": "01811999999"},
+    )
+    assert res_valid.status_code == 200
+    valid_json = res_valid.json()
+    assert valid_json["status"] == "ok"
+    assert valid_json["message"] == wrong_json["message"]  # Indistinguishable message!
+
+    # Verify stored OTP hash is HMAC-SHA256
+    updated_link = brief_engine.find_brief_link(token)
+    assert updated_link["otp_hash"] is not None
+    # Verify wrong OTP fails constant-time check
+    with pytest.raises(ValueError, match="ভুল ওটিপি কোড"):
+        brief_engine.verify_recipient_otp(token, "000000")
+
+    # C. Revoked link returns indistinguishable response
+    rev_res = client.post(f"/api/v1/consents/{consent_id}/revoke", headers=auth_headers_user_a)
+    assert rev_res.status_code == 200
+    res_revoked = client.post(
+        f"/api/v1/s/{token}/request-otp",
+        json={"recipient": "01811999999"},
+    )
+    assert res_revoked.status_code == 200
+    assert res_revoked.json()["message"] == wrong_json["message"]  # Indistinguishable!
+
+    # 3. Documented migration: legacy sha256(pepper+token) automatically migrated to HMAC-SHA256
+    legacy_token = "legacy_token_for_migration_test_123"
+    legacy_pepper = get_link_token_pepper()
+    legacy_hash = hashlib.sha256(f"{legacy_pepper}{legacy_token}".encode("utf-8")).hexdigest()
+
+    # Create link with legacy hash in DB
+    future_exp = (datetime.now(timezone.utc) + timedelta(days=5)).isoformat()
+    new_link = brief_engine.db.create_brief_link(
+        consent_id=consent_id,
+        case_id=cid,
+        token_hash=legacy_hash,
+        recipient_contact="01822000000",
+        expires_at=future_exp,
+    )
+
+    # find_brief_link finds via legacy hash and migrates to HMAC-SHA256
+    found_link = brief_engine.find_brief_link(legacy_token)
+    assert found_link is not None
+    assert found_link["id"] == new_link["id"]
+
+    # Check that stored hash has been upgraded to HMAC-SHA256
+    migrated_row = brief_engine.db.get_brief_link(new_link["id"])
+    expected_migrated_hmac = brief_engine._hash_token(legacy_token)
+    assert migrated_row["token_hash"] == expected_migrated_hmac
+
+
+def test_zx2_share_link_uniformity_anti_enumeration(auth_headers_user_a, test_case_with_facts):
+    """
+    Directive ZX2 / ADR-033: Share-Link Anti-Enumeration Uniformity.
+    Asserts that:
+    1. Unknown tokens
+    2. Malformed tokens
+    3. Expired tokens
+    4. Revoked tokens
+    all return:
+    - IDENTICAL HTTP status code (404)
+    - IDENTICAL body bytes (b'{"detail":"Not Found"}')
+    - IDENTICAL response headers (content-type, content-length, cache-control)
+    with zero leakage of internal KeyError messages or token existence state.
+    """
+    from packages.trust_kernel.brief_engine import brief_engine
+
+    client = TestClient(app)
+    cid = test_case_with_facts if isinstance(test_case_with_facts, str) else test_case_with_facts["id"]
+    headers = {"Accept": "application/json"}
+
+    # 1. Unknown token
+    tok_unknown = "unknown_nonexistent_token_99999"
+
+    # 2. Malformed token
+    tok_malformed = "malformed!@#_invalid$token"
+
+    # 3. Expired token (create consent + update to past timestamp)
+    res_exp = brief_engine.create_sharing_consent(
+        case_id=cid,
+        owner_id=CLIENT_PHONE_A,
+        recipient_contact="01833000111",
+        scopes=["brief"],
+        permissions={"view": True},
+        duration_days=1,
+    )
+    tok_expired = res_exp["token"]
+    past_exp = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
+    brief_engine.db.update_brief_link(res_exp["link_id"], expires_at=past_exp)
+
+    # 4. Revoked token (create consent + revoke)
+    res_rev = brief_engine.create_sharing_consent(
+        case_id=cid,
+        owner_id=CLIENT_PHONE_A,
+        recipient_contact="01833000222",
+        scopes=["brief"],
+        permissions={"view": True},
+        duration_days=5,
+    )
+    tok_revoked = res_rev["token"]
+    brief_engine.revoke_consent(res_rev["consent"]["id"], CLIENT_PHONE_A)
+
+    # Perform GET requests
+    r_unknown = client.get(f"/api/v1/s/{tok_unknown}", headers=headers)
+    r_malformed = client.get(f"/api/v1/s/{tok_malformed}", headers=headers)
+    r_expired = client.get(f"/api/v1/s/{tok_expired}", headers=headers)
+    r_revoked = client.get(f"/api/v1/s/{tok_revoked}", headers=headers)
+
+    responses = [r_unknown, r_malformed, r_expired, r_revoked]
+
+    # Status Code Uniformity (404)
+    for r in responses:
+        assert r.status_code == 404, f"Expected 404, got {r.status_code}: {r.text}"
+
+    # Body Bytes Uniformity: exactly identical byte string
+    expected_bytes = b'{"detail":"Not Found"}'
+    assert r_unknown.content == expected_bytes, f"Unknown body bytes mismatch: {r_unknown.content}"
+    assert r_malformed.content == expected_bytes, f"Malformed body bytes mismatch: {r_malformed.content}"
+    assert r_expired.content == expected_bytes, f"Expired body bytes mismatch: {r_expired.content}"
+    assert r_revoked.content == expected_bytes, f"Revoked body bytes mismatch: {r_revoked.content}"
+
+    # Response Header Uniformity (ignoring date)
+    def _extract_comparable_headers(resp):
+        return {
+            "content-type": resp.headers.get("content-type"),
+            "content-length": resp.headers.get("content-length"),
+            "cache-control": resp.headers.get("cache-control"),
+        }
+
+    h_ref = _extract_comparable_headers(r_unknown)
+    assert _extract_comparable_headers(r_malformed) == h_ref
+    assert _extract_comparable_headers(r_expired) == h_ref
+    assert _extract_comparable_headers(r_revoked) == h_ref
+

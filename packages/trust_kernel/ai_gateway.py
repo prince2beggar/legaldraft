@@ -1112,6 +1112,7 @@ class AIGateway:
                 "urgency": input_data.get("urgency", "normal"),
             },
         )
+
     def generate(
         self,
         system_prompt: str,

@@ -422,10 +422,12 @@ def finalize_draft(
 def export_draft(
     draft_id: str,
     format: str = Query(default="pdf", pattern="^(pdf|docx)$"),
+    layout: str = Query(default="normal", pattern="^(normal|stamp)$"),
     current_user: dict = Depends(get_current_user),
 ):
     """
     Exports draft to PDF or DOCX (AC-M05-4).
+    Supports normal A4 layout and stamp layout (for 300 Tk non-judicial stamp paper).
     Files are encrypted at rest with AES-256-GCM.
     Decrypted bytes are returned to the authenticated user on download.
     """
@@ -434,11 +436,14 @@ def export_draft(
             draft_id=draft_id,
             user_id=current_user["sub"],
             export_format=format,
+            layout=layout,
         )
         content, filename, media_type = draft_engine.get_decrypted_export_bytes(
             export_id=res["export_id"],
             user_id=current_user["sub"],
         )
+        if layout == "stamp" and format == "pdf":
+            filename = f"stamp_{filename}"
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:

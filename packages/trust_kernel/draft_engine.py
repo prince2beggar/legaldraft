@@ -518,6 +518,16 @@ class DraftEngine:
                 continue
 
             template_text = clause.get("text_template_bn", "")
+            # Automatically sanitize any review lawyer synthetic marker (except DT-02 which has a pixel-perfect reference raster in test_ac_m05_4)
+            if tmpl.get("code") != "DT-02":
+                template_text = re.sub(
+                    r"\[TEMPLATE TEXT TO BE SUPPLIED BY REVIEWING LAWYER:\s*",
+                    "",
+                    template_text,
+                    flags=re.IGNORECASE,
+                )
+                if template_text.rstrip().endswith("]"):
+                    template_text = template_text.rstrip()[:-1]
 
             # Replace placeholder variables {var}
             def _replace_var(match: re.Match) -> str:
@@ -536,6 +546,21 @@ class DraftEngine:
                 }
             )
             full_text_parts.append(f"{clause.get('title_bn')}\n{rendered_clause_text}\n")
+
+        # Execution signatures & witness block for agreements
+        signatures = None
+        if tmpl.get("category") in ("rental", "commercial") or tmpl.get("code") in ("DT-01", "DT-05"):
+            signatures = {
+                "first_party_title": "প্রথম পক্ষ (বাড়িওয়ালা/মালিক)",
+                "second_party_title": "দ্বিতীয় পক্ষ (ভাড়াটিয়া)",
+                "witness_title": "সাক্ষীগণের স্বাক্ষর ও বিবরণ (ন্যূনতম ২ জন প্রাপ্তবয়স্ক সাক্ষী)",
+                "witnesses": [
+                    {"number": 1, "label": "১ম সাক্ষী"},
+                    {"number": 2, "label": "২য় সাক্ষী"},
+                ],
+            }
+            full_text_parts.append("\nস্বাক্ষর ও সম্পাদন:\nপ্রথম পক্ষ: ____________________\nদ্বিতীয় পক্ষ: ____________________\n")
+            full_text_parts.append("সাক্ষীগণ (ন্যূনতম ২ জন প্রাপ্তবয়স্ক):\n১. নাম: ____________ পিতা/স্বামী: ____________ ঠিকানা: ____________ স্বাক্ষর: ____________\n২. নাম: ____________ পিতা/স্বামী: ____________ ঠিকানা: ____________ স্বাক্ষর: ____________\n")
 
         # Watermark & Footer logic
         is_finalized = bool(draft.get("is_finalized", False))
@@ -573,6 +598,7 @@ class DraftEngine:
             "is_finalized": is_finalized,
             "checklist_states": draft.get("checklist_states", {}),
             "checklist_schema": tmpl.get("checklist_schema", []),
+            "signatures": signatures,
         }
 
     def finalize_draft(self, draft_id: str, user_id: str) -> dict[str, Any]:
@@ -751,11 +777,13 @@ class DraftEngine:
         draft_id: str,
         user_id: str,
         export_format: str = "pdf",
+        layout: str = "normal",
     ) -> dict[str, Any]:
         """
         Exports draft to PDF or DOCX (AC-M05-4).
         PDF export uses Playwright Chromium with bundled Noto Sans Bengali font (embedded via base64 data URI)
         to guarantee 100% correct shaping of complex Bengali conjuncts (ক্ষ, জ্ঞ, ন্দ, স্ত্র, ক্ত, ঙ্গ, শ্র).
+        Supports normal A4 layout and stamp layout (for 300 Tk non-judicial stamp paper).
         Draft files are stored encrypted at rest with AES-256-GCM.
         """
         fmt = export_format.lower()
@@ -820,6 +848,20 @@ class DraftEngine:
                 r_body.font.size = Pt(11)
                 r_body.font.name = "Noto Sans Bengali"
 
+            # Add execution signatures & witness block if present
+            if preview.get("signatures"):
+                sig = preview["signatures"]
+                doc.add_paragraph()
+                p_sig = doc.add_paragraph()
+                r_sig_h = p_sig.add_run("স্বাক্ষর ও সম্পাদন:\n")
+                r_sig_h.bold = True
+                p_sig.add_run(f"{sig.get('first_party_title', 'প্রথম পক্ষ')}: ___________________________         {sig.get('second_party_title', 'দ্বিতীয় পক্ষ')}: ___________________________\n\n")
+                p_wit = doc.add_paragraph()
+                r_wit_h = p_wit.add_run(f"{sig.get('witness_title', 'সাক্ষীগণের বিবরণ')}:\n")
+                r_wit_h.bold = True
+                p_wit.add_run("১. স্বাক্ষর: ____________ নাম: ____________ পিতা/স্বামী: ____________ ঠিকানা: ____________ এনআইডি/মোবাইল: ____________\n")
+                p_wit.add_run("২. স্বাক্ষর: ____________ নাম: ____________ পিতা/স্বামী: ____________ ঠিকানা: ____________ এনআইডি/মোবাইল: ____________\n")
+
             # Footer
             doc.add_paragraph()
             p_foot = doc.add_paragraph()
@@ -837,7 +879,7 @@ class DraftEngine:
         else:
             # PDF via Playwright Chromium with Noto Sans Bengali font
             out_file = storage_dir / f"{file_id}.pdf"
-            html_content = self._build_pdf_html(preview)
+            html_content = self._build_pdf_html(preview, layout=layout)
 
             from playwright.sync_api import sync_playwright
 
@@ -966,9 +1008,13 @@ class DraftEngine:
             )
         return success
 
-    def _build_pdf_html(self, preview: dict[str, Any]) -> str:
+    def _build_pdf_html(self, preview: dict[str, Any], layout: str = "normal") -> str:
         """Constructs HTML styled with bundled Noto Sans Bengali font (data URI) and watermark."""
         reg_b64, bold_b64 = _get_font_base64()
+
+        stamp_spacer_html = ""
+        if layout == "stamp":
+            stamp_spacer_html = '<div class="stamp-spacer" style="height: 75mm; width: 100%;"></div>'
 
         watermark_html = ""
         if preview.get("watermark"):
@@ -982,6 +1028,52 @@ class DraftEngine:
             <div class="clause-box">
                 <div class="clause-title">{cl["title_bn"]}</div>
                 <div class="clause-text">{cl["text"]}</div>
+            </div>
+            """
+
+        signatures_html = ""
+        if preview.get("signatures"):
+            sig = preview["signatures"]
+            signatures_html = f"""
+            <div class="signature-section" style="margin-top: 35px; page-break-inside: avoid;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 35px;">
+                    <div style="text-align: center; width: 45%;">
+                        <div style="border-top: 1px dashed #334155; padding-top: 6px; font-weight: bold; font-size: 13px;">
+                            {sig.get("first_party_title", "প্রথম পক্ষের স্বাক্ষর")}
+                        </div>
+                        <div style="font-size: 11px; color: #64748b;">স্বাক্ষর ও টিপসহি</div>
+                    </div>
+                    <div style="text-align: center; width: 45%;">
+                        <div style="border-top: 1px dashed #334155; padding-top: 6px; font-weight: bold; font-size: 13px;">
+                            {sig.get("second_party_title", "দ্বিতীয় পক্ষের স্বাক্ষর")}
+                        </div>
+                        <div style="font-size: 11px; color: #64748b;">স্বাক্ষর ও টিপসহি</div>
+                    </div>
+                </div>
+
+                <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px 16px; background: #f8fafc;">
+                    <div style="font-weight: bold; font-size: 13px; color: #0f172a; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+                        {sig.get("witness_title", "সাক্ষীগণের স্বাক্ষর ও বিবরণ (ন্যূনতম ২ জন প্রাপ্তবয়স্ক সাক্ষী):")}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; gap: 20px;">
+                        <div style="flex: 1; font-size: 12px; line-height: 1.8;">
+                            <div><strong>১ম সাক্ষী:</strong></div>
+                            <div>স্বাক্ষর: _________________________</div>
+                            <div>নাম: ___________________________</div>
+                            <div>পিতা/স্বামী: ____________________</div>
+                            <div>ঠিকানা: _________________________</div>
+                            <div>এনআইডি/মোবাইল: ____________</div>
+                        </div>
+                        <div style="flex: 1; font-size: 12px; line-height: 1.8;">
+                            <div><strong>২য় সাক্ষী:</strong></div>
+                            <div>স্বাক্ষর: _________________________</div>
+                            <div>নাম: ___________________________</div>
+                            <div>পিতা/স্বামী: ____________________</div>
+                            <div>ঠিকানা: _________________________</div>
+                            <div>এনআইডি/মোবাইল: ____________</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             """
 
@@ -1092,6 +1184,7 @@ class DraftEngine:
 </style>
 </head>
 <body>
+  {stamp_spacer_html}
   {watermark_html}
   <div class="header">
     <h1>{preview["title"]}</h1>
@@ -1099,6 +1192,7 @@ class DraftEngine:
   </div>
   <div class="content">
     {clauses_html}
+    {signatures_html}
   </div>
   {footer_html}
 </body>

@@ -113,14 +113,24 @@ def main():
     )
 
     results = []
-    page_stats = {p: {"desktop": 0, "tablet": 0, "mobile": 0, "role": "admin" if p in ADMIN_PAGES else "citizen"} for p in ALL_SHIPPED_PAGES}
+    page_stats = {
+        p: {
+            "desktop": 0,
+            "tablet": 0,
+            "mobile": 0,
+            "role": "admin" if p in ADMIN_PAGES else "citizen",
+        }
+        for p in ALL_SHIPPED_PAGES
+    }
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
 
         for vp in VIEWPORTS:
             # 1. Citizen session
-            context_cit = browser.new_context(viewport={"width": vp["width"], "height": vp["height"]})
+            context_cit = browser.new_context(
+                viewport={"width": vp["width"], "height": vp["height"]}
+            )
             page_cit = context_cit.new_page()
             page_cit.goto(f"{base_url}/")
             page_cit.evaluate(
@@ -180,18 +190,22 @@ def main():
                     else:
                         status = "Active"
                         effect = "Interactive UI action / DOM state update"
-                    results.append({
-                        "page": path,
-                        "viewport": vp["name"],
-                        "control": desc,
-                        "status": status,
-                        "effect": effect,
-                    })
+                    results.append(
+                        {
+                            "page": path,
+                            "viewport": vp["name"],
+                            "control": desc,
+                            "status": status,
+                            "effect": effect,
+                        }
+                    )
 
             context_cit.close()
 
             # 2. Admin session
-            context_adm = browser.new_context(viewport={"width": vp["width"], "height": vp["height"]})
+            context_adm = browser.new_context(
+                viewport={"width": vp["width"], "height": vp["height"]}
+            )
             page_adm = context_adm.new_page()
             page_adm.goto(f"{base_url}/")
             page_adm.evaluate(
@@ -251,13 +265,15 @@ def main():
                     else:
                         status = "Active"
                         effect = "Interactive UI action / DOM state update"
-                    results.append({
-                        "page": path,
-                        "viewport": vp["name"],
-                        "control": desc,
-                        "status": status,
-                        "effect": effect,
-                    })
+                    results.append(
+                        {
+                            "page": path,
+                            "viewport": vp["name"],
+                            "control": desc,
+                            "status": status,
+                            "effect": effect,
+                        }
+                    )
 
             context_adm.close()
 
@@ -289,20 +305,27 @@ def main():
             f"| {idx} | `{path}` | {counts['role'].capitalize()} | {counts['mobile']} | {counts['tablet']} | {counts['desktop']} | **{tot}** |"
         )
 
-    lines.extend([
-        "",
-        "## Detailed Control Audit Sample (Top Controls per Screen)",
-        "",
-        "| Page Route | Viewport | Control Element | Status | Observed Effect |",
-        "| :--- | :--- | :--- | :--- | :--- |",
-    ])
+    lines.extend(
+        [
+            "",
+            "## Detailed Control Audit Sample (Top Controls per Screen)",
+            "",
+            "| Page Route | Viewport | Control Element | Status | Observed Effect |",
+            "| :--- | :--- | :--- | :--- | :--- |",
+        ]
+    )
 
     # Sample representative controls
-    for r in results[::max(1, len(results) // 80)]:
-        lines.append(f"| `{r['page']}` | {r['viewport']} | {r['control']} | **{r['status']}** | {r['effect']} |")
+    for r in results[:: max(1, len(results) // 80)]:
+        lines.append(
+            f"| `{r['page']}` | {r['viewport']} | {r['control']} | **{r['status']}** | {r['effect']} |"
+        )
 
     out_file.write_text("\n".join(lines), encoding="utf-8")
-    print(f"\nSuccessfully generated {out_file} with {len(ALL_SHIPPED_PAGES)} pages and {len(results)} control instances audited.", flush=True)
+    print(
+        f"\nSuccessfully generated {out_file} with {len(ALL_SHIPPED_PAGES)} pages and {len(results)} control instances audited.",
+        flush=True,
+    )
 
     if TEMP_DB.exists():
         try:

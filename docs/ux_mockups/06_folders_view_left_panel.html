@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ফোল্ডার ও ফাইল প্যানেল [নমুনা - যাচাই বাকি]</title>
+  <style>
+  :root {
+    --primary: #047857;
+    --primary-light: #ecfdf5;
+    --primary-dark: #064e3b;
+    --surface: #ffffff;
+    --bg: #f8fafc;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --amber-bg: #fffbeb;
+    --amber-border: #fde68a;
+    --amber-text: #92400e;
+    --danger: #dc2626;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    font-size: 1.1rem;
+  }
+  .disclaimer-banner {
+    background: var(--amber-bg);
+    border-bottom: 1px solid var(--amber-border);
+    color: var(--amber-text);
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  main {
+    flex: 1;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .chat-bubble {
+    padding: 0.85rem 1rem;
+    border-radius: 1rem;
+    max-width: 85%;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .chat-ai {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    border-bottom-left-radius: 0.25rem;
+  }
+  .chat-user {
+    background: var(--primary);
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 0.25rem;
+  }
+  .ai-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.35rem;
+  }
+  .chips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .chip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    text-align: left;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    transition: all 0.2s;
+  }
+  .chip-card:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .chip-card span.icon { font-size: 1.5rem; }
+  .bottom-nav {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    padding: 0.5rem 0;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    gap: 0.2rem;
+  }
+  .nav-item.active {
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .btn {
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-outline { border-color: var(--border); background: var(--surface); color: var(--text); }
+  .btn-secondary { background: #e2e8f0; color: #0f172a; }
+  .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  .dual-path {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+    .layout-split {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1.5rem;
+      width: 100%;
+    }
+    @media (max-width: 768px) {
+      .layout-split { grid-template-columns: 1fr; }
+    }
+    .sidebar-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+    .folder-item {
+      padding: 0.6rem 0.75rem;
+      border-radius: 0.5rem;
+      margin-bottom: 0.35rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .folder-item.active {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+    .file-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">⚖️ আইন-AI</div>
+    <div style="font-size: 0.85rem;">আমার ফোল্ডারসমূহ</div>
+  </header>
+  <main style="max-width: 1100px;">
+    <div class="layout-split">
+      <div class="sidebar-panel">
+        <h3 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text-muted);">কেস ফোল্ডার তালিকা</h3>
+        <div class="folder-item active">📁 ধানমন্ডি ফ্ল্যাট ভাড়াচুক্তি</div>
+        <div class="folder-item">📁 মিরপুর জমি বিরোধ [নমুনা - যাচাই বাকি]</div>
+        <div class="folder-item">📁 চেক ডিজঅনার নোটিশ [নমুনা - যাচাই বাকি]</div>
+      </div>
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2>ধানমন্ডি ফ্ল্যাট ভাড়াচুক্তি (২০২৬)</h2>
+          <button class="btn btn-outline" style="font-size: 0.8rem;">+ নথি যোগ করুন</button>
+        </div>
+        <div class="file-card">
+          <div>
+            <div style="font-weight: 600; font-size: 0.9rem;">📄 ভাড়াচুক্তি_খসড়া_v1.pdf</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">তৈরি: ১০ অক্টোবর ২০২৬ | অবস্থা: খসড়া</div>
+          </div>
+          <button class="btn btn-primary" style="font-size: 0.8rem;">ডাউনলোড</button>
+        </div>
+        <div class="file-card">
+          <div>
+            <div style="font-weight: 600; font-size: 0.9rem;">🖼️ এনআইডি_ফটোকপি.jpg</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">আপলোড: ১০ অক্টোবর ২০২৬ | ১.২ মেগাবাইট</div>
+          </div>
+          <button class="btn btn-outline" style="font-size: 0.8rem;">দেখুন</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item"><span>💬</span><span>সহায়িকা</span></a>
+    <a href="#" class="nav-item active"><span>📁</span><span>ফোল্ডার</span></a>
+    <a href="#" class="nav-item"><span>➕</span><span>যোগ</span></a>
+    <a href="#" class="nav-item"><span>📖</span><span>সাহায্য</span></a>
+    <a href="#" class="nav-item"><span>👤</span><span>আমার</span></a>
+  </nav>
+</body>
+</html>

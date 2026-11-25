@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>আইন-AI — মামলা ফোল্ডারসমূহ</title>
   <link rel="stylesheet" href="/static/fonts.css">
+  <script src="/static/formatters.js"></script>
+  <script src="/static/icons.js"></script>
+  <script>
+    if (typeof formatEnum === 'undefined') {
+      document.write('<script src="./formatters.js"><\/script>');
+    }
+    if (typeof renderIcons === 'undefined') {
+      document.write('<script src="./icons.js"><\/script>');
+    }
+  </script>
   <style>
     :root {
       --color-primary: #047857;
@@ -31,9 +41,18 @@
       background-color: var(--color-bg);
       color: var(--color-text-main);
       display: flex;
+      flex-direction: column;
       min-height: 100vh;
       font-size: 16px;
       line-height: 1.6;
+    }
+
+    .app-layout {
+      display: flex;
+      flex: 1;
+      flex-direction: row;
+      min-height: 0;
+      width: 100%;
     }
 
     /* Sidebar */
@@ -366,92 +385,98 @@
       font-size: 0.68rem;
       gap: 2px;
       flex: 0 0 auto;
-      min-width: 48px;
-      height: 100%;
-      min-height: 44px;
-      padding: 4px;
-      white-space: nowrap;
     }
-    .bottom-tab.active {
-      color: var(--color-primary);
-      font-weight: 700;
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Desktop Sidebar -->
-  <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
-    <a href="/home" class="logo">
-      <span aria-hidden="true">⚖️</span>
-      <span>আইন-AI</span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="/home" class="nav-link">🏠 হোম</a></li>
-      <li><a href="/cases" class="nav-link active">📁 মামলা ফোল্ডার</a></li>
-      <li><a href="/intake" class="nav-link">⚖️ আইনি মূল্যায়ন</a></li>
-      <li><a href="/draft" class="nav-link">📝 আইনি খসড়া</a></li>
-      <li><a href="/documents/upload" class="nav-link">📄 নোটিশ স্ক্যান</a></li>
-      <li><a href="/notifications" class="nav-link">🔔 বিজ্ঞপ্তি</a></li>
-      <li><a href="/library" class="nav-link">📚 আইন পাঠাগার</a></li>
-      <li><a href="/me/sharing" class="nav-link">🔗 ব্রিফ শেয়ারিং</a></li>
-      <li><a href="/notification-settings" class="nav-link">⚙️ সেটিংস</a></li>
-      <li id="adminNavLink" style="display:none;"><a href="/admin" class="nav-link">🔒 অ্যাডমিন</a></li>
-    </ul>
-  </aside>
+  <div class="app-layout">
+    <!-- Desktop Sidebar -->
+    <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
+      <a href="/home" class="logo">
+        <span aria-hidden="true" data-icon="scale"></span>
+        <span>আইন-AI</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/home" class="nav-link"><span data-icon="home"></span> <span>হোম</span></a></li>
+        <li><a href="/cases" class="nav-link active"><span data-icon="folder"></span> <span>মামলা ফোল্ডার</span></a></li>
+        <li><a href="/intake" class="nav-link"><span data-icon="intake"></span> <span>আইনি মূল্যায়ন</span></a></li>
+        <li><a href="/draft" class="nav-link"><span data-icon="draft"></span> <span>আইনি খসড়া</span></a></li>
+        <li><a href="/documents/upload" class="nav-link"><span data-icon="upload"></span> <span>নোটিশ স্ক্যান</span></a></li>
+        <li><a href="/notifications" class="nav-link"><span data-icon="bell"></span> <span>বিজ্ঞপ্তি</span></a></li>
+        <li><a href="/library" class="nav-link"><span data-icon="book"></span> <span>আইন পাঠাগার</span></a></li>
+        <li><a href="/me/sharing" class="nav-link"><span data-icon="share"></span> <span>ব্রিফ শেয়ারিং</span></a></li>
+        <li><a href="/notification-settings" class="nav-link"><span data-icon="settings"></span> <span>সেটিংস</span></a></li>
+        <li id="adminNavLink" style="display:none;"><a href="/admin" class="nav-link"><span data-icon="lock"></span> <span>অ্যাডমিন</span></a></li>
+      </ul>
+    </aside>
 
-  <!-- Mobile Bottom Nav (M4) -->
-  <nav class="mobile-bottom-nav" aria-label="মোবাইল নেভিগেশন">
-    <a href="/home" class="bottom-tab"><span>🏠</span><span>হোম</span></a>
-    <a href="/cases" class="bottom-tab active"><span>📁</span><span>মামলা</span></a>
-    <a href="/intake" class="bottom-tab"><span>⚖️</span><span>সমস্যা</span></a>
-    <a href="/draft" class="bottom-tab"><span>📝</span><span>খসড়া</span></a>
-    <a href="/documents/upload" class="bottom-tab"><span>📄</span><span>আপলোড</span></a>
-    <a href="/library" class="bottom-tab"><span>📚</span><span>পাঠাগার</span></a>
-    <a href="/notifications" class="bottom-tab"><span>🔔</span><span>বিজ্ঞপ্তি</span></a>
-    <a href="/me/sharing" class="bottom-tab"><span>🔗</span><span>শেয়ার</span></a>
-    <a href="/notification-settings" class="bottom-tab"><span>⚙️</span><span>সেটিংস</span></a>
-  </nav>
+    <!-- Mobile Bottom Nav (M4) -->
+    <nav class="mobile-bottom-nav" aria-label="মোবাইল নেভিগেশন">
+      <a href="/home" class="bottom-tab"><span data-icon="home"></span><span>হোম</span></a>
+      <a href="/cases" class="bottom-tab active"><span data-icon="folder"></span><span>মামলা</span></a>
+      <a href="/intake" class="bottom-tab"><span data-icon="intake"></span><span>সমস্যা</span></a>
+      <a href="/draft" class="bottom-tab"><span data-icon="draft"></span><span>খসড়া</span></a>
+      <a href="/documents/upload" class="bottom-tab"><span data-icon="upload"></span><span>আপলোড</span></a>
+      <a href="/library" class="bottom-tab"><span data-icon="book"></span><span>পাঠাগার</span></a>
+      <a href="/notifications" class="bottom-tab"><span data-icon="bell"></span><span>বিজ্ঞপ্তি</span></a>
+      <a href="/me/sharing" class="bottom-tab"><span data-icon="share"></span><span>শেয়ার</span></a>
+      <a href="/notification-settings" class="bottom-tab"><span data-icon="settings"></span><span>সেটিংস</span></a>
+    </nav>
 
-  <!-- Main Area -->
-  <main class="app-main">
-    <header class="top-bar">
-      <div class="top-bar-title">মামলা ফোল্ডারসমূহ (Case Folders)</div>
-      <button type="button" class="btn-create-case" id="btnOpenCreateModal" onclick="openCreateModal()">
-        <span>+</span> নতুন মামলা তৈরি
-      </button>
-    </header>
+    <!-- Main Area -->
+    <main class="app-main">
+      <header class="top-bar">
+        <h1 class="top-bar-title">মামলা ফোল্ডারসমূহ</h1>
+        <button type="button" class="btn-create-case" id="btnOpenCreateModal" onclick="openCreateModal()">
+          <span>+</span> নতুন মামলা তৈরি
+        </button>
+      </header>
 
-    <div class="container">
+      <div class="container">
 
-      <!-- Search & Filters -->
-      <section class="filter-bar">
-        <input
-          type="search"
-          id="searchCasesInput"
-          class="search-input"
-          placeholder="মামলার শিরোনাম বা বিষয় দিয়ে খুঁজুন..."
-          aria-label="মামলা অনুসন্ধান"
-          oninput="filterCases()"
-        />
-        <div class="filter-tabs">
-          <button type="button" class="tab-btn active" data-filter="all" onclick="setFilter('all', this)">সকল</button>
-          <button type="button" class="tab-btn" data-filter="action_required" onclick="setFilter('action_required', this)">পদক্ষেপ প্রয়োজন</button>
-          <button type="button" class="tab-btn" data-filter="active" onclick="setFilter('active', this)">সক্রিয়</button>
-          <button type="button" class="tab-btn" data-filter="waiting" onclick="setFilter('waiting', this)">অপেক্ষমান</button>
-          <button type="button" class="tab-btn" data-filter="with_lawyer" onclick="setFilter('with_lawyer', this)">আইনজীবীর সাথে</button>
-          <button type="button" class="tab-btn" data-filter="completed" onclick="setFilter('completed', this)">সম্পন্ন</button>
-          <button type="button" class="tab-btn" data-filter="archived" onclick="setFilter('archived', this)">আর্কাইভ</button>
-        </div>
-      </section>
+        <!-- Search & Filters -->
+        <section class="filter-bar">
+          <input
+            type="search"
+            id="searchCasesInput"
+            class="search-input"
+            placeholder="মামলার শিরোনাম বা বিষয় দিয়ে খুঁজুন..."
+            aria-label="মামলা অনুসন্ধান"
+            oninput="filterCases()"
+          />
+          <div class="filter-tabs">
+            <button type="button" class="tab-btn active" data-filter="all" onclick="setFilter('all', this)">সকল</button>
+            <button type="button" class="tab-btn" data-filter="action_required" onclick="setFilter('action_required', this)">পদক্ষেপ প্রয়োজন</button>
+            <button type="button" class="tab-btn" data-filter="active" onclick="setFilter('active', this)">সক্রিয়</button>
+            <button type="button" class="tab-btn" data-filter="waiting" onclick="setFilter('waiting', this)">অপেক্ষমান</button>
+            <button type="button" class="tab-btn" data-filter="with_lawyer" onclick="setFilter('with_lawyer', this)">আইনজীবীর সাথে</button>
+            <button type="button" class="tab-btn" data-filter="completed" onclick="setFilter('completed', this)">সম্পন্ন</button>
+            <button type="button" class="tab-btn" data-filter="archived" onclick="setFilter('archived', this)">আর্কাইভ</button>
+          </div>
+        </section>
 
-      <!-- Cases Grid -->
-      <section class="cases-grid" id="casesGrid">
-        <!-- Injected dynamically -->
-      </section>
+        <!-- Cases Grid -->
+        <section class="cases-grid" id="casesGrid">
+          <!-- Injected dynamically -->
+        </section>
 
-    </div>
-  </main>
+        <footer style="margin-top:auto; padding:20px 0; text-align:center;">
+          <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
+        </footer>
+
+      </div>
+    </main>
+  </div>
 
   <!-- Modal: Create Case -->
   <div class="modal-overlay" id="createCaseModal" role="dialog" aria-modal="true" aria-labelledby="createCaseTitle">
@@ -465,19 +490,19 @@
         <div class="form-group" style="margin-top: 10px;">
           <label class="form-label" for="newCaseType">মামলার ধরন</label>
           <select id="newCaseType" class="form-control">
-            <option value="notice_response">আইনি নোটিশ জবাব (Legal Notice)</option>
-            <option value="land_dispute">জমিজমা ও সম্পত্তি (Land & Property)</option>
-            <option value="civil">দেওয়ানি মামলা (Civil Dispute)</option>
-            <option value="criminal">ফৌজদারি বা এনআই অ্যাক্ট (Criminal / NI Act)</option>
-            <option value="family">পারিবারিক বিরোধ (Family Dispute)</option>
-            <option value="general">সাধারণ আইনি বিষয় (General)</option>
+            <option value="notice_response">আইনি নোটিশের জবাব</option>
+            <option value="land_dispute">জমিজমা ও সম্পত্তি</option>
+            <option value="civil">দেওয়ানি বিরোধ</option>
+            <option value="criminal">ফৌজদারি বা এনআই অ্যাক্ট</option>
+            <option value="family">পারিবারিক বিরোধ</option>
+            <option value="general">সাধারণ আইনি বিষয়</option>
           </select>
         </div>
         <div class="form-group" style="margin-top: 10px;">
           <label class="form-label" for="newCaseUrgency">জরুরিতা</label>
           <select id="newCaseUrgency" class="form-control">
-            <option value="normal">সাধারণ (Normal)</option>
-            <option value="urgent">জরুরি (Urgent)</option>
+            <option value="normal">সাধারণ</option>
+            <option value="urgent">জরুরি</option>
           </select>
         </div>
         <div class="form-group" style="margin-top: 10px;">
@@ -500,11 +525,11 @@
       return [
         {
           id: 'case-mock-01',
-          title: 'আইনি নোটিশ বিষয়: এনআই অ্যাক্ট ১৩৮ চেক ডিজঅনার',
+          title: 'নমুনা মামলা: চেক ডিজঅনার নোটিশ',
           case_type: 'notice_response',
           status: 'action_required',
           urgency: 'urgent',
-          description: 'ডাচ-বাংলা ব্যাংকের চেক ডিজঅনার সংক্রান্ত লিগ্যাল নোটিশের জবাব দাখিল ও প্রস্তুতি।',
+          description: 'চেক ডিজঅনার সংক্রান্ত লিগ্যাল নোটিশের জবাব দাখিল ও প্রস্তুতি (নমুনা)।',
           parties_count: 2,
           created_at: '২০২৬-১০-০১'
         },
@@ -543,6 +568,12 @@
         openCreateModal();
       }
 
+      if (urlParams.get('filter') === 'empty') {
+        allCases = [];
+        renderCases(allCases);
+        return;
+      }
+
       if (window.location.protocol === 'file:' || !window.location.origin.startsWith('http') || urlParams.has('mock')) {
         allCases = getMockCases();
         renderCases(allCases);
@@ -550,7 +581,9 @@
       }
 
       try {
-        const res = await fetch('/api/v1/cases');
+        const token = localStorage.getItem('ain_token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        const res = await fetch('/api/v1/cases', { headers });
         if (!res.ok) throw new Error('মামলা তালিকা লোড করা সম্ভব হয়নি');
         const data = await res.json();
         allCases = data.cases || [];
@@ -576,8 +609,10 @@
         card.href = `/cases/${c.id}`;
         card.className = 'case-card';
 
+        const caseTypeLabel = formatEnum('case_type', c.case_type || 'general');
+        const statusLabel = formatEnum('status', c.status || 'active');
         let badgeClass = 'badge-active';
-        let badgeText = 'সক্রিয়';
+        let badgeText = statusLabel;
         if (c.urgency === 'urgent') {
           badgeClass = 'badge-urgent';
           badgeText = 'জরুরি';
@@ -595,11 +630,19 @@
           </div>
           <p class="case-desc">${c.description || 'কোনো বিবরণ যোগ করা হয়নি।'}</p>
           <div class="case-footer">
-            <span>ধরন: ${c.case_type || 'সাধারণ'}</span>
+            <span>ধরন: ${caseTypeLabel}</span>
             <span>বিস্তারিত দেখুন →</span>
           </div>
         `;
         grid.appendChild(card);
+      });
+    }
+
+    function renderIcons() {
+      if (typeof getIcon !== 'function') return;
+      document.querySelectorAll('[data-icon]').forEach(el => {
+        const iconName = el.getAttribute('data-icon');
+        el.innerHTML = getIcon(iconName);
       });
     }
 
@@ -674,9 +717,11 @@
       }
     }
 
-    window.addEventListener('DOMContentLoaded', loadCases);
+    window.addEventListener('DOMContentLoaded', () => {
+      renderIcons();
+      loadCases();
+    });
   </script>
-  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
   <script src="/static/sw-register.js"></script>
 </body>
 </html>

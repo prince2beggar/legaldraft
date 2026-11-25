@@ -172,9 +172,10 @@
     .bottom-tab.active { color: var(--color-primary); }
 
     @media (max-width: 768px) {
+      body { flex-direction: column; }
       .app-sidebar { display: none; }
       .mobile-bottom-nav { display: flex !important; }
-      .app-main { padding-bottom: 74px; }
+      .app-main { padding-bottom: 74px; width: 100%; }
     }
   </style>
 </head>
@@ -246,7 +247,7 @@
           <div class="intent-icon">📁</div>
           <div class="intent-info">
             <h3>ব্যক্তিগত নথিশালায় সংরক্ষণ</h3>
-            <p>নথিটি অপটিক্যাল ক্যারেক্টার রিকগনিশন (OCR) সহ সুরক্ষিত ব্যক্তিগত ভল্টে সংরক্ষণ করে রাখুন।</p>
+            <p>নথিটি সুরক্ষিত ব্যক্তিগত ভল্টে সংরক্ষণ করে রাখুন।</p>
           </div>
         </div>
       </div>
@@ -254,6 +255,7 @@
       <button type="button" class="btn-submit" onclick="proceedToViewer()">
         এগিয়ে যান (পরবর্তী ধাপ) →
       </button>
+      <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
     </div>
   </main>
 
@@ -278,7 +280,6 @@
       window.location.href = `/documents/viewer?intent=${chosenIntent}&doc=sample-doc-1`;
     }
   </script>
-  <div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0;">build: 2026.10.08-s9-hardening</div>
   <script src="/static/sw-register.js"></script>
 </body>
 </html>

@@ -28,9 +28,17 @@
       background-color: var(--color-bg);
       color: var(--color-text-main);
       display: flex;
+      flex-direction: column;
       min-height: 100vh;
       font-size: 16px;
       line-height: 1.6;
+    }
+
+    .app-layout {
+      display: flex;
+      flex: 1;
+      width: 100%;
+      min-width: 0;
     }
 
     /* Sidebar */
@@ -255,7 +263,7 @@
   </style>
 </head>
 <body>
-
+  <div class="app-layout">
   <!-- Desktop Sidebar -->
   <aside class="app-sidebar" aria-label="প্রধান নেভিগেশন">
     <a href="/home" class="logo">
@@ -292,7 +300,7 @@
         <!-- 1. In-App Notifications -->
         <div class="setting-item">
           <div class="setting-info">
-            <div class="setting-name">ইন-অ্যাপ বিজ্ঞপ্তি (In-App Alerts)</div>
+            <div class="setting-name">ইন-অ্যাপ বিজ্ঞপ্তি</div>
             <div class="setting-desc">ওয়েব ও মোবাইল ড্যাশবোর্ডে সময়সীমার বিজ্ঞপ্তি প্রদর্শন করুন।</div>
           </div>
           <label class="switch">
@@ -304,10 +312,10 @@
         <!-- 2. SMS Notifications (AC-M07-1, AC-M07-2) -->
         <div class="setting-item">
           <div class="setting-info">
-            <div class="setting-name">এসএমএস এস্কেলেশন (SMS Alerts)</div>
+            <div class="setting-name">জরুরি এসএমএস বার্তা</div>
             <div class="setting-desc">
               সময়সীমার ৩ দিন ও ১ দিন আগে মোবাইল নম্বরে সংক্ষিপ্ত এসএমএস পাঠান।<br>
-              <strong style="color:var(--color-primary-dark);">🔒 গোপনীয়তা সুরক্ষা:</strong> এসএমএস বার্তায় কোনো সংবেদনশীল তথ্য বা মামলার বিস্তারিত বিবরণ থাকবে না (যেমন: "You have a deadline soon. Open AIN-AI.")।
+              <strong style="color:var(--color-primary-dark);">🔒 গোপনীয়তা সুরক্ষা:</strong> এসএমএস বার্তায় কোনো সংবেদনশীল তথ্য বা মামলার বিস্তারিত বিবরণ থাকবে না (যেমন: "আপনার আইনি সময়সীমা আসন্ন। আইন-AI খুলুন।")।
             </div>
           </div>
           <label class="switch">
@@ -319,7 +327,7 @@
         <!-- 3. Quiet Hours (AC-M07-3) -->
         <div class="setting-item">
           <div class="setting-info">
-            <div class="setting-name">নিস্তব্ধ সময় (Quiet Hours: রাত ১০টা - সকাল ৭টা)</div>
+            <div class="setting-name">নিস্তব্ধ সময় (রাত ১০টা থেকে সকাল ৭টা)</div>
             <div class="setting-desc">
               রাত ২২:০০ থেকে সকাল ০৭:০০ (এশিয়া/ঢাকা সময়) পর্যন্ত কোনো বিজ্ঞপ্তি পাঠানো হবে না। এই সময়ের বিজ্ঞপ্তিগুলো সকাল ০৮:০০ টার মর্নিং ডাইজেস্টে পাঠানো হবে।
             </div>
@@ -333,12 +341,12 @@
         <!-- 4. Notification Language -->
         <div class="setting-item">
           <div class="setting-info">
-            <div class="setting-name">বিজ্ঞপ্তির ভাষা (Notification Language)</div>
+            <div class="setting-name">বিজ্ঞপ্তির ভাষা</div>
             <div class="setting-desc">বিজ্ঞপ্তি বার্তা প্রেরণের মূল ভাষা নির্বাচন করুন।</div>
           </div>
           <select id="prefLanguage" class="select-control">
-            <option value="bn" selected>বাংলা (Bangla)</option>
-            <option value="en">English</option>
+            <option value="bn" selected>বাংলা</option>
+            <option value="en">ইংরেজি</option>
           </select>
         </div>
 
@@ -349,6 +357,7 @@
 
     </div>
   </main>
+  </div>
 
   <div class="toast" id="toastMessage">বিজ্ঞপ্তি পছন্দসমূহ সফলভাবে সংরক্ষিত হয়েছে!</div>
 

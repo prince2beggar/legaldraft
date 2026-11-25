@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>জরুরি ট্রায়াজ ও হেল্পলাইন [নমুনা - যাচাই বাকি]</title>
+  <style>
+  :root {
+    --primary: #047857;
+    --primary-light: #ecfdf5;
+    --primary-dark: #064e3b;
+    --surface: #ffffff;
+    --bg: #f8fafc;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --amber-bg: #fffbeb;
+    --amber-border: #fde68a;
+    --amber-text: #92400e;
+    --danger: #dc2626;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    font-size: 1.1rem;
+  }
+  .disclaimer-banner {
+    background: var(--amber-bg);
+    border-bottom: 1px solid var(--amber-border);
+    color: var(--amber-text);
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  main {
+    flex: 1;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .chat-bubble {
+    padding: 0.85rem 1rem;
+    border-radius: 1rem;
+    max-width: 85%;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .chat-ai {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    align-self: flex-start;
+    border-bottom-left-radius: 0.25rem;
+  }
+  .chat-user {
+    background: var(--primary);
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 0.25rem;
+  }
+  .ai-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.35rem;
+  }
+  .chips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .chip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    text-align: left;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    transition: all 0.2s;
+  }
+  .chip-card:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+  .chip-card span.icon { font-size: 1.5rem; }
+  .bottom-nav {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    padding: 0.5rem 0;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    gap: 0.2rem;
+  }
+  .nav-item.active {
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .btn {
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-outline { border-color: var(--border); background: var(--surface); color: var(--text); }
+  .btn-secondary { background: #e2e8f0; color: #0f172a; }
+  .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  .dual-path {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+    .urgent-banner {
+      background: #7f1d1d;
+      color: #ffffff;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .helpline-box {
+      background: #ffffff;
+      color: #0f172a;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-top: 0.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">⚖️ আইন-AI</div>
+    <div style="font-size: 0.85rem; color: var(--danger); font-weight: 700;">জরুরি নিরাপত্তা মোড</div>
+  </header>
+  <main>
+    <div class="chat-bubble chat-user">
+      আমার ছোট ভাইকে পুলিশ ধরে নিয়ে গেছে, থানায় গেলে বলতেছে গ্রেপ্তার দেখাবে, মারধর করতে পারে!
+    </div>
+    <div class="chat-bubble chat-ai" style="max-width: 100%;">
+      <div class="ai-badge">🤖 আইন-AI সহকারী | তাৎক্ষণিক জরুরি সুরক্ষা (HR-16)</div>
+      
+      <div class="urgent-banner">
+        <h3 style="font-size: 1rem; margin-bottom: 0.25rem;">🚨 জরুরি সুরক্ষা ও সহায়তা সবার আগে</h3>
+        <p style="font-size: 0.85rem; opacity: 0.9;">গ্রেপ্তার বা বলপ্রয়োগের ঝুঁকিতে অ্যাপের ভেতর দলিল লেখার সময় নষ্ট করবেন না। অবিলম্বে সরকারি সহায়তা নিন:</p>
+        
+        <div class="helpline-box">
+          <div>
+            <strong>জাতীয় জরুরি সেবা:</strong><br>
+            <span style="font-size: 1.1rem; color: var(--danger); font-weight: 700;">৯৯৯</span>
+            <div style="font-size: 0.75rem; color: var(--amber-text); margin-top: 0.2rem;">
+              <span class="badge">[নমুনা - যাচাই বাকি]</span> (HR-16: অ্যাডমিন যাচাই বাকি)
+            </div>
+          </div>
+          <div>
+            <strong>সরকারি আইনি সহায়তা:</strong><br>
+            <span style="font-size: 1.1rem; color: var(--primary); font-weight: 700;">১৬৪৩০</span>
+            <div style="font-size: 0.75rem; color: var(--amber-text); margin-top: 0.2rem;">
+              <span class="badge">[নমুনা - যাচাই বাকি]</span> (HR-16: অ্যাডমিন যাচাই বাকি)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size: 0.85rem;">আইনি অধিকার নির্দেশিকা: ২৪ ঘণ্টার মধ্যে ম্যাজিস্ট্রেট আদালতে হাজির করার সাংবিধানিক অধিকার রয়েছে।</p>
+
+      <div class="action-buttons">
+        <button class="btn btn-primary">⚖️ বারের অন-ডিউটি আইনজীবীর তথ্য দেখুন</button>
+        <button class="btn btn-outline">জিডি বা অভিযোগ তথ্য নোট রাখুন</button>
+      </div>
+    </div>
+  </main>
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item active"><span>💬</span><span>সহায়িকা</span></a>
+    <a href="#" class="nav-item"><span>📁</span><span>ফোল্ডার</span></a>
+    <a href="#" class="nav-item"><span>➕</span><span>যোগ</span></a>
+    <a href="#" class="nav-item"><span>📖</span><span>সাহায্য</span></a>
+    <a href="#" class="nav-item"><span>👤</span><span>আমার</span></a>
+  </nav>
+</body>
+</html>

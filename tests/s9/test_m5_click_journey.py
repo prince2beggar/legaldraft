@@ -40,6 +40,7 @@ def test_m5_click_only_journey(live_server):
     JOURNEY_DIR.mkdir(parents=True, exist_ok=True)
 
     from packages.trust_kernel.db import db_manager
+
     db_manager.seed_default_templates()
     db_manager.update_template("DT-01", status="approved")
 
@@ -201,7 +202,7 @@ def test_m5_click_only_journey(live_server):
             # STEP 9: Export View / Wizard in Draft
             # =========================================================================
             page.wait_for_selector(".template-card:visible", timeout=7000)
-            start_draft_btn = page.locator('.template-card:visible button.btn-primary').first
+            start_draft_btn = page.locator(".template-card:visible button.btn-primary").first
             start_draft_btn.scroll_into_view_if_needed()
             start_draft_btn.click()
             page.wait_for_selector("#viewWizard", state="visible", timeout=7000)
@@ -224,7 +225,9 @@ def test_m5_click_only_journey(live_server):
             # =========================================================================
             # STEP 11: Share Consent / ব্রিফ শেয়ারিং (Active Tab)
             # =========================================================================
-            share_link = page.locator('a[href="/me/sharing"]:visible, button[data-tab="lawyer"]:visible').first
+            share_link = page.locator(
+                'a[href="/me/sharing"]:visible, button[data-tab="lawyer"]:visible'
+            ).first
             share_link.click()
             page.wait_for_timeout(500)
             page.screenshot(path=str(JOURNEY_DIR / f"11_share_consent_{vp_name}.png"))
@@ -248,7 +251,9 @@ def test_m5_click_only_journey(live_server):
             page.screenshot(path=str(JOURNEY_DIR / f"13_notifications_{vp_name}.png"))
 
             # Verify guard: exactly 1 goto called
-            assert goto_counter["count"] == 1, f"Expected exactly 1 page.goto, got {goto_counter['count']}"
+            assert goto_counter["count"] == 1, (
+                f"Expected exactly 1 page.goto, got {goto_counter['count']}"
+            )
 
             context.close()
 
@@ -256,4 +261,7 @@ def test_m5_click_only_journey(live_server):
 
     # Verify screenshots uniqueness via scripts/verify_screenshots.py
     from scripts.verify_screenshots import verify_directory
-    assert verify_directory(JOURNEY_DIR), "Screenshot uniqueness verification failed in storage/screenshots/journey!"
+
+    assert verify_directory(JOURNEY_DIR), (
+        "Screenshot uniqueness verification failed in storage/screenshots/journey!"
+    )

@@ -91,6 +91,7 @@
 
   <!-- Main Content Area -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+    <h1 class="text-xl font-bold text-slate-800 mb-4 pb-2 border-b border-slate-200">বাংলাদেশ আইনি সমস্যা সমাধান ও ড্রাফটিং ওয়ার্কস্পেস</h1>
 
     <!-- ==================== TAB 0: LEGAL ADVISORY & PROBLEM SOLVER ==================== -->
     <div id="tab-advisory" class="hidden space-y-6">
@@ -302,7 +303,7 @@
           </div>
           <div class="flex items-center space-x-2">
             <span id="bookRulesBadge" class="text-[11px] bg-white/90 border border-emerald-300 text-emerald-800 font-medium px-2.5 py-1 rounded-lg shadow-2xs">
-              ✓ ৫টি সংবিধিবদ্ধ নীতি কার্যকর
+              ✓ ৫টি আইনি রুলস নীতি [নমুনা] কার্যকর
             </span>
           </div>
         </div>
@@ -677,7 +678,7 @@
         <div class="lg:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col h-[750px]">
           <div class="pb-3 border-b border-slate-100 mb-3">
             <h3 class="font-bold text-xs text-slate-800">জাল দলিল ও সত্যতা নিরীক্ষা</h3>
-            <p class="text-[10px] text-slate-400">৮টি কালানুক্রমিক ও সংবিধিবদ্ধ রুলস চেক</p>
+            <p class="text-[10px] text-slate-400">৮টি কালানুক্রমিক ও নিয়মভিত্তিক রুলস চেক [নমুনা]</p>
           </div>
 
           <div class="flex-1 overflow-y-auto space-y-4 pr-1">
@@ -964,7 +965,7 @@
 
           <!-- Applicable Laws Badges -->
           <div>
-            <span class="text-xs font-semibold text-slate-600 block mb-1.5">প্রযোজ্য বাংলাদেশ আইন ও সংবিধিবদ্ধ বিধান:</span>
+            <span class="text-xs font-semibold text-slate-600 block mb-1.5">প্রযোজ্য বাংলাদেশ আইন ও বিধান [নমুনা - যাচাই বাকি]:</span>
             <div class="flex flex-wrap gap-2">
               ${data.applicable_laws.map(l => `<span class="text-xs bg-slate-100 text-slate-800 border border-slate-200 font-medium px-2.5 py-1 rounded-md">⚖️ ${l}</span>`).join('')}
             </div>
@@ -1344,7 +1345,7 @@
 
         document.getElementById('bookGroundingScoreDisplay').innerText = `${score}%`;
         document.getElementById('bookChapterRefDisplay').innerText = chapRef;
-        document.getElementById('bookRulesBadge').innerText = `✓ ${rules.length || 5}টি সংবিধিবদ্ধ নীতি কার্যকর`;
+        document.getElementById('bookRulesBadge').innerText = `✓ ${rules.length || 5}টি আইনি রুলস নীতি [নমুনা] কার্যকর`;
 
         const rulesBox = document.getElementById('bookAppliedRulesBox');
         const rulesList = document.getElementById('bookAppliedRulesList');

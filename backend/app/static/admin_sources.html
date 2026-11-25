@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>নলেজ সেন্টার ও উৎস প্রশাসন (Knowledge Center) — AIN-AI</title>
+  <title>নলেজ সেন্টার ও উৎস প্রশাসন — AIN-AI</title>
   <link rel="stylesheet" href="/static/fonts.css">
   <style>
     :root {
@@ -366,7 +366,7 @@
       <div class="logo-badge">আইন</div>
       <div>
         <div class="brand-title">আইন-AI</div>
-        <div class="brand-sub">প্রশাসন কনসোল (Admin)</div>
+        <div class="brand-sub">প্রশাসন কনসোল</div>
       </div>
     </div>
 
@@ -409,7 +409,7 @@
 
     <div class="container">
       <div class="test-banner" role="alert">
-        <strong>সতর্কতা (FAKE_TEST_DATA):</strong> আইন-AI নলেজ সেন্টারে সকল ইনজেস্টেড ও অনুমোদিত উৎস কৃত্রিম ও পরীক্ষামূলক ডাটা হিসেবে সংরক্ষিত। বাস্তব সংবিধিবদ্ধ আইন ব্যবহারের পূর্বে যাচাইকরণ আবশ্যক।
+        <strong>সতর্কতা:</strong> আইন-AI নলেজ সেন্টারে সকল ইনজেস্টেড ও অনুমোদিত উৎস কৃত্রিম ও পরীক্ষামূলক ডাটা [নমুনা] হিসেবে সংরক্ষিত। বাস্তব আইন প্রয়োগের পূর্বে আইনজীবীর মাধ্যমে যাচাইকরণ আবশ্যক।
       </div>
 
       <!-- Ingestion Pipeline Tracker Card -->
@@ -418,45 +418,46 @@
           <span>উৎস ইনজেশন পাইপলাইন ট্র্যাকার</span>
           <span class="badge badge-approved">সর্বশেষ সমাপ্ত</span>
         </div>
+
         <div class="stepper-row">
           <div class="step-item active">
             <div class="step-icon">✓</div>
-            <span class="step-name">১. আপলোড (Real)</span>
+            <span class="step-name">১. আপলোড</span>
           </div>
           <div class="step-item active" style="opacity: 0.9;">
             <div class="step-icon" style="background: #D97706;">⚡</div>
-            <span class="step-name">২. টেক্সট (Stub: no OCR)</span>
+            <span class="step-name">২. টেক্সট রূপান্তর</span>
           </div>
           <div class="step-item active">
             <div class="step-icon">✓</div>
-            <span class="step-name">৩. ক্লিনিং (Real)</span>
+            <span class="step-name">৩. টেক্সট পরিমার্জন</span>
           </div>
           <div class="step-item active" style="opacity: 0.9;">
             <div class="step-icon" style="background: #D97706;">⚡</div>
-            <span class="step-name">৪. ক্লাসিফাই (Stub: Heuristic)</span>
+            <span class="step-name">৪. শ্রেণিবিন্যাস</span>
           </div>
           <div class="step-item active">
             <div class="step-icon">✓</div>
-            <span class="step-name">৫. চাঙ্কিং (Real)</span>
+            <span class="step-name">৫. অনুচ্ছেদ বিভাজন</span>
           </div>
           <div class="step-item active">
             <div class="step-icon">✓</div>
-            <span class="step-name">৬. ইনডেক্সিং (Real: Determ.)</span>
+            <span class="step-name">৬. ইনডেক্সিং</span>
           </div>
           <div class="step-item active">
             <div class="step-icon">✓</div>
-            <span class="step-name">৭. রিভিউ পেন্ডিং (Real)</span>
+            <span class="step-name">৭. পর্যালোচনা অপেক্ষমাণ</span>
           </div>
         </div>
         <div style="margin-top: 14px; font-size: 0.78rem; color: #64748B; background: #F8FAFC; padding: 8px 12px; border-radius: 8px; border-left: 3px solid #D97706;">
-          <strong>পাইপলাইন অবস্থা:</strong> হোস্টে Tesseract ben+eng না থাকায় OCR/PDF নিষ্কাশন স্টাবড (কেবল UTF-8 টেক্সট ডিকোড)। ক্লাসিফিকেশন রেগুলার এক্সপ্রেশন ভিত্তিক। ইন-প্রসেস অ্যাসিনক্রোনাস এক্সেকিউশন সক্রিয় (রেডিস ওয়ার্কার ড্রাইভেন নয়)।
+          <strong>পাইপলাইন অবস্থা:</strong> হোস্টে প্রয়োজনীয় প্যাকেজ না থাকায় ওসিআর নিষ্কাশন স্টাবড। শ্রেণিবিন্যাস রেগুলার এক্সপ্রেশন ভিত্তিক। ইন-প্রসেস অ্যাসিনক্রোনাস এক্সেকিউশন সক্রিয়।
         </div>
       </section>
 
       <!-- Sources Registry Table -->
       <section class="card" aria-label="Knowledge Sources List">
         <div class="card-title-lg">
-          <span>আইনি উৎস ও সংস্করণ তালিকা (Source Registry)</span>
+          <span>আইনি উৎস ও সংস্করণ তালিকা</span>
         </div>
 
         <table class="sources-table" id="sourcesTable">
@@ -473,29 +474,29 @@
           <tbody>
             <tr>
               <td data-label="আইন">বাড়িভাড়া নিয়ন্ত্রণ আইন ১৯৯১</td>
-              <td data-label="ধরন">Statute</td>
+              <td data-label="ধরন">আইনি বিধান [নমুনা]</td>
               <td data-label="কর্তৃপক্ষ">সংসদ</td>
               <td data-label="সংস্করণ">১৯৯১ মূল আইন</td>
-              <td data-label="স্ট্যাটাস"><span class="badge badge-approved">Approved</span></td>
-              <td data-label="পদক্ষেপ"><button class="btn-primary" style="height:34px; padding:0 10px; font-size:0.75rem;" onclick="viewDiff()">Diff দেখুন</button></td>
+              <td data-label="স্ট্যাটাস"><span class="badge badge-approved">অনুমোদিত</span></td>
+              <td data-label="পদক্ষেপ"><button class="btn-primary" style="height:34px; padding:0 10px; font-size:0.75rem;" onclick="viewDiff()">পরিবর্তন দেখুন</button></td>
             </tr>
             <tr>
               <td data-label="আইন">ভূমি সংস্কার আইন ২০২৩</td>
-              <td data-label="ধরন">Statute</td>
+              <td data-label="ধরন">আইনি বিধান [নমুনা]</td>
               <td data-label="কর্তৃপক্ষ">সংসদ</td>
-              <td data-label="সংস্করণ">২০২৩ সংশোধনী (Ver 2.0)</td>
-              <td data-label="স্ট্যাটাস"><span class="badge badge-pending">Review Pending</span></td>
-              <td data-label="পদক্ষেপ"><button class="btn-primary" style="height:34px; padding:0 10px; font-size:0.75rem;" onclick="viewDiff()">অনুমোদন ও Diff</button></td>
+              <td data-label="সংস্করণ">২০২৩ সংশোধনী (সংস্করণ ২.০)</td>
+              <td data-label="স্ট্যাটাস"><span class="badge badge-pending">পর্যালোচনা অপেক্ষমাণ</span></td>
+              <td data-label="পদক্ষেপ"><button class="btn-primary" style="height:34px; padding:0 10px; font-size:0.75rem;" onclick="viewDiff()">অনুমোদন ও পরিবর্তন</button></td>
             </tr>
           </tbody>
         </table>
       </section>
 
-      <!-- Legal Version Control & Diff Viewer (AC-M10-2) -->
+      <!-- Legal Version Control & Diff Viewer -->
       <section class="diff-container" id="diffSection">
         <div class="diff-header">
           <div>
-            <h3 style="font-size:1.15rem; font-weight:700;">সংস্করণ তুলনা ও পরিবর্তন (Version Diff Viewer)</h3>
+            <h3 style="font-size:1.15rem; font-weight:700;">সংস্করণ তুলনা ও পরিবর্তন</h3>
             <p style="font-size:0.85rem; color:var(--color-text-muted);">ভূমি সংস্কার আইন: ২০১০ সংস্করণ বনাম ২০২৩ সংশোধনী</p>
           </div>
           <div style="display:flex; gap:8px;">
@@ -507,7 +508,7 @@
         <div class="diff-grid">
           <!-- Left: Predecessor Version -->
           <div class="diff-pane">
-            <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--color-text-muted);">পূর্ববর্তী অনুমোদিত সংস্করণ (Ver 1.0 - 2010):</h4>
+            <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--color-text-muted);">পূর্ববর্তী অনুমোদিত সংস্করণ (সংস্করণ ১.০ — ২০১০):</h4>
             <div style="font-size:0.85rem; line-height:1.5;">
               <p><strong>ধারা ১:</strong> কোনো ব্যক্তি বা পরিবার ১০০ বিঘার অতিরিক্ত কৃষি জমি দখলে রাখতে পারিবেন না।</p>
               <div class="diff-removed">
@@ -518,7 +519,7 @@
 
           <!-- Right: New Pending Version -->
           <div class="diff-pane">
-            <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--color-text-muted);">প্রস্তাবিত নতুন সংস্করণ (Ver 2.0 - 2023):</h4>
+            <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--color-text-muted);">প্রস্তাবিত নতুন সংস্করণ (সংস্করণ ২.০ — ২০২৩):</h4>
             <div style="font-size:0.85rem; line-height:1.5;">
               <p><strong>ধারা ১:</strong> কোনো ব্যক্তি বা পরিবার ৬০ বিঘার অতিরিক্ত কৃষি জমি দখলে রাখতে পারিবেন না।</p>
               <div class="diff-added">
@@ -546,10 +547,10 @@
 
             <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
               <button type="submit" class="btn-primary" id="btnApprove" style="background:#0B5D4B;">
-                ✓ অনুমোদন দিন (Approve & Publish)
+                ✓ অনুমোদন ও প্রকাশ করুন
               </button>
               <button type="button" style="background:transparent; color:#DC2626; border:1.5px solid #DC2626; padding:0 18px; height:44px; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:8px;" onclick="alert('সংশোধন চাওয়া হয়েছে...')">
-                ✕ পরিবর্তন প্রয়োজন (Request Changes)
+                ✕ পরিবর্তন প্রয়োজন
               </button>
             </div>
           </form>

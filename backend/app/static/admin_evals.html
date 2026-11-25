@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>আইনি এআই মূল্যায়ন ও কোয়ালিটি গেট (Evaluation Harness) — AIN-AI</title>
+  <title>আইনি মূল্যায়ন ও কোয়ালিটি গেট — AIN-AI</title>
   <link rel="stylesheet" href="/static/fonts.css">
   <style>
     :root {
@@ -279,7 +279,7 @@
       <div class="logo-badge">আইন</div>
       <div>
         <div class="brand-title">আইন-AI</div>
-        <div class="brand-sub">প্রশাসন কনসোল (Admin)</div>
+        <div class="brand-sub">প্রশাসন কনসোল</div>
       </div>
     </div>
 
@@ -305,7 +305,7 @@
       <li>
         <a href="/admin/evals" class="nav-link active">
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span class="nav-text">মূল্যায়ন (Evals)</span>
+          <span class="nav-text">মূল্যায়ন</span>
         </a>
       </li>
     </ul>
@@ -316,42 +316,42 @@
     <header class="top-header">
       <div>
         <h1 style="font-size: clamp(1.2rem, 2.5vw, 1.5rem); font-weight: 700;">আইনি মূল্যায়ন ও কোয়ালিটি গেট ড্যাশবোর্ড</h1>
-        <p style="font-size: 0.85rem; color: var(--color-text-muted);">স্বর্ণমান ডেটাসেট (Golden Sets), উদ্ধৃতি নির্ভুলতা ও গেট পরীক্ষা (SRS Section 8.7)</p>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted);">স্বর্ণমান ডেটাসেট, উদ্ধৃতি নির্ভুলতা ও গেট পরীক্ষা</p>
       </div>
       <div>
-        <span class="badge badge-pass" id="globalGateBadge">কোয়ালিটি গেট উত্তীর্ণ (Gate: ≥ ৮০%)</span>
+        <span class="badge badge-pass" id="globalGateBadge">কোয়ালিটি গেট উত্তীর্ণ (ন্যূনতম ৮০%)</span>
       </div>
     </header>
 
     <div class="container">
       <div class="test-banner" role="alert">
-        <strong>সতর্কতা (FAKE_TEST_DATA):</strong> আইন-AI মূল্যায়ন ব্যবস্থার সকল স্বর্ণমান (Golden Sets) ও নমুনা প্রশ্নাবলী পরীক্ষামূলক সিন্থেটিক ডেটা হিসেবে প্রস্তুত করা হয়েছে।
+        <strong>সতর্কতা:</strong> আইন-AI মূল্যায়ন ব্যবস্থার সকল স্বর্ণমান ও নমুনা প্রশ্নাবলী পরীক্ষামূলক সিন্থেটিক ডেটা হিসেবে প্রস্তুত করা হয়েছে।
       </div>
 
       <!-- Metrics Row -->
       <div class="metrics-grid">
         <div class="metric-card">
-          <div class="metric-label">মোট মূল্যায়ন রান (Total Runs)</div>
+          <div class="metric-label">মোট মূল্যায়ন রান</div>
           <div class="metric-value" id="valTotalRuns">১২</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">কোয়ালিটি গেট স্ট্যাটাস</div>
-          <div class="metric-value" style="color:var(--color-primary);" id="valGateStatus">উত্তীর্ণ (Pass)</div>
+          <div class="metric-value" style="color:var(--color-primary);" id="valGateStatus">উত্তীর্ণ</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">গড় নির্ভুলতার হার (Accuracy)</div>
+          <div class="metric-label">গড় নির্ভুলতার হার</div>
           <div class="metric-value" id="valAvgAccuracy">১০০%</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">গড় সিস্টেম বিলম্ব (Latency)</div>
-          <div class="metric-value" id="valAvgLatency">১৪ ms</div>
+          <div class="metric-label">গড় সিস্টেম বিলম্ব</div>
+          <div class="metric-value" id="valAvgLatency">১৪ মিলি-সেকেন্ড</div>
         </div>
       </div>
 
       <!-- Golden Test Suites -->
       <section class="card" aria-label="Golden Test Suites">
         <div class="card-title-lg">
-          <span>স্বর্ণমান মূল্যায়ন স্যুটসমূহ (Golden Suites)</span>
+          <span>স্বর্ণমান মূল্যায়ন স্যুটসমূহ</span>
         </div>
 
         <table class="eval-table" id="suitesTable">
@@ -366,10 +366,10 @@
           <tbody>
             <tr>
               <td data-label="স্যুট">
-                <strong>limitation_deadline_calculation_golden.v1</strong><br>
+                <strong>তামাদি সময়সীমা গণনা স্বর্ণমান</strong><br>
                 <span style="font-size:0.8rem; color:var(--color-text-muted);">তামাদি ও আইনি নোটিশ গণনার নির্ভুলতা যাচাই</span>
               </td>
-              <td data-label="লেবেল"><span class="badge badge-test">FAKE_TEST_DATA</span></td>
+              <td data-label="লেবেল"><span class="badge badge-test">টেস্ট ডেটা</span></td>
               <td data-label="কেস">৩টি কেস</td>
               <td data-label="পদক্ষেপ">
                 <button type="button" class="btn-primary" onclick="runSuite('limitation_deadline_calculation_golden.v1')">রান করুন</button>
@@ -377,10 +377,10 @@
             </tr>
             <tr>
               <td data-label="স্যুট">
-                <strong>citation_exactness_golden.v1</strong><br>
+                <strong>উদ্ধৃতি নির্ভুলতা স্বর্ণমান</strong><br>
                 <span style="font-size:0.8rem; color:var(--color-text-muted);">উদ্ধৃতি যাচাইকারীর স্ট্যাটিউট মিল ও স্প্যান সত্যতা</span>
               </td>
-              <td data-label="লেবেল"><span class="badge badge-test">FAKE_TEST_DATA</span></td>
+              <td data-label="লেবেল"><span class="badge badge-test">টেস্ট ডেটা</span></td>
               <td data-label="কেস">২টি কেস</td>
               <td data-label="পদক্ষেপ">
                 <button type="button" class="btn-primary" onclick="runSuite('citation_exactness_golden.v1')">রান করুন</button>
@@ -388,10 +388,10 @@
             </tr>
             <tr>
               <td data-label="স্যুট">
-                <strong>gateway_schema_compliance_golden.v1</strong><br>
+                <strong>গেটওয়ে স্কিমা সম্মতি স্বর্ণমান</strong><br>
                 <span style="font-size:0.8rem; color:var(--color-text-muted);">এআই গেটওয়ে স্কিমা ও পিআইআই রিডাকশন সক্ষমতা</span>
               </td>
-              <td data-label="লেবেল"><span class="badge badge-test">FAKE_TEST_DATA</span></td>
+              <td data-label="লেবেল"><span class="badge badge-test">টেস্ট ডেটা</span></td>
               <td data-label="কেস">১টি কেস</td>
               <td data-label="পদক্ষেপ">
                 <button type="button" class="btn-primary" onclick="runSuite('gateway_schema_compliance_golden.v1')">রান করুন</button>
@@ -404,7 +404,7 @@
       <!-- Recent Evaluation Runs -->
       <section class="card" aria-label="Recent Runs">
         <div class="card-title-lg">
-          <span>সর্বশেষ মূল্যায়ন ফলাফল (Recent Run Logs)</span>
+          <span>সর্বশেষ মূল্যায়ন ফলাফল</span>
         </div>
 
         <div id="runOutputAlert" style="display:none; margin-bottom:16px; padding:12px 16px; background:#DCFCE7; border:1px solid #86EFAC; border-radius:8px; color:#166534; font-size:0.9rem;">
@@ -424,8 +424,8 @@
           </thead>
           <tbody id="runsTbody">
             <tr>
-              <td data-label="রান আইডি">eval-init001</td>
-              <td data-label="স্যুট">limitation_deadline_calculation_golden.v1</td>
+              <td data-label="রান আইডি">রান-০১</td>
+              <td data-label="স্যুট">তামাদি সময়সীমা স্বর্ণমান</td>
               <td data-label="মোট কেস">৩</td>
               <td data-label="উত্তীর্ণ">৩</td>
               <td data-label="নির্ভুলতা">১০০%</td>

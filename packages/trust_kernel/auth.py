@@ -10,6 +10,7 @@ Implements:
 """
 
 import hashlib
+import hmac
 import os
 import secrets
 import uuid
@@ -279,13 +280,18 @@ class AuthService:
                     details={"retry_after": wait_time},
                 )
 
-        # Generate 6-digit OTP code
+        # Generate 6-digit OTP code and HMAC-SHA256 hash
         code = f"{secrets.randbelow(900000) + 100000:06d}"
         expires_at = now + timedelta(minutes=5)
+        otp_hash = hmac.new(
+            get_otp_pepper().encode("utf-8"),
+            code.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
 
         self._otp_records[clean_phone] = {
             "phone": clean_phone,
-            "code": code,
+            "otp_hash": otp_hash,
             "attempts": record.get("attempts", 0) if record else 0,
             "expires_at": expires_at,
             "locked_until": None,
@@ -358,8 +364,25 @@ class AuthService:
                 "Verification code has expired. Please request a new code.", status_code=400
             )
 
-        # Validate code match
-        if record["code"] != code.strip():
+        # Validate code match using timing-safe HMAC-SHA256 comparison
+        candidate_hash = hmac.new(
+            get_otp_pepper().encode("utf-8"),
+            code.strip().encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+
+        matched = False
+        if "otp_hash" in record:
+            matched = hmac.compare_digest(record["otp_hash"], candidate_hash)
+        elif "code" in record:
+            expected_hash = hmac.new(
+                get_otp_pepper().encode("utf-8"),
+                record["code"].strip().encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+            matched = hmac.compare_digest(expected_hash, candidate_hash)
+
+        if not matched:
             record["attempts"] += 1
             attempts = record["attempts"]
 

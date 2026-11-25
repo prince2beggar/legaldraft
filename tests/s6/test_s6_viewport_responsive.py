@@ -125,6 +125,7 @@ def test_s6_screens_responsive_and_screenshots(browser_instance, view):
             page.screenshot(path=str(target_path), full_page=False)
         except OSError:
             import time
+
             time.sleep(0.3)
             page.screenshot(path=str(target_path), full_page=False)
         assert target_path.exists()
@@ -135,6 +136,7 @@ def test_s6_screens_responsive_and_screenshots(browser_instance, view):
                 shutil.copy(target_path, ARTIFACT_DIR / img_name)
             except OSError:
                 import time
+
                 time.sleep(0.2)
                 shutil.copy(target_path, ARTIFACT_DIR / img_name)
 

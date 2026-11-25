@@ -120,11 +120,13 @@ def test_x001_unauthenticated_route_sweep():
     # Part A: Verify all public shells return 200 without user/case data
     tested_shells = 0
     for pattern in PUBLIC_SHELLS:
-        test_url = pattern.replace("{case_id}", "test-case-id") \
-                          .replace("{draft_id}", "test-draft-id") \
-                          .replace("{step}", "1") \
-                          .replace("{doc_id}", "test-doc-id") \
-                          .replace("{token}", "test-token")
+        test_url = (
+            pattern.replace("{case_id}", "test-case-id")
+            .replace("{draft_id}", "test-draft-id")
+            .replace("{step}", "1")
+            .replace("{doc_id}", "test-doc-id")
+            .replace("{token}", "test-token")
+        )
         res = client.get(test_url)
         # /s/{token} returns 404 for nonexistent token which is valid token-gated behavior
         if pattern == "/s/{token}":

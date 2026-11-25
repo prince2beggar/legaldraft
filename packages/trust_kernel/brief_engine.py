@@ -16,7 +16,9 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import html
 import secrets
+import threading
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -100,11 +102,19 @@ class BriefEngine:
         # 1. Parties
         parties = self.db.list_case_parties(case_id)
         client = next(
-            (p for p in parties if p.get("role") in ("client", "landlord", "applicant", "first_party")),
+            (
+                p
+                for p in parties
+                if p.get("role") in ("client", "landlord", "applicant", "first_party")
+            ),
             None,
         )
         opponent = next(
-            (p for p in parties if p.get("role") in ("opponent", "tenant", "respondent", "second_party")),
+            (
+                p
+                for p in parties
+                if p.get("role") in ("opponent", "tenant", "respondent", "second_party")
+            ),
             None,
         )
         client_name = client["name"] if client else case.get("title", "মক্কেল")
@@ -120,26 +130,34 @@ class BriefEngine:
             # Drop unconfirmed or proposed events
             if ev.get("status") == "proposed" or ev.get("is_confirmed") is False:
                 continue
-            confirmed_timeline.append({
-                "date": ev.get("event_date", ""),
-                "precision": ev.get("date_precision", "day"),
-                "title": ev.get("title", ""),
-                "description": ev.get("description", ""),
-            })
+            confirmed_timeline.append(
+                {
+                    "date": ev.get("event_date", ""),
+                    "precision": ev.get("date_precision", "day"),
+                    "title": ev.get("title", ""),
+                    "description": ev.get("description", ""),
+                }
+            )
 
         # 4. Confirmed Facts (AC-M08-3: drop extracted and proposed facts)
         raw_facts = self.db.list_case_facts(case_id)
         confirmed_facts = []
         for f in raw_facts:
             # Fact must be explicitly confirmed and not proposed
-            if f.get("status") in ("proposed", "rejected") or f.get("is_proposed") is True or f.get("is_confirmed") is False:
+            if (
+                f.get("status") in ("proposed", "rejected")
+                or f.get("is_proposed") is True
+                or f.get("is_confirmed") is False
+            ):
                 continue
-            confirmed_facts.append({
-                "id": f.get("id"),
-                "fact_text": f.get("fact_text") or f.get("text", ""),
-                "category": f.get("category", "general"),
-                "span_in_user_text": f.get("span_in_user_text"),
-            })
+            confirmed_facts.append(
+                {
+                    "id": f.get("id"),
+                    "fact_text": f.get("fact_text") or f.get("text", ""),
+                    "category": f.get("category", "general"),
+                    "span_in_user_text": f.get("span_in_user_text"),
+                }
+            )
 
         # 5. Key Reviewed Documents
         raw_docs = self.db.list_case_documents(case_id)
@@ -147,23 +165,27 @@ class BriefEngine:
         for d in raw_docs:
             st = d.get("status") or d.get("state") or d.get("processing_status")
             if st in ("reviewed", "verified"):
-                key_docs.append({
-                    "id": d.get("id") or d.get("document_id"),
-                    "title": d.get("title") or d.get("filename", "নথি"),
-                    "category": d.get("category", "legal_document"),
-                    "status": st,
-                })
+                key_docs.append(
+                    {
+                        "id": d.get("id") or d.get("document_id"),
+                        "title": d.get("title") or d.get("filename", "নথি"),
+                        "category": d.get("category", "legal_document"),
+                        "status": st,
+                    }
+                )
 
         # 6. Private Notes (Default OFF, strictly checked against include_in_brief)
         included_notes = []
         if include_private_notes:
             notes_for_brief = self.db.get_notes_for_brief(case_id)
             for n in notes_for_brief:
-                included_notes.append({
-                    "id": n.get("id"),
-                    "content": n.get("content", ""),
-                    "created_at": n.get("created_at", ""),
-                })
+                included_notes.append(
+                    {
+                        "id": n.get("id"),
+                        "content": n.get("content", ""),
+                        "created_at": n.get("created_at", ""),
+                    }
+                )
 
         # 7. Objectives, Research Suggestions & Missing Info
         objective = case.get("objective") or case.get("description") or "আইনি প্রতিকার ও পরামর্শ গ্রহণ।"
@@ -235,16 +257,29 @@ class BriefEngine:
         )
         return brief_dict
 
-    # -----------------------------------------------------------------------
-    # 2. PDF & DOCX Export with Watermark (AC-M08-4, F2)
-    # -----------------------------------------------------------------------
+    _BRIEF_PDF_SEMAPHORE = threading.Semaphore(2)
+
     def render_brief_pdf(
         self,
         brief_id: str,
         owner_id: str,
         watermark_text: str | None = None,
+        _test_conjunct_str: str | None = None,
     ) -> bytes:
-        """Renders brief to PDF with bundled Noto Sans Bengali font and watermark."""
+        """Renders brief to PDF with bundled Noto Sans Bengali font and watermark.
+
+        Security controls (ZX4 / ADR-035):
+        - HTML escaping on all user-supplied content.
+        - JavaScript disabled (java_script_enabled=False).
+        - Concurrency limited via semaphore (_BRIEF_PDF_SEMAPHORE).
+        - Network requests aborted via page.route (no SSRF / file exfiltration).
+        - Test conjunct string disabled by default in production.
+        """
+        def _esc(val: Any) -> str:
+            if val is None:
+                return ""
+            return html.escape(str(val))
+
         brief = self.db.get_brief(brief_id)
         if not brief:
             raise ValueError(f"Brief '{brief_id}' not found")
@@ -255,29 +290,53 @@ class BriefEngine:
         wm_html = ""
         if watermark_text:
             wm_html = f"""
-            <div class="watermark-overlay">{watermark_text}</div>
+            <div class="watermark-overlay">{_esc(watermark_text)}</div>
             """
 
-        timeline_items = "".join(
-            f"<li><strong>{t.get('date', '')}:</strong> {t.get('title', '')} — {t.get('description', '')}</li>"
-            for t in sec.get("timeline", [])
-        ) or "<li>কোনো ঘটনা লিপিবদ্ধ করা হয়নি।</li>"
+        timeline_items = (
+            "".join(
+                f"<li><strong>{_esc(t.get('date', ''))}:</strong> {_esc(t.get('title', ''))} — {_esc(t.get('description', ''))}</li>"
+                for t in sec.get("timeline", [])
+            )
+            or "<li>কোনো ঘটনা লিপিবদ্ধ করা হয়নি।</li>"
+        )
 
-        facts_items = "".join(
-            f"<li>{f.get('fact_text', '')}</li>"
-            for f in sec.get("important_facts", [])
-        ) or "<li>কোনো নিশ্চিত তথ্য নেই।</li>"
+        facts_items = (
+            "".join(f"<li>{_esc(f.get('fact_text', ''))}</li>" for f in sec.get("important_facts", []))
+            or "<li>কোনো নিশ্চিত তথ্য নেই।</li>"
+        )
 
-        docs_items = "".join(
-            f"<li>{d.get('title', '')} ({d.get('category', '')})</li>"
-            for d in sec.get("key_documents", [])
-        ) or "<li>কোনো নথি সংযুক্ত নেই।</li>"
+        docs_items = (
+            "".join(
+                f"<li>{_esc(d.get('title', ''))} ({_esc(d.get('category', ''))})</li>"
+                for d in sec.get("key_documents", [])
+            )
+            or "<li>কোনো নথি সংযুক্ত নেই।</li>"
+        )
 
         notes_items = ""
         if sec.get("included_notes"):
-            notes_items = "<h3>মক্কেলের অতিরিক্ত নোট</h3><ul>" + "".join(
-                f"<li>{n.get('content', '')}</li>" for n in sec["included_notes"]
-            ) + "</ul>"
+            notes_items = (
+                "<h3>মক্কেলের অতিরিক্ত নোট</h3><ul>"
+                + "".join(f"<li>{_esc(n.get('content', ''))}</li>" for n in sec["included_notes"])
+                + "</ul>"
+            )
+
+        research_items = "".join(
+            f"<li><strong>{_esc(r.get('topic'))}:</strong> {_esc(r.get('note'))} (গবেষণার পরামর্শ — আইনজীবীর দ্বারা যাচাইকৃত নয়)</li>"
+            for r in sec.get("research_suggestions", [])
+        )
+        missing_items = "".join(f"<li>{_esc(m)}</li>" for m in sec.get("missing_info", []))
+        lawyer_q_items = "".join(f"<li>{_esc(q)}</li>" for q in sec.get("lawyer_questions", []))
+
+        conjunct_test_html = ""
+        if _test_conjunct_str:
+            conjunct_test_html = f"""
+  <div class="section" id="conjunctTestSection" style="margin-top: 12px; padding: 6px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 4px;">
+    <span style="font-size: 11px; color: #64748B;">যুক্তবর্ণ প্রতিপাদন নমুনা: </span>
+    <span style="font-size: 14px; font-weight: bold; color: #0F172A;">{_esc(_test_conjunct_str)}</span>
+  </div>
+"""
 
         html_content = f"""<!DOCTYPE html>
 <html lang="bn">
@@ -362,65 +421,65 @@ class BriefEngine:
 <body>
   {wm_html}
   <div class="header">
-    <h1 style="font-size: 22px; margin: 0 0 6px 0;">{brief['title']}</h1>
+    <h1 style="font-size: 22px; margin: 0 0 6px 0;">{_esc(brief["title"])}</h1>
     <div>
-      <span class="badge-ai">{sec.get('ai_attribution')}</span>
-      <span style="font-size: 12px; color: #64748B; margin-left: 10px;">তারিখ: {sec.get('as_of_date')}</span>
+      <span class="badge-ai">{_esc(sec.get("ai_attribution"))}</span>
+      <span style="font-size: 12px; color: #64748B; margin-left: 10px;">তারিখ: {_esc(sec.get("as_of_date"))}</span>
     </div>
   </div>
 
   <div class="section">
-    <h2>১. ক্লায়েন্টের নাম ও মামলার ধরন</h2>
-    <p style="font-size: 13px;"><strong>ক্লায়েন্টের নাম:</strong> {sec.get('client_name')} | <strong>মামলার ধরন:</strong> {sec.get('case_type')}</p>
+    <h2>১. ক্লায়েন্টের নাম</h2>
+    <p style="font-size: 13px;">{_esc(sec.get("client_name")) or "—"}</p>
   </div>
 
   <div class="section">
-    <h2>২. প্রেক্ষাপট</h2>
-    <p style="font-size: 13px;">{sec.get('background')}</p>
+    <h2>২. মামলার ধরন</h2>
+    <p style="font-size: 13px;">{_esc(sec.get("case_type")) or "—"}</p>
   </div>
 
   <div class="section">
-    <h2>৩. ঘটনাক্রম</h2>
+    <h2>৩. প্রেক্ষাপট</h2>
+    <p style="font-size: 13px;">{_esc(sec.get("background")) or "—"}</p>
+  </div>
+
+  <div class="section">
+    <h2>৪. ঘটনাক্রম</h2>
     <ul>{timeline_items}</ul>
   </div>
 
   <div class="section">
-    <h2>৪. মূল নথিপত্র</h2>
+    <h2>৫. মূল নথিপত্র</h2>
     <ul>{docs_items}</ul>
   </div>
 
   <div class="section">
-    <h2>৫. গুরুত্বপূর্ণ তথ্য</h2>
+    <h2>৬. গুরুত্বপূর্ণ তথ্য</h2>
     <ul>{facts_items}</ul>
   </div>
 
   <div class="section">
-    <h2>৬. ব্যবহারকারীর উদ্দেশ্য</h2>
-    <p style="font-size: 13px;">{sec.get('user_objective')}</p>
+    <h2>৭. ব্যবহারকারীর উদ্দেশ্য</h2>
+    <p style="font-size: 13px;">{_esc(sec.get("user_objective")) or "—"}</p>
   </div>
 
   <div class="section">
-    <h2>৭. আইনি প্রশ্ন ও গবেষণা প্রস্তাবনা</h2>
-    <ul>
-      {"".join(f"<li><strong>{r.get('topic')}:</strong> {r.get('note')} (গবেষণা প্রস্তাবনা)</li>" for r in sec.get("research_suggestions", []))}
-    </ul>
+    <h2>৮. আইনি প্রশ্ন ও গবেষণা প্রস্তাবনা (গবেষণার পরামর্শ — আইনজীবীর দ্বারা যাচাইকৃত নয়)</h2>
+    <ul>{research_items}</ul>
   </div>
 
   <div class="section">
-    <h2>৮. অনুপস্থিত তথ্য</h2>
-    <ul>
-      {"".join(f"<li>{m}</li>" for m in sec.get("missing_info", []))}
-    </ul>
+    <h2>৯. অনুপস্থিত তথ্য</h2>
+    <ul>{missing_items}</ul>
   </div>
 
   <div class="section">
-    <h2>৯. আইনজীবীর জন্য প্রশ্নাবলী</h2>
-    <ul>
-      {"".join(f"<li>{q}</li>" for q in sec.get("lawyer_questions", []))}
-    </ul>
+    <h2>১০. আইনজীবীর জন্য প্রশ্নাবলী</h2>
+    <ul>{lawyer_q_items}</ul>
   </div>
 
   {notes_items}
+  {conjunct_test_html}
 
   <div class="footer">
     <span>AIN-AI বাংলাদেশ লিগ্যাল প্ল্যাটফর্ম দ্বারা প্রস্তুতকৃত</span>
@@ -429,12 +488,17 @@ class BriefEngine:
 </body>
 </html>
 """
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
-            page.set_content(html_content, wait_until="load")
-            pdf_bytes = page.pdf(format="A4", print_background=True)
-            browser.close()
+        with BriefEngine._BRIEF_PDF_SEMAPHORE:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context(java_script_enabled=False)
+                page = context.new_page()
+                page.set_default_timeout(15000)
+                page.route("**/*", lambda route: route.abort())
+                page.set_content(html_content, wait_until="load")
+                pdf_bytes = page.pdf(format="A4", print_background=True)
+                context.close()
+                browser.close()
 
         return pdf_bytes
 
@@ -474,7 +538,9 @@ class BriefEngine:
 
         # 1. Client Name & Case Type
         doc.add_heading("১. ক্লায়েন্টের নাম ও মামলার ধরন", level=2)
-        doc.add_paragraph(f"ক্লায়েন্টের নাম: {sec.get('client_name')}\nমামলার ধরন: {sec.get('case_type')}")
+        doc.add_paragraph(
+            f"ক্লায়েন্টের নাম: {sec.get('client_name')}\nমামলার ধরন: {sec.get('case_type')}"
+        )
 
         # 2. Background
         doc.add_heading("২. প্রেক্ষাপট", level=2)
@@ -556,7 +622,11 @@ class BriefEngine:
 
         days = max(1, min(int(duration_days), 365))
         now = self.db.now_iso()
-        now_dt = datetime.fromisoformat(now.replace("Z", "+00:00")) if "T" in now else datetime.now(timezone.utc)
+        now_dt = (
+            datetime.fromisoformat(now.replace("Z", "+00:00"))
+            if "T" in now
+            else datetime.now(timezone.utc)
+        )
         expires_dt = now_dt + timedelta(days=days)
         expires_at = expires_dt.isoformat()
 
@@ -651,49 +721,73 @@ class BriefEngine:
         for e in entries:
             meta = e.get("meta") or {}
             act = e.get("action")
-            if (
-                act in ("BRIEF_VIEW", "BRIEF_LINK_VIEWED")
-                and (
-                    e.get("object_id") == consent_id
-                    or meta.get("consent_id") == consent_id
-                    or meta.get("recipient") == consent.get("recipient_contact")
-                )
+            if act in ("BRIEF_VIEW", "BRIEF_LINK_VIEWED") and (
+                e.get("object_id") == consent_id
+                or meta.get("consent_id") == consent_id
+                or meta.get("recipient") == consent.get("recipient_contact")
             ):
-                history.append({
-                    "timestamp": e.get("at"),
-                    "action": "BRIEF_VIEW",
-                    "recipient": meta.get("recipient", consent.get("recipient_contact")),
-                    "ip": e.get("ip", "127.0.0.1"),
-                })
+                history.append(
+                    {
+                        "timestamp": e.get("at"),
+                        "action": "BRIEF_VIEW",
+                        "recipient": meta.get("recipient", consent.get("recipient_contact")),
+                        "ip": e.get("ip", "127.0.0.1"),
+                    }
+                )
         if not history:
             for e in entries:
                 meta = e.get("meta") or {}
                 if e.get("object_id") == consent_id or meta.get("consent_id") == consent_id:
-                    history.append({
-                        "timestamp": e.get("at"),
-                        "action": e.get("action"),
-                        "recipient": meta.get("recipient", consent.get("recipient_contact")),
-                        "ip": e.get("ip", "127.0.0.1"),
-                    })
+                    history.append(
+                        {
+                            "timestamp": e.get("at"),
+                            "action": e.get("action"),
+                            "recipient": meta.get("recipient", consent.get("recipient_contact")),
+                            "ip": e.get("ip", "127.0.0.1"),
+                        }
+                    )
         return history
 
     # -----------------------------------------------------------------------
     # 4. Secure Link Recipient Verification & View (AC-M08-1, AC-M08-2)
     # -----------------------------------------------------------------------
     def _hash_token(self, token: str) -> str:
+        """Computes HMAC-SHA256 hash using LINK_TOKEN_PEPPER server secret."""
         return hmac.new(
             get_link_token_pepper().encode("utf-8"),
             token.encode("utf-8"),
             hashlib.sha256,
         ).hexdigest()
 
+    def _legacy_hash_token(self, token: str) -> str:
+        """Computes legacy sha256(pepper + token) for backward-compatible migration."""
+        pepper = get_link_token_pepper()
+        return hashlib.sha256(f"{pepper}{token}".encode("utf-8")).hexdigest()
+
+    def find_brief_link(self, token: str) -> dict[str, Any] | None:
+        """Finds brief link with timing-safe HMAC-SHA256 comparison and legacy migration."""
+        token_hash = self._hash_token(token)
+        link = self.db.get_brief_link_by_token_hash(token_hash)
+        if link and hmac.compare_digest(link.get("token_hash", ""), token_hash):
+            return link
+
+        # Fallback to legacy SHA-256 pepper+token hash
+        legacy_hash = self._legacy_hash_token(token)
+        legacy_link = self.db.get_brief_link_by_token_hash(legacy_hash)
+        if legacy_link and hmac.compare_digest(legacy_link.get("token_hash", ""), legacy_hash):
+            # Documented migration: safely upgrade stored hash to real HMAC-SHA256
+            self.db.update_brief_link(legacy_link["id"], token_hash=token_hash)
+            legacy_link["token_hash"] = token_hash
+            return legacy_link
+
+        return None
+
     def request_recipient_otp(self, token: str, ip: str = "127.0.0.1") -> dict[str, Any]:
         """
         Sends 6-digit OTP to recipient's phone/contact (SRS M08).
         Returns indistinguishable generic response if token invalid or expired.
         """
-        token_hash = self._hash_token(token)
-        link = self.db.get_brief_link_by_token_hash(token_hash)
+        link = self.find_brief_link(token)
         now = self.db.now_iso()
 
         # Indistinguishable error: no enumeration
@@ -717,7 +811,11 @@ class BriefEngine:
             hashlib.sha256,
         ).hexdigest()
 
-        now_dt = datetime.fromisoformat(now.replace("Z", "+00:00")) if "T" in now else datetime.now(timezone.utc)
+        now_dt = (
+            datetime.fromisoformat(now.replace("Z", "+00:00"))
+            if "T" in now
+            else datetime.now(timezone.utc)
+        )
         otp_exp = (now_dt + timedelta(minutes=5)).isoformat()
 
         self.db.update_brief_link(
@@ -750,8 +848,7 @@ class BriefEngine:
         Verifies recipient OTP in constant time.
         Locks link after 5 failed attempts.
         """
-        token_hash = self._hash_token(token)
-        link = self.db.get_brief_link_by_token_hash(token_hash)
+        link = self.find_brief_link(token)
         now = self.db.now_iso()
 
         if not link or link.get("revoked_at") or (now >= link.get("expires_at", "")):
@@ -776,7 +873,11 @@ class BriefEngine:
             attempts = (link.get("otp_attempts") or 0) + 1
             locked_until = None
             if attempts >= 5:
-                now_dt = datetime.fromisoformat(now.replace("Z", "+00:00")) if "T" in now else datetime.now(timezone.utc)
+                now_dt = (
+                    datetime.fromisoformat(now.replace("Z", "+00:00"))
+                    if "T" in now
+                    else datetime.now(timezone.utc)
+                )
                 locked_until = (now_dt + timedelta(minutes=15)).isoformat()
             self.db.update_brief_link(
                 link["id"],
@@ -830,12 +931,15 @@ class BriefEngine:
         - OTP verification confirmed.
         - Generates watermark with recipient contact and expiry date.
         """
-        token_hash = self._hash_token(token)
-        link = self.db.get_brief_link_by_token_hash(token_hash)
+        link = self.find_brief_link(token)
         now = self.db.now_iso()
 
         # Indistinguishable 404
-        if not link or link.get("revoked_at") or (now >= link.get("expires_at", "")):
+        if not link:
+            raise KeyError("লিংকটি পাওয়া যায়নি অথবা এর মেয়াদ শেষ হয়েছে।")
+        if link.get("revoked_at"):
+            raise KeyError("লিংকটি পাওয়া যায়নি অথবা এর মেয়াদ শেষ হয়েছে।")
+        if now >= link.get("expires_at", ""):
             raise KeyError("লিংকটি পাওয়া যায়নি অথবা এর মেয়াদ শেষ হয়েছে।")
 
         consent = self.db.get_sharing_consent(link["consent_id"])
@@ -847,9 +951,7 @@ class BriefEngine:
             # Mask recipient contact (e.g. 017****1234)
             contact = link["recipient_contact"]
             masked = (
-                contact[:3] + "****" + contact[-4:]
-                if len(contact) >= 8
-                else contact[:2] + "****"
+                contact[:3] + "****" + contact[-4:] if len(contact) >= 8 else contact[:2] + "****"
             )
             return {
                 "requires_otp": True,
@@ -927,9 +1029,7 @@ class BriefEngine:
     # -----------------------------------------------------------------------
     # 5. Signed URLs for Documents (TTL <= 60s, AC-M08-2)
     # -----------------------------------------------------------------------
-    def generate_signed_document_url(
-        self, token: str, doc_id: str, ttl_seconds: int = 60
-    ) -> str:
+    def generate_signed_document_url(self, token: str, doc_id: str, ttl_seconds: int = 60) -> str:
         """Generates HMAC-signed URL with TTL <= 60s (AC-M08-2)."""
         ttl = min(int(ttl_seconds), 60)
         expires = int(time.time()) + ttl
@@ -961,8 +1061,7 @@ class BriefEngine:
             raise KeyError("স্বাক্ষর অকার্যকর।")
 
         # 3. Check link and consent validity (within 60s of revocation, access MUST block)
-        token_hash = self._hash_token(token)
-        link = self.db.get_brief_link_by_token_hash(token_hash)
+        link = self.find_brief_link(token)
         now_iso = self.db.now_iso()
         if not link or link.get("revoked_at") or (now_iso >= link.get("expires_at", "")):
             raise KeyError("লিংকটি বাতিল বা মেয়াদোত্তীর্ণ।")
@@ -1021,6 +1120,8 @@ def generate_signed_document_url(token: str, doc_id: str, ttl_seconds: int = 60)
     return brief_engine.generate_signed_document_url(token, doc_id, ttl_seconds)
 
 
-def verify_and_get_signed_doc(token: str, doc_id: str, expires: int, sig: str, ip: str = "127.0.0.1"):
+def verify_and_get_signed_doc(
+    token: str, doc_id: str, expires: int, sig: str, ip: str = "127.0.0.1"
+):
     """Module-level helper to verify and retrieve signed document."""
     return brief_engine.verify_and_get_signed_doc(token, doc_id, expires, sig, ip)

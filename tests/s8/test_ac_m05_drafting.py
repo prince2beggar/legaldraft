@@ -579,7 +579,12 @@ def test_ac_m05_admin_template_lifecycle(isolated_db):
             {"id": "party_name", "type": "text", "label_bn": "পক্ষের নাম", "required": True}
         ],
         clauses=[
-            {"id": "C-01", "title_bn": "ধারা ১", "text_template_bn": "পক্ষ: {party_name}।", "is_optional": False}
+            {
+                "id": "C-01",
+                "title_bn": "ধারা ১",
+                "text_template_bn": "পক্ষ: {party_name}।",
+                "is_optional": False,
+            }
         ],
         sample_answers={"party_name": "আব্দুর রহিম"},
     )

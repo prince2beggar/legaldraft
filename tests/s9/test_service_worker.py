@@ -170,7 +170,9 @@ def test_service_worker_cache_invalidation_on_static_change_in_real_browser(monk
             initial_cache_name = [c for c in initial_caches if c.startswith("ain-ai-build-")][0]
 
             # 2. Modify a static file WITHOUT bumping any version
-            marker_file.write_text("cache_bust_static_content_change_without_bumping_version", encoding="utf-8")
+            marker_file.write_text(
+                "cache_bust_static_content_change_without_bumping_version", encoding="utf-8"
+            )
 
             # 3. Trigger SW update in browser
             page.evaluate("""async () => {

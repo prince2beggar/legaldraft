@@ -8,7 +8,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Header, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -51,6 +51,7 @@ from services.api.app.routers.knowledge import router as knowledge_router
 from services.api.app.routers.library import router as library_router
 from services.api.app.routers.rules import router as rules_router
 from services.api.app.routers.sharing import router as sharing_router
+from services.api.app.routers.tax import router as tax_router
 
 app = FastAPI(
     title="AIN-AI (আইন-AI) API",
@@ -91,7 +92,12 @@ async def security_headers_middleware(request: Request, call_next):
             "frame-ancestors 'none';"
         )
     # Cache control for shared links and sensitive routes (AC-M08-2)
-    if path.startswith("/s/") or path.startswith("/api/v1/s/") or "/consents" in path or path.startswith("/me/sharing"):
+    if (
+        path.startswith("/s/")
+        or path.startswith("/api/v1/s/")
+        or "/consents" in path
+        or path.startswith("/me/sharing")
+    ):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
     return response
@@ -159,6 +165,7 @@ app.include_router(intake_router, prefix="/api/v1")
 app.include_router(drafts_router)
 app.include_router(drafts_router, prefix="/api/v1")
 app.include_router(sharing_router)
+app.include_router(tax_router, prefix="/api/v1")
 
 
 # Mount i18n lookup endpoint
@@ -200,9 +207,11 @@ if STATIC_DIR.exists():
     @app.middleware("http")
     async def block_mock_variants_in_prod(request: Request, call_next):
         from packages.trust_kernel.auth import is_dev_mode
+
         if not is_dev_mode():
             if request.query_params.get("variant") or request.query_params.get("mock"):
                 from fastapi.responses import JSONResponse
+
                 return JSONResponse(
                     status_code=404,
                     content={"detail": "Mock variants are disabled when DEV_MODE=false"},
@@ -316,7 +325,10 @@ if STATIC_DIR.exists():
             return Response(
                 content=content,
                 media_type="application/javascript",
-                headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache, no-store, must-revalidate"},
+                headers={
+                    "Service-Worker-Allowed": "/",
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                },
             )
         sw_path = STATIC_DIR / "sw.js"
         if sw_path.exists():
@@ -325,7 +337,10 @@ if STATIC_DIR.exists():
             return Response(
                 content=content,
                 media_type="application/javascript",
-                headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache, no-store, must-revalidate"},
+                headers={
+                    "Service-Worker-Allowed": "/",
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                },
             )
         from fastapi import HTTPException
 
@@ -350,13 +365,28 @@ if STATIC_DIR.exists():
                 "<title>আইন-AI — হোম ও পরবর্তী পদক্ষেপ</title>",
                 "<title>AIN-AI — Home & Next Action (English)</title>",
             )
+        is_demo = os.getenv("DEMO_MODE", "").lower() in ("true", "1")
+        if is_demo and "demoModeBanner" not in content:
+            demo_banner = '<div id="demoModeBanner" style="background:#fef3c7; color:#92400e; border-bottom:1px solid #f59e0b; padding:8px 16px; text-align:center; font-weight:700; font-size:13px; position:sticky; top:0; z-index:9999; width:100%; box-sizing:border-box; white-space:nowrap; flex-shrink:0;">⚠️ ডেমো ডেটা — নমুনা (Demo Mode)</div>'
+            content = content.replace("<body>", f"<body>\n{demo_banner}")
+
+        is_dev = os.getenv("DEV_MODE", "false").lower() in ("true", "1") or is_demo
         info = get_build_stamp()
-        stamp_str = f"build: {info['git_hash']} | static: {info['static_hash']} | id: {info['build_id']}"
-        content = re.sub(
-            r'<div class="build-stamp"[^>]*>.*?</div>',
-            f'<div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0; pointer-events:none;">{stamp_str}</div>',
-            content,
+        stamp_str = (
+            f"build: {info['git_hash']} | static: {info['static_hash']} | id: {info['build_id']}"
         )
+        if is_dev:
+            content = re.sub(
+                r'<div class="build-stamp"[^>]*>.*?</div>',
+                f'<div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0; pointer-events:none;">{stamp_str}</div>',
+                content,
+            )
+        else:
+            content = re.sub(
+                r'<div class="build-stamp"[^>]*>.*?</div>',
+                '<div class="build-stamp" id="buildStamp" style="display:none;"></div>',
+                content,
+            )
         return HTMLResponse(content=content, status_code=200)
 
     def _require_auth_page(
@@ -374,16 +404,26 @@ if STATIC_DIR.exists():
 
         is_demo = os.getenv("DEMO_MODE", "").lower() in ("true", "1")
         if is_demo and "demoModeBanner" not in content:
-            demo_banner = '<div id="demoModeBanner" style="background:#fef3c7; color:#92400e; border-bottom:1px solid #f59e0b; padding:8px; text-align:center; font-weight:700; font-size:14px; position:sticky; top:0; z-index:9999;">⚠️ ডেমো ডেটা — নমুনা (Demo Mode)</div>'
+            demo_banner = '<div id="demoModeBanner" style="background:#fef3c7; color:#92400e; border-bottom:1px solid #f59e0b; padding:8px 16px; text-align:center; font-weight:700; font-size:13px; position:sticky; top:0; z-index:9999; width:100%; box-sizing:border-box; white-space:nowrap; flex-shrink:0;">⚠️ ডেমো ডেটা — নমুনা (Demo Mode)</div>'
             content = content.replace("<body>", f"<body>\n{demo_banner}")
 
+        is_dev = os.getenv("DEV_MODE", "false").lower() in ("true", "1") or is_demo
         info = get_build_stamp()
-        stamp_str = f"build: {info['git_hash']} | static: {info['static_hash']} | id: {info['build_id']}"
-        content = re.sub(
-            r'<div class="build-stamp"[^>]*>.*?</div>',
-            f'<div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0; pointer-events:none;">{stamp_str}</div>',
-            content,
+        stamp_str = (
+            f"build: {info['git_hash']} | static: {info['static_hash']} | id: {info['build_id']}"
         )
+        if is_dev:
+            content = re.sub(
+                r'<div class="build-stamp"[^>]*>.*?</div>',
+                f'<div class="build-stamp" id="buildStamp" style="font-size:11px; color:#94a3b8; text-align:center; padding:12px 0; pointer-events:none;">{stamp_str}</div>',
+                content,
+            )
+        else:
+            content = re.sub(
+                r'<div class="build-stamp"[^>]*>.*?</div>',
+                '<div class="build-stamp" id="buildStamp" style="display:none;"></div>',
+                content,
+            )
 
         return HTMLResponse(content=content, status_code=200)
 
@@ -393,6 +433,18 @@ if STATIC_DIR.exists():
         authorization: str | None = Header(default=None),
     ):
         return _require_auth_page(request, authorization, "admin.html", "AIN-AI Admin Portal")
+
+    @app.get("/admin/legacy-ingest", response_class=HTMLResponse)
+    def serve_legacy_ingest(
+        request: Request,
+        authorization: str | None = Header(default=None),
+    ):
+        from packages.trust_kernel.auth import is_dev_mode
+        if not is_dev_mode():
+            raise HTTPException(status_code=404, detail="Not Found")
+        return _require_auth_page(
+            request, authorization, "legacy_ingest.html", "AIN-AI Legacy Ingest (DEV ONLY)"
+        )
 
     @app.get("/library")
     def serve_library(
@@ -406,7 +458,9 @@ if STATIC_DIR.exists():
         request: Request,
         authorization: str | None = Header(default=None),
     ):
-        return _require_auth_page(request, authorization, "admin_sources.html", "AIN-AI Admin Knowledge Center")
+        return _require_auth_page(
+            request, authorization, "admin_sources.html", "AIN-AI Admin Knowledge Center"
+        )
 
     @app.get("/home", response_class=HTMLResponse)
     def serve_home(request: Request, authorization: str | None = Header(default=None)):
@@ -452,6 +506,10 @@ if STATIC_DIR.exists():
     def serve_draft(request: Request, authorization: str | None = Header(default=None)):
         return _require_auth_page(request, authorization, "draft.html", "AIN-AI Guided Drafting")
 
+    @app.get("/tax", response_class=HTMLResponse)
+    def serve_tax(request: Request, authorization: str | None = Header(default=None)):
+        return _require_auth_page(request, authorization, "tax.html", "AIN-AI Tax & VAT Workspace")
+
     @app.get("/admin/emergency-contacts", response_class=HTMLResponse)
     def serve_admin_emergency_contacts(
         request: Request, authorization: str | None = Header(default=None)
@@ -469,6 +527,7 @@ if STATIC_DIR.exists():
             request, authorization, "admin_templates.html", "AIN-AI Admin Templates"
         )
 
+    @app.get("/cases/{case_id}/brief", response_class=HTMLResponse)
     @app.get("/cases/{case_id}/lawyer", response_class=HTMLResponse)
     def serve_case_lawyer_brief(
         case_id: str, request: Request, authorization: str | None = Header(default=None)
@@ -488,4 +547,3 @@ if STATIC_DIR.exists():
         return _require_auth_page(
             request, authorization, "admin_system.html", "AIN-AI System Observability"
         )
-

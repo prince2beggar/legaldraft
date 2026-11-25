@@ -247,7 +247,7 @@
   <!-- Main Area -->
   <div class="main-wrapper">
     <div class="header">
-      <div style="font-weight: 700; font-size: 18px; color: var(--color-primary);">আইন-AI এডমিন — জরুরি হেল্পলাইন ও নম্বর যাচাই</div>
+      <h1 style="font-weight: 700; font-size: 18px; color: var(--color-primary); margin: 0;">জরুরি হেল্পলাইন ও নম্বর যাচাই</h1>
       <a href="/static/intake.html" style="color: var(--color-primary); text-decoration: none; font-size: 14px; font-weight: 600;">← ইনটেকে ফিরে যান</a>
     </div>
 
@@ -330,6 +330,12 @@
         const tbody = document.getElementById('contactsBody');
         tbody.innerHTML = '';
 
+        const CATEGORY_MAP = {
+          'emergency': 'জরুরি সেবা',
+          'legal_aid': 'আইনগত সহায়তা',
+          'violence_against_women': 'নারী ও শিশু নির্যাতন প্রতিরোধ'
+        };
+
         (data.contacts || []).forEach(c => {
           const tr = document.createElement('tr');
           const badge = c.is_verified 
@@ -337,11 +343,13 @@
             : '<span class="badge-unverified">যাচাই করা হয়নি</span>';
           const lastVer = formatBanglaDate(c.last_verified_at);
           const sourceNote = c.source_note ? c.source_note : 'কোনো তথ্য নেই';
+          const cleanTitle = (c.title || '').replace(/\(NLASO\)/g, '').trim();
+          const categoryBn = CATEGORY_MAP[c.category] || c.category || 'সাধারণ';
 
           tr.innerHTML = `
-            <td><strong>${c.title}</strong></td>
+            <td><strong>${cleanTitle}</strong></td>
             <td><code>${toBanglaDigits(c.phone)}</code></td>
-            <td>${c.category}</td>
+            <td>${categoryBn}</td>
             <td>${badge}</td>
             <td>${lastVer}</td>
             <td style="font-size: 12px; color: var(--color-text-muted); max-width: 200px; word-break: break-word;">${sourceNote}</td>

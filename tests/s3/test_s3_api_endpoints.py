@@ -61,7 +61,9 @@ from packages.trust_kernel.auth import create_access_token
 
 
 def _get_admin_headers():
-    token = create_access_token(data={"sub": "01700000000", "phone": "01700000000", "role": "admin"})
+    token = create_access_token(
+        data={"sub": "01700000000", "phone": "01700000000", "role": "admin"}
+    )
     return {"Authorization": f"Bearer {token}"}
 
 

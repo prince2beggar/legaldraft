@@ -26,8 +26,10 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 
-    # Uploads & Exports
+    # Uploads & Exports (ZW1: SRS-authoritative single centralized upload limit: 20 MB)
     STORAGE_DIR: str = os.getenv("STORAGE_DIR", "./storage")
+    MAX_UPLOAD_SIZE_MB: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", "20"))
+    MAX_UPLOAD_SIZE_BYTES: int = int(os.getenv("MAX_UPLOAD_SIZE_BYTES", str(20 * 1024 * 1024)))
 
     model_config = {"case_sensitive": True, "env_file": ".env", "extra": "ignore"}
 
