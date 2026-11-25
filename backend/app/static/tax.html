@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>আইন-AI — আয়কর ও ভ্যাট ওয়ার্কস্পেস</title>
+  <link rel="stylesheet" href="/static/fonts.css">
+  <style>
+    :root {
+      --color-primary: #047857;
+      --color-primary-dark: #065F46;
+      --color-primary-soft: #ECFDF5;
+      --color-bg: #F8FAFC;
+      --color-surface: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #0F172A;
+      --color-text-muted: #64748B;
+      --color-accent: #0284C7;
+      --color-accent-soft: #E0F2FE;
+      --radius: 12px;
+      --font-bn: 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: var(--font-bn);
+      background-color: var(--color-bg);
+      color: var(--color-text-main);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      max-width: 100vw;
+    }
+
+    .app-layout {
+      display: flex;
+      flex: 1;
+      flex-direction: row;
+      min-height: 0;
+      width: 100%;
+    }
+
+    /* Sidebar */
+    .app-sidebar {
+      width: 240px;
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand-title {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      font-weight: 600;
+    }
+
+    /* Main Content */
+    .main-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .app-header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--color-border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .container {
+      max-width: 1040px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    .disclaimer-banner {
+      background: #FEF3C7;
+      border: 1.5px solid #F59E0B;
+      color: #92400E;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      gap: 10px;
+      border-bottom: 2px solid var(--color-border);
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      padding: 12px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .tab-btn.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    /* Cards & Layout */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+    }
+    @media (max-width: 860px) {
+      .grid-2col { grid-template-columns: 1fr; }
+      .app-sidebar { display: none; }
+    }
+
+    .card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--color-text-main);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #FFFFFF;
+      transition: border-color 0.15s ease;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 580px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* Result Panel */
+    .result-box {
+      background: #F0FDF4;
+      border: 1.5px solid #86EFAC;
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .result-metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 8px 0;
+      border-bottom: 1px dashed #CBD5E1;
+      font-size: 14px;
+    }
+    .result-metric:last-child {
+      border-bottom: none;
+    }
+    .result-total {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--color-primary-dark);
+      padding-top: 12px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      transition: all 0.15s ease;
+    }
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+    .btn-primary {
+      background: var(--color-primary);
+      color: #FFFFFF;
+    }
+    .btn-primary:hover {
+      background: var(--color-primary-dark);
+    }
+    .btn-secondary {
+      background: #E2E8F0;
+      color: #1E293B;
+    }
+    .btn-outline-primary {
+      background: transparent;
+      border: 1.5px solid var(--color-primary);
+      color: var(--color-primary);
+    }
+    .btn-outline-primary:hover {
+      background: var(--color-primary-soft);
+    }
+    .btn-outline-danger {
+      background: transparent;
+      border: 1.5px solid #EF4444;
+      color: #DC2626;
+    }
+    .btn-outline-danger:hover {
+      background: #FEE2E2;
+    }
+    .btn-block {
+      width: 100%;
+    }
+
+    /* Tags */
+    .tag-income {
+      background: #E0F2FE;
+      color: #0369A1;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      display: inline-block;
+    }
+    .tag-vat {
+      background: #FEF3C7;
+      color: #B45309;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      display: inline-block;
+    }
+
+    /* Dossier Table */
+    .dossier-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+    .dossier-table th, .dossier-table td {
+      border: 1px solid #CBD5E1;
+      padding: 9px 12px;
+      text-align: left;
+    }
+    .dossier-table th {
+      background: #F1F5F9;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    /* Printable statement sheet */
+    .sheet-preview {
+      background: #FFFFFF;
+      border: 2px solid #334155;
+      padding: 28px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-top: 20px;
+    }
+    .sheet-header {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #334155;
+      padding-bottom: 12px;
+    }
+    .sheet-title {
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .sheet-sub {
+      font-size: 12px;
+      color: #475569;
+    }
+    .meta-box-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 6px;
+    }
+    @media (max-width: 640px) {
+      .meta-box-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+      <a href="/home" class="brand-title">
+        <span>⚖️ আইন-AI</span>
+      </a>
+      <ul class="nav-list">
+        <li><a href="/home" class="nav-link">🏠 হোম</a></li>
+        <li><a href="/cases" class="nav-link">📁 মামলা ফোল্ডার</a></li>
+        <li><a href="/intake" class="nav-link">⚖️ আইনি মূল্যায়ন</a></li>
+        <li><a href="/draft" class="nav-link">📝 আইনি খসড়া</a></li>
+        <li><a href="/tax" class="nav-link active">📊 কর ও ভ্যাট</a></li>
+        <li><a href="/documents/upload" class="nav-link">📄 নোটিশ স্ক্যান</a></li>
+        <li><a href="/me/sharing" class="nav-link">🔗 ব্রিফ শেয়ারিং</a></li>
+        <li><a href="/library" class="nav-link">📚 আইন পাঠাগার</a></li>
+        <li><a href="/notifications" class="nav-link">🔔 বিজ্ঞপ্তি</a></li>
+      </ul>
+    </aside>
+
+    <div class="main-wrapper">
+      <header class="app-header">
+        <h1 style="font-size: 18px; font-weight: 700; color: var(--color-primary);">আয়কর ও ভ্যাট ওয়ার্কস্পেস (Tax & VAT)</h1>
+        <div style="display: flex; gap: 8px;">
+          <a href="#savedReturnsSection" class="btn btn-secondary" style="font-size: 13px;">📂 সংরক্ষিত রেকর্ড</a>
+          <button class="btn btn-primary" onclick="window.print()">🖨️ প্রিন্ট বিবরণী</button>
+        </div>
+      </header>
+
+      <main class="container">
+        <!-- Legal Warning Banner -->
+        <div class="disclaimer-banner">
+          <span style="font-size: 20px;">⚠️</span>
+          <div>
+            <strong>আইনি সতর্কতা ও নীতিগত ঘোষণা:</strong>
+            এটি আয়কর আইন ২০২৩ ও মূসক আইন ২০১২ বিধিমোতাবেক স্বয়ংক্রিয় গণনা ও খসড়া ফরম সহায়ক ব্যবস্থা। এনবিআরের অফিসিয়াল ই-রিটার্নে সরাসরি দাখিলের পূর্বে একজন সনদপ্রাপ্ত আয়কর আইনজীবী (ITP) বা সিএ দ্বারা নিরীক্ষা নিশ্চিত করুন।
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tab-bar">
+          <button class="tab-btn active" id="tabBtnIncome" onclick="switchTab('income')">
+            💼 ব্যক্তিগত আয়কর ও আইটি-১১গ (Income Tax)
+          </button>
+          <button class="tab-btn" id="tabBtnVat" onclick="switchTab('vat')">
+            🏢 মাসিক মূসক ও মূসক-৯.১ (VAT Return)
+          </button>
+        </div>
+
+        <!-- TAB 1: Income Tax -->
+        <div id="tabIncomeSection">
+          <div class="grid-2col">
+            <!-- Left: Inputs -->
+            <div>
+              <div class="card">
+                <h2 class="card-title">১. করদাতার পরিচয়, পেশা ও করবর্ষ</h2>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>করদাতার পূর্ণ নাম <span style="color:#DC2626;">*</span></label>
+                    <input type="text" id="taxpayerName" class="form-control" value="মো: কামরুল হাসান" oninput="onTaxpayerMetaChange()">
+                  </div>
+                  <div class="form-group">
+                    <label>কাজের ধরণ / পেশা <span style="color:#DC2626;">*</span></label>
+                    <input type="text" id="taxpayerProfession" class="form-control" list="professionList" value="সফটওয়্যার ইঞ্জিনিয়ার" placeholder="যেমন: সফটওয়্যার ইঞ্জিনিয়ার / ব্যবসায়ী / ব্যাংকার" oninput="onTaxpayerMetaChange()">
+                    <datalist id="professionList">
+                      <option value="সফটওয়্যার ইঞ্জিনিয়ার / আইটি প্রফেশনাল">
+                      <option value="সরকারি কর্মকর্তা / কর্মচারী">
+                      <option value="বেসরকারি ব্যাংক বা কর্পোরেট কর্মকর্তা">
+                      <option value="চিকিৎসক (ডাক্তার)">
+                      <option value="প্রকৌশলী (ইঞ্জিনিয়ার)">
+                      <option value="শিক্ষক / অধ্যাপক">
+                      <option value="আইনজীবী / লিগ্যাল কনসালট্যান্ট">
+                      <option value="উদ্যোক্তা ও ব্যবসায়ী">
+                      <option value="ফ্রিল্যান্সার / স্বাধীন পরামর্শক">
+                      <option value="অন্যান্য পেশা">
+                    </datalist>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>কর্মস্থল / প্রতিষ্ঠান / ডিপার্টমেন্ট</label>
+                    <input type="text" id="taxpayerWorkplace" class="form-control" value="প্রাইম টেক সল্যুশনস লিমিটেড" placeholder="কর্মস্থল বা প্রতিষ্ঠানের নাম" oninput="onTaxpayerMetaChange()">
+                  </div>
+                  <div class="form-group">
+                    <label>টিআইএন নম্বর (১২ ডিজিট)</label>
+                    <input type="text" id="taxpayerTin" class="form-control" value="৭৪১২০৩৪৮৯১২৩" oninput="onTaxpayerMetaChange()">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>জাতীয় পরিচয়পত্র নং (NID)</label>
+                    <input type="text" id="taxpayerNid" class="form-control" value="১৯৮৫২৬৯২৪৫১২৩" oninput="onTaxpayerMetaChange()">
+                  </div>
+                  <div class="form-group">
+                    <label>করবর্ষ (Assessment Year)</label>
+                    <select id="taxAssessmentYear" class="form-control" onchange="onTaxpayerMetaChange()">
+                      <option value="২০২৪-২০২৫" selected>২০২৪-২০২৫</option>
+                      <option value="২০২৫-২০২৬">২০২৫-২০২৬</option>
+                      <option value="২০২৬-২০২৭">২০২৬-২০২৭</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>কর সার্কেল</label>
+                    <input type="text" id="taxCircle" class="form-control" value="সার্কেল-১১" oninput="onTaxpayerMetaChange()">
+                  </div>
+                  <div class="form-group">
+                    <label>কর অঞ্চল</label>
+                    <input type="text" id="taxZone" class="form-control" value="কর অঞ্চল-৪, ঢাকা" oninput="onTaxpayerMetaChange()">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>হিসাব / দাখিলের তারিখ</label>
+                    <input type="date" id="taxDate" class="form-control" onchange="onTaxpayerMetaChange()">
+                  </div>
+                  <div class="form-group">
+                    <label>হিসাবের সময়</label>
+                    <input type="text" id="taxTime" class="form-control" placeholder="যেমন: ০৮:৪৫ PM" oninput="onTaxpayerMetaChange()">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>করদাতা শ্রেণি</label>
+                    <select id="taxCategory" class="form-control" onchange="runIncomeTaxCalc()">
+                      <option value="general" selected>সাধারণ করদাতা (পুরুষ) — করমুক্ত ৩.৫ লাখ</option>
+                      <option value="female_senior">নারী ও ৬৫+ প্রবীণ — করমুক্ত ৪.০ লাখ</option>
+                      <option value="disabled_third_gender">প্রতিবন্ধী ও তৃতীয় লিঙ্গ — করমুক্ত ৪.৭৫ লাখ</option>
+                      <option value="freedom_fighter">গেজেটভুক্ত মুক্তিযোদ্ধা — করমুক্ত ৫.০ লাখ</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>এলাকা / এখতিয়ার</label>
+                    <select id="taxLocation" class="form-control" onchange="runIncomeTaxCalc()">
+                      <option value="dhaka_chattogram_cc" selected>ঢাকা ও চট্টগ্রাম সিটি কর্পোরেশন (ন্যূনতম ৫,০০০/-)</option>
+                      <option value="other_cc">অন্যান্য সিটি কর্পোরেশন (ন্যূনতম ৪,০০০/-)</option>
+                      <option value="non_cc">সিটি কর্পোরেশন বহির্ভূত অন্যান্য এলাকা (ন্যূনতম ৩,০০০/-)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h2 class="card-title">২. মোট আয়ের বিবরণ (Income Heads)</h2>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>বেতন খাতের আয় (টাকা)</label>
+                    <input type="number" id="incSalary" class="form-control" value="650000" oninput="runIncomeTaxCalc()">
+                  </div>
+                  <div class="form-group">
+                    <label>গৃহ-সম্পত্তি ভাড়া আয় (টাকা)</label>
+                    <input type="number" id="incHouse" class="form-control" value="120000" oninput="runIncomeTaxCalc()">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>ব্যবসা বা পেশার আয় (টাকা)</label>
+                    <input type="number" id="incBusiness" class="form-control" value="0" oninput="runIncomeTaxCalc()">
+                  </div>
+                  <div class="form-group">
+                    <label>ব্যাংক সুদ / সঞ্চয়পত্র মুনাফা (টাকা)</label>
+                    <input type="number" id="incInterest" class="form-control" value="30000" oninput="runIncomeTaxCalc()">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>কৃষি ও অন্যান্য উৎস (টাকা)</label>
+                    <input type="number" id="incOther" class="form-control" value="0" oninput="runIncomeTaxCalc()">
+                  </div>
+                  <div class="form-group">
+                    <label>মূলধনী মুনাফা (টাকা)</label>
+                    <input type="number" id="incCapital" class="form-control" value="0" oninput="runIncomeTaxCalc()">
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h2 class="card-title">৩. বিনিয়োগ রেয়াত ও অগ্রিম কর</h2>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>অনুমোদিত বিনিয়োগ (ডিপিএস/সঞ্চয়পত্র)</label>
+                    <input type="number" id="actInvestment" class="form-control" value="120000" oninput="runIncomeTaxCalc()">
+                  </div>
+                  <div class="form-group">
+                    <label>অগ্রিম কর / উৎসে কর্তন (AIT / TDS)</label>
+                    <input type="number" id="advTaxPaid" class="form-control" value="5000" oninput="runIncomeTaxCalc()">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>মোট নীট পরিসম্পদ (সারচার্জের জন্য)</label>
+                  <input type="number" id="netWealth" class="form-control" value="15000000" oninput="runIncomeTaxCalc()">
+                </div>
+                <button class="btn btn-primary btn-block" onclick="saveIncomeTaxReturn()">💾 নাম, পেশা ও তারিখসহ আয়কর রিটার্ন সংরক্ষণ করুন</button>
+              </div>
+            </div>
+
+            <!-- Right: Live Computation & Slabs -->
+            <div>
+              <div class="result-box">
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 12px;">📊 কর দায় সারসংক্ষেপ</h3>
+                <div class="result-metric">
+                  <span>মোট বার্ষিক আয়:</span>
+                  <strong id="resTotalIncome">৮,০০,০০০ টাকা</strong>
+                </div>
+                <div class="result-metric">
+                  <span>করমুক্ত আয়ের সীমা:</span>
+                  <span id="resThreshold">৩,৫০,০০০ টাকা</span>
+                </div>
+                <div class="result-metric">
+                  <span>করযোগ্য নীট আয়:</span>
+                  <strong id="resTaxableIncome">৪,৫০,০০০ টাকা</strong>
+                </div>
+                <div class="result-metric">
+                  <span>স্থূল কর (Gross Tax):</span>
+                  <span id="resGrossTax">৪০,০০০ টাকা</span>
+                </div>
+                <div class="result-metric">
+                  <span>বিনিয়োগ কর রেয়াত:</span>
+                  <span id="resRebate" style="color: #047857;">- ১৮,০০০ টাকা</span>
+                </div>
+                <div class="result-metric">
+                  <span>রেয়াত পরবর্তী কর:</span>
+                  <span id="resTaxAfterRebate">২২,০০০ টাকা</span>
+                </div>
+                <div class="result-metric">
+                  <span>অগ্রিম কর্তিত কর (AIT):</span>
+                  <span id="resAitPaid" style="color: #047857;">- ৫,০০০ টাকা</span>
+                </div>
+                <div class="result-metric result-total">
+                  <span>মোট প্রদেয় নীট কর:</span>
+                  <span id="resNetPayable" style="color: #B91C1C;">১৭,০০০ টাকা</span>
+                </div>
+                <div style="font-size: 12px; margin-top: 8px; color: #475569;" id="resWords">
+                  কথায়: সতের হাজার টাকা মাত্র
+                </div>
+              </div>
+
+              <!-- Slab Breakdown Table -->
+              <div class="card">
+                <h3 class="card-title">আইনসম্মত স্ল্যাব বিশ্লেষণ</h3>
+                <table class="dossier-table" id="slabTable">
+                  <thead>
+                    <tr>
+                      <th>স্ল্যাব বিবরণ</th>
+                      <th>বরাদ্দ</th>
+                      <th>হার</th>
+                      <th>কর</th>
+                    </tr>
+                  </thead>
+                  <tbody id="slabBody">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Printable IT-11GA Statement Preview -->
+          <div class="sheet-preview" id="it11gaSheet">
+            <div class="sheet-header">
+              <div class="sheet-title">জাতীয় রাজস্ব board (NBR) — খসড়া আইটি-১১গ বিবরণী</div>
+              <div class="sheet-sub">ব্যক্তি করদাতার আয়কর আইন ২০২৩ এর ধারা ১৬৬ মোতাবেক রিটার্ন সারসংক্ষেপ</div>
+            </div>
+            
+            <div class="meta-box-grid">
+              <div><strong>করদাতার নাম:</strong> <span id="sheetName">মো: কামরুল হাসান</span></div>
+              <div><strong>কাজের ধরণ / পেশা:</strong> <span id="sheetProfession">সফটওয়্যার ইঞ্জিনিয়ার</span></div>
+              <div><strong>কর্মস্থল / প্রতিষ্ঠান:</strong> <span id="sheetWorkplace">প্রাইম টেক সল্যুশনস লিমিটেড</span></div>
+              <div><strong>টিআইএন (TIN):</strong> <span id="sheetTin">৭৪১২০৩৪৮৯১২৩</span></div>
+              <div><strong>জাতীয় পরিচয়পত্র (NID):</strong> <span id="sheetNid">১৯৮৫২৬৯২৪৫১২৩</span></div>
+              <div><strong>কর সার্কেল ও অঞ্চল:</strong> <span id="sheetCircleZone">সার্কেল-১১, কর অঞ্চল-৪, ঢাকা</span></div>
+              <div><strong>করবর্ষ:</strong> <span id="sheetYear">২০২৪-২০২৫</span></div>
+              <div><strong>প্রস্তুতের তারিখ ও সময়:</strong> <span id="sheetDateTime">১১/১০/২০২৬, ০৮:৪৫ PM</span></div>
+            </div>
+
+            <table class="dossier-table">
+              <tr>
+                <td>১. মোট অর্জিত আয়</td>
+                <td style="text-align: right;"><strong id="sheetTotalInc">৮,০০,০০০/-</strong></td>
+              </tr>
+              <tr>
+                <td>২. স্থূল প্রদেয় কর</td>
+                <td style="text-align: right;" id="sheetGrossTax">৪০,০০০/-</td>
+              </tr>
+              <tr>
+                <td>৩. অনুমোদিত বিনিয়োগ কর রেয়াত</td>
+                <td style="text-align: right;" id="sheetRebate">১৮,০০০/-</td>
+              </tr>
+              <tr>
+                <td>৪. উৎসে কর্তিত ও অগ্রিম প্রদত্ত কর</td>
+                <td style="text-align: right;" id="sheetAit">৫,০০০/-</td>
+              </tr>
+              <tr style="background: #F8FAFC; font-weight: 700;">
+                <td>৫. রিটার্নের সাথে প্রদেয় নীট কর</td>
+                <td style="text-align: right; color: #B91C1C;" id="sheetPayable">১৭,০০০/-</td>
+              </tr>
+            </table>
+            <div style="margin-top: 14px; font-size: 11px; color: #64748B;">
+              ঘোষণা: আমি প্রত্যয়ন করিতেছি যে এই খসড়া বিবরণীতে প্রদত্ত সকল তথ্য আমার দাখিলকৃত প্রমাণের আলোকে প্রস্তুতকৃত।
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: VAT Mushak-9.1 -->
+        <div id="tabVatSection" style="display: none;">
+          <div class="grid-2col">
+            <!-- Left: VAT Inputs -->
+            <div>
+              <div class="card">
+                <h2 class="card-title">১. প্রতিষ্ঠানের বিবরণ, কাজের ধরণ ও কর মেয়াদ</h2>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>প্রতিষ্ঠানের নাম <span style="color:#DC2626;">*</span></label>
+                    <input type="text" id="vatEntityName" class="form-control" value="মেসার্স বেঙ্গল এন্টারপ্রাইজ" oninput="onVatMetaChange()">
+                  </div>
+                  <div class="form-group">
+                    <label>কাজের ধরণ / অর্থনৈতিক কার্যক্রম <span style="color:#DC2626;">*</span></label>
+                    <input type="text" id="vatBusinessNature" class="form-control" list="vatNatureList" value="আইটি সেবা ও সফটওয়্যার সরবরাহ" placeholder="যেমন: প্রস্তুতকারক / পাইকারি ট্রেডিং / আইটি সেবা" oninput="onVatMetaChange()">
+                    <datalist id="vatNatureList">
+                      <option value="সফটওয়্যার ও তথ্যপ্রযুক্তি সেবা (ITES)">
+                      <option value="পণ্য উৎপাদন ও সরবরাহকারী (Manufacturing)">
+                      <option value="পাইকারি ও খুচরা বাণিজ্যিক প্রতিষ্ঠান (Trading)">
+                      <option value="আমদানিকারক ও রপ্তানিকারক (Import/Export)">
+                      <option value="হোটেল, রেস্তোরাঁ ও ক্যাফে সেবা">
+                      <option value="নির্মাণ ও ঠিকাদারি প্রতিষ্ঠান (Contractor)">
+                      <option value="পেশাগত ও ব্যবস্থাপনা পরামর্শক সেবা">
+                      <option value="অন্যান্য ব্যবসায়িক সেবা">
+                    </datalist>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>বাণিজ্যিক কার্যালয়ের ঠিকানা</label>
+                    <input type="text" id="vatAddress" class="form-control" value="মতিঝিল বা/এ, ঢাকা-১০০০" oninput="onVatMetaChange()">
+                  </div>
+                  <div class="form-group">
+                    <label>বিআইএন (BIN - ৯ ডিজিট)</label>
+                    <input type="text" id="vatBin" class="form-control" value="০০২৮৯৭৩৬৪" oninput="onVatMetaChange()">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>কর মেয়াদ (মাস ও বছর)</label>
+                    <input type="text" id="vatPeriod" class="form-control" value="২০২৬-১০" oninput="onVatMetaChange()">
+                  </div>
+                  <div class="form-group">
+                    <label>দাখিলের তারিখ ও সময়</label>
+                    <div style="display: flex; gap: 8px;">
+                      <input type="date" id="vatDate" class="form-control" onchange="onVatMetaChange()">
+                      <input type="text" id="vatTime" class="form-control" placeholder="যেমন: ০৮:৪৫ PM" oninput="onVatMetaChange()">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h2 class="card-title">২. সরবরাহ ও বিক্রয় বিবরণ (Output Tax)</h2>
+                <div class="form-group">
+                  <label>১৫% প্রমিত হারে করযোগ্য সরবরাহ (টাকা)</label>
+                  <input type="number" id="vatStdSales" class="form-control" value="500000" oninput="runVatCalc()">
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>হ্রাসকৃত হারে করযোগ্য সরবরাহ</label>
+                    <input type="number" id="vatRedSales" class="form-control" value="100000" oninput="runVatCalc()">
+                  </div>
+                  <div class="form-group">
+                    <label>হ্রাসকৃত কর হার</label>
+                    <select id="vatRedRate" class="form-control" onchange="runVatCalc()">
+                      <option value="0.05" selected>৫%</option>
+                      <option value="0.075">৭.৫%</option>
+                      <option value="0.10">১০%</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h2 class="card-title">৩. উপকরণ ক্রয় ও উৎসে মূসক সমন্বয়</h2>
+                <div class="form-group">
+                  <label>১৫% ভ্যাটযুক্ত রেয়াতযোগ্য কাঁচামাল/পণ্য ক্রয় (টাকা)</label>
+                  <input type="number" id="vatPurchases" class="form-control" value="300000" oninput="runVatCalc()">
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>ক্রেতা কর্তৃক উৎসে কর্তিত মূসক (VDS)</label>
+                    <input type="number" id="vatVdsBuyers" class="form-control" value="5000" oninput="runVatCalc()">
+                  </div>
+                  <div class="form-group">
+                    <label>সরবরাহকারীর নিকট হতে কর্তিত মূসক</label>
+                    <input type="number" id="vatVdsSuppliers" class="form-control" value="2000" oninput="runVatCalc()">
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="saveVatReturn()">💾 নাম, কাজের ধরণ ও তারিখসহ মূসক-৯.১ সংরক্ষণ করুন</button>
+              </div>
+            </div>
+
+            <!-- Right: VAT Live Results -->
+            <div>
+              <div class="result-box">
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--color-primary-dark); margin-bottom: 12px;">📊 মূসক হিসাব সারসংক্ষেপ</h3>
+                <div class="result-metric">
+                  <span>মোট বিক্রয়/টার্নওভার:</span>
+                  <strong id="resVatTurnover">৬,০০,০০০ টাকা</strong>
+                </div>
+                <div class="result-metric">
+                  <span>মোট প্রদেয় উৎপাদ কর (Output Tax):</span>
+                  <span id="resOutputVat">৮০,০০০ টাকা</span>
+                </div>
+                <div class="result-metric">
+                  <span>অনুমোদিত উপকরণ রেয়াত (Input Tax):</span>
+                  <span id="resInputCredit" style="color: #047857;">- ৪৫,০০০ টাকা</span>
+                </div>
+                <div class="result-metric">
+                  <span>ক্রেতা কর্তৃক উৎসে কর্তন (VDS):</span>
+                  <span id="resVdsBuyers" style="color: #047857;">- ৫,০০০ টাকা</span>
+                </div>
+                <div class="result-metric">
+                  <span>সরবরাহকারী হতে কর্তিত মূসক সমন্বয়:</span>
+                  <span id="resVdsSuppliers">+ ২,০০০ টাকা</span>
+                </div>
+                <div class="result-metric result-total">
+                  <span>মাসিক নিট প্রদেয় মূসক:</span>
+                  <span id="resNetVat" style="color: #B91C1C;">৩২,০০০ টাকা</span>
+                </div>
+                <div style="font-size: 12px; margin-top: 8px; color: #475569;" id="resVatWords">
+                  কথায়: বত্রিশ হাজার টাকা মাত্র
+                </div>
+              </div>
+
+              <!-- Mushak-9.1 Summary Sheet -->
+              <div class="sheet-preview">
+                <div class="sheet-header">
+                  <div class="sheet-title">গণপ্রজাতন্ত্রী বাংলাদেশ সরকার — জাতীয় রাজস্ব বোর্ড</div>
+                  <div class="sheet-title" style="color: #047857;">মূসক-৯.১ দাখিলপত্র (মাসিক রিটার্ন)</div>
+                  <div class="sheet-sub">ধারা ৬৪ ও বিধি ৪৭ অনুসারে দাখিলকৃত</div>
+                </div>
+
+                <div class="meta-box-grid">
+                  <div><strong>করদাতা প্রতিষ্ঠান:</strong> <span id="mushakEntity">মেসার্স বেঙ্গল এন্টারপ্রাইজ</span></div>
+                  <div><strong>কাজের ধরণ / কার্যক্রম:</strong> <span id="mushakNature">আইটি সেবা ও সফটওয়্যার সরবরাহ</span></div>
+                  <div><strong>ঠিকানা:</strong> <span id="mushakAddress">মতিঝিল বা/এ, ঢাকা-১০০০</span></div>
+                  <div><strong>বিআইএন (BIN):</strong> <span id="mushakBin">০০২৮৯৭৩৬৪</span></div>
+                  <div><strong>কর মেয়াদ:</strong> <span id="mushakPeriod">২০২৬-১০</span></div>
+                  <div><strong>দাখিলের তারিখ ও সময়:</strong> <span id="mushakDateTime">১১/১০/২০২৬, ০৮:৪৫ PM</span></div>
+                </div>
+
+                <table class="dossier-table">
+                  <tr>
+                    <td>অংশ ৩: করযোগ্য সরবরাহ</td>
+                    <td style="text-align: right;" id="mushakSales">৬,০০,০০০/-</td>
+                  </tr>
+                  <tr>
+                    <td>অংশ ৪: উৎপাদ কর দায়</td>
+                    <td style="text-align: right;" id="mushakOutput">৮০,০০০/-</td>
+                  </tr>
+                  <tr>
+                    <td>অংশ ৫: অনুমোদিত উপকরণ কর রেয়াত</td>
+                    <td style="text-align: right;" id="mushakInput">৪৫,০০০/-</td>
+                  </tr>
+                  <tr>
+                    <td>অংশ ৬: উৎসে কর্তন সমন্বয়</td>
+                    <td style="text-align: right;">৩,০০০/-</td>
+                  </tr>
+                  <tr style="background: #F8FAFC; font-weight: 700;">
+                    <td>অংশ ৭: সরকারি কোষাগারে প্রদেয় নীট মূসক</td>
+                    <td style="text-align: right; color: #B91C1C;" id="mushakNet">৩২,০০০/-</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: SAVED TAX & VAT RETURNS LIST -->
+        <div class="card" id="savedReturnsSection" style="margin-top: 36px; border-top: 3px solid var(--color-primary);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <h2 class="card-title" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">
+              📂 সংরক্ষিত কর ও ভ্যাট রিটার্নের ইতিহাস (Saved Returns History)
+            </h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <span id="savedCountBadge" style="background: var(--color-primary-soft); color: var(--color-primary-dark); padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: 13px;">০ টি সংরক্ষিত রেকর্ড</span>
+              <button class="btn btn-secondary btn-sm" onclick="loadSavedReturnsList()">🔄 রিফ্রেশ করুন</button>
+            </div>
+          </div>
+          <p style="font-size: 13px; color: var(--color-text-muted); margin-bottom: 16px;">
+            এখানে করদাতার নাম, কাজের ধরণ (পেশা/ব্যবসা), সংরক্ষণ তারিখ ও সময়সহ ডাটাবেজের সকল হিসাব সংরক্ষিত রয়েছে। এক ক্লিকেই পূর্বের রেকর্ড ফর্মে লোড করে পুনরায় সম্পাদনা বা প্রিন্ট করতে পারেন।
+          </p>
+
+          <div style="overflow-x: auto;">
+            <table class="dossier-table" id="savedReturnsTable">
+              <thead>
+                <tr>
+                  <th>করদাতা / প্রতিষ্ঠানের নাম</th>
+                  <th>কাজের ধরণ / পেশা</th>
+                  <th>বিবরণীর ধরণ</th>
+                  <th>করবর্ষ / মেয়াদ</th>
+                  <th>সংরক্ষণ তারিখ ও সময়</th>
+                  <th>প্রদেয় নীট কর</th>
+                  <th style="text-align: center; min-width: 170px;">ব্যবস্থা (Action)</th>
+                </tr>
+              </thead>
+              <tbody id="savedReturnsBody">
+                <tr>
+                  <td colspan="7" style="text-align: center; color: #94A3B8; padding: 24px;">লোড হচ্ছে...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastNotification" style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: #065F46; color: #FFFFFF; padding: 14px 20px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); font-weight: 600; font-size: 14px; display: none; align-items: center; gap: 10px; border-left: 5px solid #10B981; max-width: 480px;">
+    <span style="font-size: 18px;">✅</span>
+    <span id="toastMsg">সফলভাবে সংরক্ষিত হয়েছে!</span>
+  </div>
+
+  <script>
+    // In-memory cache of saved returns
+    let savedReturnsData = [];
+    let cachedAuthToken = null;
+
+    // Helper: Retrieve or acquire valid authentication token
+    async function getValidAuthToken() {
+      if (cachedAuthToken) return cachedAuthToken;
+
+      let token = localStorage.getItem('ain_ai_token') ||
+                  localStorage.getItem('ain_token') ||
+                  localStorage.getItem('auth_token') ||
+                  localStorage.getItem('token');
+
+      // Check cookie
+      if (!token || token === 'demo_token') {
+        const match = document.cookie.match(/(?:^|;\s*)ain_ai_token=([^;]+)/);
+        if (match && match[1]) {
+          token = match[1];
+        }
+      }
+
+      // If still no token or dummy token, auto acquire demo token in demo mode
+      if (!token || token === 'demo_token') {
+        try {
+          const res = await fetch('/api/v1/auth/demo-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: 'citizen' })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.access_token) {
+              token = data.access_token;
+              localStorage.setItem('ain_ai_token', token);
+            }
+          }
+        } catch (e) {
+          console.warn('Auto demo login attempt:', e);
+        }
+      }
+
+      cachedAuthToken = token || 'demo_token';
+      return cachedAuthToken;
+    }
+
+    // Helper: format current local date and time
+    function getTodayDateStr() {
+      const d = new Date();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${d.getFullYear()}-${month}-${day}`;
+    }
+
+    function getCurrentTimeStr() {
+      const d = new Date();
+      let hours = d.getHours();
+      const mins = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return `${String(hours).padStart(2, '0')}:${mins} ${ampm}`;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastNotification');
+      document.getElementById('toastMsg').innerText = msg;
+      toast.style.display = 'flex';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 4000);
+    }
+
+    // Initialize default dates & times
+    function initDefaultDateTime() {
+      const today = getTodayDateStr();
+      const nowTime = getCurrentTimeStr();
+      
+      const taxDate = document.getElementById('taxDate');
+      const taxTime = document.getElementById('taxTime');
+      const vatDate = document.getElementById('vatDate');
+      const vatTime = document.getElementById('vatTime');
+
+      if (!taxDate.value) taxDate.value = today;
+      if (!taxTime.value) taxTime.value = nowTime;
+      if (!vatDate.value) vatDate.value = today;
+      if (!vatTime.value) vatTime.value = nowTime;
+
+      onTaxpayerMetaChange();
+      onVatMetaChange();
+    }
+
+    // Tab switching
+    function switchTab(tab) {
+      if (tab === 'income') {
+        document.getElementById('tabIncomeSection').style.display = 'block';
+        document.getElementById('tabVatSection').style.display = 'none';
+        document.getElementById('tabBtnIncome').classList.add('active');
+        document.getElementById('tabBtnVat').classList.remove('active');
+        runIncomeTaxCalc();
+      } else {
+        document.getElementById('tabIncomeSection').style.display = 'none';
+        document.getElementById('tabVatSection').style.display = 'block';
+        document.getElementById('tabBtnIncome').classList.remove('active');
+        document.getElementById('tabBtnVat').classList.add('active');
+        runVatCalc();
+      }
+    }
+
+    // Live update of Taxpayer header information into Sheet preview
+    function onTaxpayerMetaChange() {
+      const name = document.getElementById('taxpayerName').value || 'করদাতার নাম';
+      const profession = document.getElementById('taxpayerProfession').value || 'পেশা / কর্ম';
+      const workplace = document.getElementById('taxpayerWorkplace').value || 'কর্মস্থল / প্রতিষ্ঠান';
+      const tin = document.getElementById('taxpayerTin').value || '১২ সংখ্যার টিআইএন';
+      const nid = document.getElementById('taxpayerNid').value || 'জাতীয় পরিচয়পত্র নং';
+      const circle = document.getElementById('taxCircle').value || 'কর সার্কেল';
+      const zone = document.getElementById('taxZone').value || 'কর অঞ্চল';
+      const year = document.getElementById('taxAssessmentYear').value || '২০২৪-২০২৫';
+      const date = document.getElementById('taxDate').value || getTodayDateStr();
+      const time = document.getElementById('taxTime').value || getCurrentTimeStr();
+
+      document.getElementById('sheetName').innerText = name;
+      document.getElementById('sheetProfession').innerText = profession;
+      document.getElementById('sheetWorkplace').innerText = workplace;
+      document.getElementById('sheetTin').innerText = tin;
+      document.getElementById('sheetNid').innerText = nid;
+      document.getElementById('sheetCircleZone').innerText = `${circle}, ${zone}`;
+      document.getElementById('sheetYear').innerText = year;
+      document.getElementById('sheetDateTime').innerText = `${date}, ${time}`;
+    }
+
+    // Live update of VAT header information into Sheet preview
+    function onVatMetaChange() {
+      const entity = document.getElementById('vatEntityName').value || 'প্রতিষ্ঠানের নাম';
+      const nature = document.getElementById('vatBusinessNature').value || 'অর্থনৈতিক কার্যক্রম';
+      const address = document.getElementById('vatAddress').value || 'বাণিজ্যিক ঠিকানা';
+      const bin = document.getElementById('vatBin').value || '৯ সংখ্যার বিন';
+      const period = document.getElementById('vatPeriod').value || '২০২৬-১০';
+      const date = document.getElementById('vatDate').value || getTodayDateStr();
+      const time = document.getElementById('vatTime').value || getCurrentTimeStr();
+
+      document.getElementById('mushakEntity').innerText = entity;
+      document.getElementById('mushakNature').innerText = nature;
+      document.getElementById('mushakAddress').innerText = address;
+      document.getElementById('mushakBin').innerText = bin;
+      document.getElementById('mushakPeriod').innerText = period;
+      document.getElementById('mushakDateTime').innerText = `${date}, ${time}`;
+    }
+
+    // Live Income Tax Computation
+    async function runIncomeTaxCalc() {
+      onTaxpayerMetaChange();
+      const token = await getValidAuthToken();
+      const payload = {
+        category: document.getElementById('taxCategory').value,
+        location: document.getElementById('taxLocation').value,
+        assessment_year: document.getElementById('taxAssessmentYear').value,
+        income_salary: parseFloat(document.getElementById('incSalary').value || 0),
+        income_house: parseFloat(document.getElementById('incHouse').value || 0),
+        income_business: parseFloat(document.getElementById('incBusiness').value || 0),
+        income_interest: parseFloat(document.getElementById('incInterest').value || 0),
+        income_agriculture: 0,
+        income_capital_gain: parseFloat(document.getElementById('incCapital').value || 0),
+        income_other: parseFloat(document.getElementById('incOther').value || 0),
+        actual_investment: parseFloat(document.getElementById('actInvestment').value || 0),
+        advance_tax_paid: parseFloat(document.getElementById('advTaxPaid').value || 0),
+        net_wealth: parseFloat(document.getElementById('netWealth').value || 0)
+      };
+
+      try {
+        const res = await fetch('/api/v1/tax/calculate/income-tax', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Update live metrics
+        document.getElementById('resTotalIncome').innerText = data.total_income_bn + ' টাকা';
+        document.getElementById('resThreshold').innerText = data.threshold_bn + ' টাকা';
+        document.getElementById('resTaxableIncome').innerText = data.taxable_income_bn + ' টাকা';
+        document.getElementById('resGrossTax').innerText = data.gross_tax_bn + ' টাকা';
+        document.getElementById('resRebate').innerText = '- ' + data.rebate_bn + ' টাকা';
+        document.getElementById('resTaxAfterRebate').innerText = data.tax_after_rebate_bn + ' টাকা';
+        document.getElementById('resAitPaid').innerText = '- ' + data.advance_tax_paid_bn + ' টাকা';
+        document.getElementById('resNetPayable').innerText = data.net_payable_bn + ' টাকা';
+        document.getElementById('resWords').innerText = 'কথায়: ' + data.net_payable_words + ' মাত্র';
+
+        // Update Sheet Preview
+        document.getElementById('sheetTotalInc').innerText = data.total_income_bn + '/-';
+        document.getElementById('sheetGrossTax').innerText = data.gross_tax_bn + '/-';
+        document.getElementById('sheetRebate').innerText = data.rebate_bn + '/-';
+        document.getElementById('sheetAit').innerText = data.advance_tax_paid_bn + '/-';
+        document.getElementById('sheetPayable').innerText = data.net_payable_bn + '/-';
+
+        // Populate slab breakdown table
+        const tbody = document.getElementById('slabBody');
+        tbody.innerHTML = '';
+        data.slab_breakdown.forEach(s => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${s.slab_name}</td>
+            <td>${s.allocated_amount.toLocaleString('bn-BD')} টাকা</td>
+            <td>${s.rate_percent}%</td>
+            <td>${s.tax_for_slab.toLocaleString('bn-BD')} টাকা</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Live VAT Computation
+    async function runVatCalc() {
+      onVatMetaChange();
+      const token = await getValidAuthToken();
+      const payload = {
+        tax_period: document.getElementById('vatPeriod').value,
+        standard_sales: parseFloat(document.getElementById('vatStdSales').value || 0),
+        reduced_sales: parseFloat(document.getElementById('vatRedSales').value || 0),
+        reduced_rate: parseFloat(document.getElementById('vatRedRate').value || 0.05),
+        exempt_sales: 0,
+        zero_rated_export: 0,
+        input_purchases_standard: parseFloat(document.getElementById('vatPurchases').value || 0),
+        vds_deducted_by_buyers: parseFloat(document.getElementById('vatVdsBuyers').value || 0),
+        vds_withheld_from_suppliers: parseFloat(document.getElementById('vatVdsSuppliers').value || 0)
+      };
+
+      try {
+        const res = await fetch('/api/v1/tax/calculate/vat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Update live metrics
+        document.getElementById('resVatTurnover').innerText = data.total_turnover_bn + ' টাকা';
+        document.getElementById('resOutputVat').innerText = data.total_output_vat_bn + ' টাকা';
+        document.getElementById('resInputCredit').innerText = '- ' + data.input_vat_credit_bn + ' টাকা';
+        document.getElementById('resVdsBuyers').innerText = '- ' + data.vds_deducted_by_buyers_bn + ' টাকা';
+        document.getElementById('resVdsSuppliers').innerText = '+ ' + data.vds_withheld_from_suppliers_bn + ' টাকা';
+        document.getElementById('resNetVat').innerText = data.net_vat_payable_bn + ' টাকা';
+        document.getElementById('resVatWords').innerText = 'কথায়: ' + data.net_vat_payable_words + ' মাত্র';
+
+        // Update Sheet Preview
+        document.getElementById('mushakSales').innerText = data.total_turnover_bn + '/-';
+        document.getElementById('mushakOutput').innerText = data.total_output_vat_bn + '/-';
+        document.getElementById('mushakInput').innerText = data.input_vat_credit_bn + '/-';
+        document.getElementById('mushakNet').innerText = data.net_vat_payable_bn + '/-';
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Save Income Tax Return
+    async function saveIncomeTaxReturn() {
+      const token = await getValidAuthToken();
+      const name = document.getElementById('taxpayerName').value.trim() || 'মো: কামরুল হাসান';
+      const profession = document.getElementById('taxpayerProfession').value.trim() || 'সফটওয়্যার ইঞ্জিনিয়ার';
+      const workplace = document.getElementById('taxpayerWorkplace').value.trim();
+      const tin = document.getElementById('taxpayerTin').value.trim();
+      const nid = document.getElementById('taxpayerNid').value.trim();
+      const year = document.getElementById('taxAssessmentYear').value;
+      const circle = document.getElementById('taxCircle').value.trim();
+      const zone = document.getElementById('taxZone').value.trim();
+      const filingDate = document.getElementById('taxDate').value || getTodayDateStr();
+      const filingTime = document.getElementById('taxTime').value || getCurrentTimeStr();
+
+      const payload = {
+        return_type: 'income_tax',
+        tax_period: year,
+        taxpayer_name: name,
+        taxpayer_tin: tin,
+        inputs: {
+          profession: profession,
+          workplace: workplace,
+          nid: nid,
+          circle: circle,
+          zone: zone,
+          assessment_year: year,
+          filing_date: filingDate,
+          filing_time: filingTime,
+          category: document.getElementById('taxCategory').value,
+          location: document.getElementById('taxLocation').value,
+          income_salary: parseFloat(document.getElementById('incSalary').value || 0),
+          income_house: parseFloat(document.getElementById('incHouse').value || 0),
+          income_business: parseFloat(document.getElementById('incBusiness').value || 0),
+          income_interest: parseFloat(document.getElementById('incInterest').value || 0),
+          income_capital_gain: parseFloat(document.getElementById('incCapital').value || 0),
+          income_other: parseFloat(document.getElementById('incOther').value || 0),
+          actual_investment: parseFloat(document.getElementById('actInvestment').value || 0),
+          advance_tax_paid: parseFloat(document.getElementById('advTaxPaid').value || 0),
+          net_wealth: parseFloat(document.getElementById('netWealth').value || 0)
+        }
+      };
+
+      try {
+        const res = await fetch('/api/v1/tax/returns', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showToast(`✅ ${name} (পেশা: ${profession}) এর আয়কর রিটার্ন সংরক্ষিত হয়েছে!`);
+          await loadSavedReturnsList();
+        } else {
+          alert('সংরক্ষণে ত্রুটি হয়েছে। পুনরায় চেষ্টা করুন।');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Save VAT Return
+    async function saveVatReturn() {
+      const token = await getValidAuthToken();
+      const name = document.getElementById('vatEntityName').value.trim() || 'মেসার্স বেঙ্গল এন্টারপ্রাইজ';
+      const nature = document.getElementById('vatBusinessNature').value.trim() || 'আইটি সেবা ও সরবরাহ';
+      const address = document.getElementById('vatAddress').value.trim();
+      const bin = document.getElementById('vatBin').value.trim();
+      const period = document.getElementById('vatPeriod').value.trim();
+      const filingDate = document.getElementById('vatDate').value || getTodayDateStr();
+      const filingTime = document.getElementById('vatTime').value || getCurrentTimeStr();
+
+      const payload = {
+        return_type: 'vat',
+        tax_period: period,
+        taxpayer_name: name,
+        taxpayer_tin: bin,
+        inputs: {
+          business_nature: nature,
+          address: address,
+          bin: bin,
+          filing_date: filingDate,
+          filing_time: filingTime,
+          standard_sales: parseFloat(document.getElementById('vatStdSales').value || 0),
+          reduced_sales: parseFloat(document.getElementById('vatRedSales').value || 0),
+          reduced_rate: parseFloat(document.getElementById('vatRedRate').value || 0.05),
+          input_purchases_standard: parseFloat(document.getElementById('vatPurchases').value || 0),
+          vds_deducted_by_buyers: parseFloat(document.getElementById('vatVdsBuyers').value || 0),
+          vds_withheld_from_suppliers: parseFloat(document.getElementById('vatVdsSuppliers').value || 0)
+        }
+      };
+
+      try {
+        const res = await fetch('/api/v1/tax/returns', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showToast(`✅ ${name} (কাজের ধরণ: ${nature}) এর মূসক-৯.১ সংরক্ষিত হয়েছে!`);
+          await loadSavedReturnsList();
+        } else {
+          alert('সংরক্ষণে ত্রুটি হয়েছে। পুনরায় চেষ্টা করুন।');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Load Saved Returns History Table
+    async function loadSavedReturnsList() {
+      const tbody = document.getElementById('savedReturnsBody');
+      const token = await getValidAuthToken();
+      try {
+        const res = await fetch('/api/v1/tax/returns', {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        if (!res.ok) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #DC2626;">রেকর্ড লোড করতে সমস্যা হয়েছে</td></tr>`;
+          return;
+        }
+        const list = await res.json();
+        savedReturnsData = list;
+        document.getElementById('savedCountBadge').innerText = `${list.length} টি সংরক্ষিত রেকর্ড`;
+
+        if (list.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; color: #64748B; padding: 28px;">
+                এখনও কোনো আয়কর বা ভ্যাট হিসাব সংরক্ষণ করা হয়নি। উপরের ফর্ম পূরণ করে সংরক্ষণ বাটনে ক্লিক করুন।
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = '';
+        list.forEach((item, idx) => {
+          const isIncome = item.return_type === 'income_tax';
+          const typeTag = isIncome ? '<span class="tag-income">💼 আয়কর (IT-11GA)</span>' : '<span class="tag-vat">🏢 মূসক-৯.১ (VAT)</span>';
+          
+          const workOrProfession = isIncome
+            ? (item.inputs.profession || item.inputs.workplace || 'ব্যক্তিগত আয়কর')
+            : (item.inputs.business_nature || item.inputs.address || 'বাণিজ্যিক কার্যক্রম');
+
+          // Date and time display
+          const displayDate = item.inputs.filing_date || (item.created_at ? item.created_at.substring(0, 10) : '—');
+          const displayTime = item.inputs.filing_time || (item.created_at && item.created_at.length > 16 ? item.created_at.substring(11, 16) : '');
+          const dateTimeStr = displayTime ? `${displayDate} (${displayTime})` : displayDate;
+
+          // Payable Tax
+          let payableText = '—';
+          if (isIncome && item.calculation && item.calculation.net_payable_bn) {
+            payableText = `${item.calculation.net_payable_bn} টাকা`;
+          } else if (!isIncome && item.calculation && item.calculation.net_vat_payable_bn) {
+            payableText = `${item.calculation.net_vat_payable_bn} টাকা`;
+          }
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>
+              <strong>${item.taxpayer_name}</strong>
+              ${item.taxpayer_tin ? `<div style="font-size: 11px; color: #64748B;">টিআইএন/বিন: ${item.taxpayer_tin}</div>` : ''}
+            </td>
+            <td>${workOrProfession}</td>
+            <td>${typeTag}</td>
+            <td><strong>${item.tax_period}</strong></td>
+            <td><span style="font-size: 12px; color: #334155;">📅 ${dateTimeStr}</span></td>
+            <td><strong style="color: #B91C1C;">${payableText}</strong></td>
+            <td style="text-align: center;">
+              <div style="display: flex; gap: 6px; justify-content: center;">
+                <button class="btn btn-outline-primary btn-sm" onclick="loadReturnIntoForm('${item.id}')" title="ফর্মে লোড করুন">
+                  📥 লোড
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="viewReturnSheet('${item.id}')" title="বিবরণী দেখুন ও প্রিন্ট">
+                  👁️ বিবরণী
+                </button>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteSavedReturn('${item.id}', '${item.taxpayer_name}')" title="মুছে ফেলুন">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #DC2626;">সার্ভার সংযোগে ত্রুটি</td></tr>`;
+      }
+    }
+
+    // Load a saved return back into active form
+    function loadReturnIntoForm(returnId) {
+      const item = savedReturnsData.find(r => r.id === returnId);
+      if (!item) return;
+
+      if (item.return_type === 'income_tax') {
+        switchTab('income');
+        document.getElementById('taxpayerName').value = item.taxpayer_name || '';
+        document.getElementById('taxpayerProfession').value = item.inputs.profession || '';
+        document.getElementById('taxpayerWorkplace').value = item.inputs.workplace || '';
+        document.getElementById('taxpayerTin').value = item.taxpayer_tin || '';
+        document.getElementById('taxpayerNid').value = item.inputs.nid || '';
+        document.getElementById('taxAssessmentYear').value = item.tax_period || '২০২৪-২০২৫';
+        document.getElementById('taxCircle').value = item.inputs.circle || 'সার্কেল-১১';
+        document.getElementById('taxZone').value = item.inputs.zone || 'কর অঞ্চল-৪, ঢাকা';
+        if (item.inputs.filing_date) document.getElementById('taxDate').value = item.inputs.filing_date;
+        if (item.inputs.filing_time) document.getElementById('taxTime').value = item.inputs.filing_time;
+        if (item.inputs.category) document.getElementById('taxCategory').value = item.inputs.category;
+        if (item.inputs.location) document.getElementById('taxLocation').value = item.inputs.location;
+
+        document.getElementById('incSalary').value = item.inputs.income_salary || 0;
+        document.getElementById('incHouse').value = item.inputs.income_house || 0;
+        document.getElementById('incBusiness').value = item.inputs.income_business || 0;
+        document.getElementById('incInterest').value = item.inputs.income_interest || 0;
+        document.getElementById('incCapital').value = item.inputs.income_capital_gain || 0;
+        document.getElementById('incOther').value = item.inputs.income_other || 0;
+        document.getElementById('actInvestment').value = item.inputs.actual_investment || 0;
+        document.getElementById('advTaxPaid').value = item.inputs.advance_tax_paid || 0;
+        document.getElementById('netWealth').value = item.inputs.net_wealth || 0;
+
+        runIncomeTaxCalc();
+        showToast(`📥 ${item.taxpayer_name} এর আয়কর তথ্য ফর্মে লোড করা হয়েছে!`);
+      } else {
+        switchTab('vat');
+        document.getElementById('vatEntityName').value = item.taxpayer_name || '';
+        document.getElementById('vatBusinessNature').value = item.inputs.business_nature || '';
+        document.getElementById('vatAddress').value = item.inputs.address || '';
+        document.getElementById('vatBin').value = item.taxpayer_tin || '';
+        document.getElementById('vatPeriod').value = item.tax_period || '২০২৬-১০';
+        if (item.inputs.filing_date) document.getElementById('vatDate').value = item.inputs.filing_date;
+        if (item.inputs.filing_time) document.getElementById('vatTime').value = item.inputs.filing_time;
+
+        document.getElementById('vatStdSales').value = item.inputs.standard_sales || 0;
+        document.getElementById('vatRedSales').value = item.inputs.reduced_sales || 0;
+        document.getElementById('vatRedRate').value = item.inputs.reduced_rate || 0.05;
+        document.getElementById('vatPurchases').value = item.inputs.input_purchases_standard || 0;
+        document.getElementById('vatVdsBuyers').value = item.inputs.vds_deducted_by_buyers || 0;
+        document.getElementById('vatVdsSuppliers').value = item.inputs.vds_withheld_from_suppliers || 0;
+
+        runVatCalc();
+        showToast(`📥 ${item.taxpayer_name} এর মূসক তথ্য ফর্মে লোড করা হয়েছে!`);
+      }
+
+      window.scrollTo({ top: 120, behavior: 'smooth' });
+    }
+
+    // View statement & scroll to preview sheet
+    function viewReturnSheet(returnId) {
+      loadReturnIntoForm(returnId);
+      setTimeout(() => {
+        const target = document.getElementById('it11gaSheet');
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 250);
+    }
+
+    // Delete a saved return record
+    async function deleteSavedReturn(returnId, name) {
+      if (!confirm(`আপনি কি নিশ্চিতভাবে "${name}" এর এই সংরক্ষিত রেকর্ডটি মুছে ফেলতে চান?`)) {
+        return;
+      }
+      const token = await getValidAuthToken();
+      try {
+        const res = await fetch(`/api/v1/tax/returns/${returnId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        if (res.ok) {
+          showToast(`🗑️ ${name} এর রেকর্ড মুছে ফেলা হয়েছে।`);
+          await loadSavedReturnsList();
+        } else {
+          alert('রেকর্ড মুছতে ব্যর্থ হয়েছে।');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // Run initial computation & load saved list
+    window.addEventListener('DOMContentLoaded', async () => {
+      initDefaultDateTime();
+      await runIncomeTaxCalc();
+      await loadSavedReturnsList();
+    });
+  </script>
+</body>
+</html>
