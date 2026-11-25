@@ -129,8 +129,8 @@ flowchart LR
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/mdprince007/bangladesh-legal-tech.git
-cd bangladesh-legal-tech
+git clone https://github.com/prince2beggar/legaldraft.git
+cd legaldraft
 ```
 
 ### 2. Backend Setup
