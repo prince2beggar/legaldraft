@@ -304,7 +304,7 @@ class NotificationEngine:
             now_dt = now_dt.replace(tzinfo=timezone.utc)
         curr_dhaka = now_dt.astimezone(DHAKA_TZ)
 
-        escalated = []
+        escalated: list[dict[str, Any]] = []
         with self.db.get_session() as session:
             from packages.trust_kernel.db import DeadlineDB, NotificationDB
 
